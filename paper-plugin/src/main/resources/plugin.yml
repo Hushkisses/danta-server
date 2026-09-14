@@ -57,3 +57,7 @@ permissions:
   danta.command.map:
     description: Allows use of the strategic map GUI.
     default: true
+
+  danta.admin.map:
+    description: Allows DEV test-map import and structure placement.
+    default: op
