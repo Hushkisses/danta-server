@@ -1,5 +1,12 @@
 map-id: dev-test-map
 world: world
+nations:
+  - id: red
+    name: "적국"
+    capital: red_capital
+  - id: blue
+    name: "청국"
+    capital: blue_capital
 points:
   - id: red_capital
     name: "적국 수도"
