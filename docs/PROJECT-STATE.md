@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-14
-Checkpoint: DEV-005A repository baseline complete after DEV-025 functional territory systems
+Checkpoint: DEV-MAP-001 logical test map defined
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -36,6 +36,7 @@ Checkpoint: DEV-005A repository baseline complete after DEV-025 functional terri
 - DEV-024 /국가 minimal GUI: COMPLETE, real client verified
 - DEV-024.1 Korean UI display layer: COMPLETE
 - DEV-025 /지도 minimal GUI: COMPLETE, real client verified
+- DEV-MAP-001 10-point logical test map: COMPLETE
 
 ## Important implementation decisions
 - Internal IDs/enums remain English; player-facing GUI text is Korean through UiText.
@@ -46,26 +47,25 @@ Checkpoint: DEV-005A repository baseline complete after DEV-025 functional terri
 - Snapshot schema remains backward-compatible through the current territory/edge model.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
+- DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
 
 ## Current test data (local dev server only)
 Known examples include nation red, nation blue, strategic point farm_a, strategic point capital_red, and edge road_1. Exact local values live in the representative's PostgreSQL snapshot and are not source-controlled.
 
 ## Open items
-1. DEV-MAP-001: define the 10-point playable logical strategy map.
-2. DEV-MAP-002: minimal structure/template auto-placement pipeline.
-3. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
-4. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
+1. DEV-MAP-002: minimal structure/template auto-placement pipeline.
+2. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
+3. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-MAP-001
-2. DEV-MAP-002
-3. DEV-030 Army domain
-4. DEV-031 ArmyOrder/Route
-5. DEV-032 movement-time calculation
-6. DEV-033 runtime movement scheduling/restart recovery
-7. DEV-034 sequential operation queue
-8. DEV-035 advance-stop conditions
-9. DEV-036 army GUI
+1. DEV-MAP-002
+2. DEV-030 Army domain
+3. DEV-031 ArmyOrder/Route
+4. DEV-032 movement-time calculation
+5. DEV-033 runtime movement scheduling/restart recovery
+6. DEV-034 sequential operation queue
+7. DEV-035 advance-stop conditions
+8. DEV-036 army GUI
 
 ## Manual verification baseline
 A checkpoint is healthy if:
