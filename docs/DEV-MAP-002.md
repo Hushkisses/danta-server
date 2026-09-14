@@ -43,4 +43,4 @@ DEV-MAP-001의 10거점 논리맵을 데이터파일에서 읽어 GameState로 �
 6. `/tp 0 72 0` 등 테스트 좌표에서 플랫폼/거점 표식 확인.
 7. 서버 재시작 후 `/지도`에서 논리맵이 Snapshot으로 복구되는지 확인.
 
-Status: IMPLEMENTED — representative-side live test pending.
+Status: COMPLETE — live server import, world placement, GUI, and restart persistence verified.
