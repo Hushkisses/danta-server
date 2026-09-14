@@ -1,0 +1,109 @@
+map-id: dev-test-map
+world: world
+points:
+  - id: red_capital
+    name: "적국 수도"
+    type: CAPITAL
+    owner: red
+    x: 0
+    y: 70
+    z: 0
+    facility-slots: 3
+  - id: red_farm
+    name: "적국 농업촌"
+    type: FARM
+    owner: red
+    x: 180
+    y: 70
+    z: 40
+    facility-slots: 2
+    production:
+      food: 200
+  - id: red_mine
+    name: "적국 광산촌"
+    type: MINE
+    owner: red
+    x: 170
+    y: 72
+    z: -130
+    facility-slots: 2
+    production:
+      iron: 120
+  - id: west_gate
+    name: "서부 관문"
+    type: GATE
+    owner: none
+    x: 360
+    y: 76
+    z: -20
+    facility-slots: 3
+  - id: forest_crossing
+    name: "숲 교차로"
+    type: FORESTRY
+    owner: none
+    x: 520
+    y: 72
+    z: 130
+    facility-slots: 2
+    production:
+      wood: 160
+  - id: central_market
+    name: "중앙 상업도시"
+    type: COMMERCIAL
+    owner: none
+    x: 640
+    y: 70
+    z: 0
+    facility-slots: 3
+    production:
+      gold: 160
+  - id: canyon_fort
+    name: "협곡 요새"
+    type: GATE
+    owner: none
+    x: 790
+    y: 78
+    z: -120
+    facility-slots: 3
+  - id: blue_farm
+    name: "청국 농업촌"
+    type: FARM
+    owner: blue
+    x: 970
+    y: 70
+    z: 60
+    facility-slots: 2
+    production:
+      food: 200
+  - id: blue_mine
+    name: "청국 광산촌"
+    type: MINE
+    owner: blue
+    x: 960
+    y: 72
+    z: -130
+    facility-slots: 2
+    production:
+      iron: 120
+  - id: blue_capital
+    name: "청국 수도"
+    type: CAPITAL
+    owner: blue
+    x: 1140
+    y: 70
+    z: 0
+    facility-slots: 3
+edges:
+  - { id: e01, a: red_capital, b: red_farm, travel-seconds: 120, tags: [ROAD, PLAIN] }
+  - { id: e02, a: red_capital, b: red_mine, travel-seconds: 150, tags: [ROAD, PLAIN] }
+  - { id: e03, a: red_farm, b: west_gate, travel-seconds: 150, tags: [ROAD, PLAIN] }
+  - { id: e04, a: red_mine, b: west_gate, travel-seconds: 180, tags: [MOUNTAIN_PASS] }
+  - { id: e05, a: west_gate, b: forest_crossing, travel-seconds: 150, tags: [FOREST_PATH] }
+  - { id: e06, a: west_gate, b: central_market, travel-seconds: 210, tags: [ROAD, PLAIN] }
+  - { id: e07, a: forest_crossing, b: central_market, travel-seconds: 150, tags: [FOREST_PATH] }
+  - { id: e08, a: central_market, b: canyon_fort, travel-seconds: 180, tags: [CANYON] }
+  - { id: e09, a: central_market, b: blue_farm, travel-seconds: 210, tags: [ROAD, PLAIN] }
+  - { id: e10, a: canyon_fort, b: blue_mine, travel-seconds: 150, tags: [MOUNTAIN_PASS] }
+  - { id: e11, a: blue_farm, b: blue_capital, travel-seconds: 120, tags: [ROAD, PLAIN] }
+  - { id: e12, a: blue_mine, b: blue_capital, travel-seconds: 150, tags: [ROAD, PLAIN] }
+  - { id: e13, a: canyon_fort, b: blue_farm, travel-seconds: 180, tags: [ROAD] }
