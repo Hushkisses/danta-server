@@ -1,0 +1,15 @@
+server.jar
+eula.txt
+world/
+world_nether/
+world_the_end/
+logs/
+cache/
+plugins/*.jar
+plugins/.paper-remapped/
+banned-*.json
+ops.json
+usercache.json
+whitelist.json
+version_history.json
+*.log

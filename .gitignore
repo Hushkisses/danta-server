@@ -1,0 +1,36 @@
+﻿# Gradle
+.gradle/
+**/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Dev server runtime
+dev-server/server.jar
+dev-server/eula.txt
+dev-server/logs/
+dev-server/cache/
+dev-server/libraries/
+dev-server/versions/
+dev-server/plugins/.paper-remapped/
+dev-server/world/
+dev-server/world_nether/
+dev-server/world_the_end/
+
+# Secrets / local config
+dev-server/plugins/DantaServer/database.properties
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local tools
+.tools/
+
+# Paper runtime/generated files
+dev-server/.paper/
+dev-server/plugins/DantaServer/runtime.properties
+dev-server/plugins/bStats/
+dev-server/plugins/spark/

@@ -1,0 +1,170 @@
+package kr.danta.core.snapshot;
+
+import kr.danta.core.nation.NationStatus;
+import kr.danta.core.territory.BattlefieldTag;
+import kr.danta.core.territory.StrategicPointType;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/** Dependency-free snapshot codec. Reads schema v1-v4; DEV-022 writes v4. */
+public final class GameSnapshotCodec {
+    private GameSnapshotCodec() {}
+
+    public static String encode(GameSnapshot s) {
+        return String.join("|",
+                Integer.toString(s.schemaVersion()),
+                Long.toString(s.createdAtEpochMillis()),
+                Long.toString(s.runtimeElapsedMillis()),
+                Boolean.toString(s.runtimePaused()),
+                Double.toString(s.runtimeSpeedMultiplier()),
+                enc(s.seasonId()), enc(s.seasonDisplayName()),
+                encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
+                encodeStrategicEdges(s.strategicEdges()));
+    }
+
+    public static GameSnapshot decode(String value) {
+        if (value == null) throw new IllegalArgumentException("snapshot is null");
+        String[] p = value.split("\\|", -1);
+        int schema = Integer.parseInt(p[0]);
+
+        if (schema == 1) {
+            if (p.length != 7) throw new IllegalArgumentException("invalid schema v1 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), List.of(), List.of(), List.of());
+        }
+        if (schema == 2) {
+            if (p.length != 8) throw new IllegalArgumentException("invalid schema v2 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]), List.of(), List.of());
+        }
+        if (schema == 3) {
+            if (p.length != 9) throw new IllegalArgumentException("invalid schema v3 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]),
+                    decodeNations(p[7]), decodeStrategicPoints(p[8]), List.of());
+        }
+        if (schema == 4) {
+            if (p.length != 10) throw new IllegalArgumentException("invalid schema v4 field count");
+            return new GameSnapshot(schema,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]));
+        }
+        throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
+    }
+
+    private static String encodeNations(List<NationSnapshot> nations) {
+        if (nations == null || nations.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (NationSnapshot n : nations) {
+            rows.add(String.join(",", enc(n.nationId()), enc(n.displayName()), enc(n.capitalPointId()),
+                    Long.toString(n.treasury()), n.status().name()));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<NationSnapshot> decodeNations(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<NationSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 5) throw new IllegalArgumentException("invalid nation snapshot row");
+            result.add(new NationSnapshot(dec(f[0]), dec(f[1]), dec(f[2]), Long.parseLong(f[3]), NationStatus.valueOf(f[4])));
+        }
+        return List.copyOf(result);
+    }
+
+    private static String encodeStrategicPoints(List<StrategicPointSnapshot> points) {
+        if (points == null || points.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (StrategicPointSnapshot p : points) {
+            rows.add(String.join(",", enc(p.pointId()), enc(p.displayName()), p.type().name(), enc(p.ownerNationId()),
+                    enc(p.worldName()), Integer.toString(p.x()), Integer.toString(p.y()), Integer.toString(p.z()),
+                    Integer.toString(p.facilitySlots()), enc(encodeProduction(p.baseProductionPerHour()))));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<StrategicPointSnapshot> decodeStrategicPoints(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<StrategicPointSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 10) throw new IllegalArgumentException("invalid strategic point snapshot row");
+            result.add(new StrategicPointSnapshot(dec(f[0]), dec(f[1]), StrategicPointType.valueOf(f[2]), dec(f[3]), dec(f[4]),
+                    Integer.parseInt(f[5]), Integer.parseInt(f[6]), Integer.parseInt(f[7]), Integer.parseInt(f[8]), decodeProduction(dec(f[9]))));
+        }
+        return List.copyOf(result);
+    }
+
+    private static String encodeStrategicEdges(List<StrategicEdgeSnapshot> edges) {
+        if (edges == null || edges.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (StrategicEdgeSnapshot e : edges) {
+            rows.add(String.join(",", enc(e.edgeId()), enc(e.pointAId()), enc(e.pointBId()),
+                    Long.toString(e.baseTravelMillis()), enc(encodeTags(e.battlefieldTags()))));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<StrategicEdgeSnapshot> decodeStrategicEdges(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<StrategicEdgeSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 5) throw new IllegalArgumentException("invalid strategic edge snapshot row");
+            result.add(new StrategicEdgeSnapshot(dec(f[0]), dec(f[1]), dec(f[2]), Long.parseLong(f[3]), decodeTags(dec(f[4]))));
+        }
+        return List.copyOf(result);
+    }
+
+    private static String encodeTags(Set<BattlefieldTag> tags) {
+        if (tags == null || tags.isEmpty()) return "";
+        return tags.stream().map(Enum::name).sorted().reduce((a, b) -> a + "+" + b).orElse("");
+    }
+
+    private static Set<BattlefieldTag> decodeTags(String payload) {
+        if (payload == null || payload.isEmpty()) return Set.of();
+        Set<BattlefieldTag> result = new LinkedHashSet<>();
+        for (String name : payload.split("\\+", -1)) result.add(BattlefieldTag.valueOf(name));
+        return Set.copyOf(result);
+    }
+
+    private static String encodeProduction(Map<String, Long> production) {
+        if (production == null || production.isEmpty()) return "";
+        List<String> rows = new ArrayList<>();
+        production.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> rows.add(e.getKey() + ":" + e.getValue()));
+        return String.join("+", rows);
+    }
+
+    private static Map<String, Long> decodeProduction(String payload) {
+        if (payload == null || payload.isEmpty()) return Map.of();
+        Map<String, Long> result = new LinkedHashMap<>();
+        for (String row : payload.split("\\+", -1)) {
+            int colon = row.lastIndexOf(':');
+            if (colon <= 0 || colon == row.length() - 1) throw new IllegalArgumentException("invalid production row");
+            result.put(row.substring(0, colon), Long.parseLong(row.substring(colon + 1)));
+        }
+        return Map.copyOf(result);
+    }
+
+    private static String enc(String s) {
+        if (s == null) return "-";
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(s.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String dec(String s) {
+        if (s.equals("-")) return null;
+        return new String(Base64.getUrlDecoder().decode(s), StandardCharsets.UTF_8);
+    }
+}

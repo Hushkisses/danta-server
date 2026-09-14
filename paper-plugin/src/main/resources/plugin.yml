@@ -1,0 +1,59 @@
+name: DantaServer
+version: '0.1.0-SNAPSHOT'
+main: kr.danta.paper.DantaPlugin
+api-version: '26.2'
+author: Danta
+load: POSTWORLD
+description: Danta asynchronous nation strategy server plugin
+
+commands:
+  danta:
+    description: Shows Danta Server development information.
+    usage: /danta
+    permission: danta.command.danta
+
+  nationgui:
+    description: Opens the Danta nation information GUI.
+    aliases: [국가]
+    usage: /국가 [nation-id]
+    permission: danta.command.nation
+
+  mapgui:
+    description: Opens the Danta strategic map GUI.
+    aliases: [지도]
+    usage: /지도
+    permission: danta.command.map
+
+permissions:
+  danta.command.danta:
+    description: Allows use of /danta.
+    default: true
+
+  danta.admin.runtime:
+    description: Allows DEV runtime clock administration.
+    default: op
+
+  danta.admin.db:
+    description: Allows DEV PostgreSQL administration and repository tests.
+    default: op
+
+
+  danta.admin.nation:
+    description: Allows DEV nation domain administration.
+    default: op
+
+  danta.admin.point:
+    description: Allows DEV strategic point domain administration.
+    default: op
+
+  danta.admin.edge:
+    description: Allows DEV strategic edge domain administration.
+    default: op
+
+  danta.command.nation:
+    description: Allows use of the nation information GUI.
+    default: true
+
+  danta.command.map:
+    description: Allows use of the strategic map GUI.
+    default: true
