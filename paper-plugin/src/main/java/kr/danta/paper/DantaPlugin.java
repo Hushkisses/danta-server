@@ -19,6 +19,10 @@ import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicPointType;
 import kr.danta.core.territory.TerritoryService;
 import kr.danta.core.territory.event.StrategicPointOwnershipChangedEvent;
+import kr.danta.paper.map.DevMapDefinition;
+import kr.danta.paper.map.DevMapLoader;
+import kr.danta.paper.map.DevMapService;
+import kr.danta.paper.map.MapStructurePlacer;
 import kr.danta.paper.persistence.DatabaseConfig;
 import kr.danta.paper.persistence.DatabaseConfigLoader;
 import kr.danta.paper.persistence.DatabaseHealth;
@@ -56,6 +60,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private TerritoryService territoryService;
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
+    private DevMapDefinition devMapDefinition;
+    private DevMapService devMapService;
+    private MapStructurePlacer mapStructurePlacer;
     private BukkitTask runtimeSchedulerPump;
 
     private PostgresDatabaseService databaseService;
@@ -71,6 +78,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
         getServer().getPluginManager().registerEvents(mapGuiController, this);
+        initializeDevMap();
         eventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> {
             getLogger().info("[Territory] " + event.pointId() + ": "
                     + event.previousOwner().orElse("none") + " -> " + event.newOwner().orElse("none")
@@ -197,6 +205,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("point")) return handleStrategicPoint(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("edge")) return handleStrategicEdge(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[Danta Server DEV]");
         sender.sendMessage("§fPlugin: §e" + getPluginMeta().getVersion());
@@ -212,6 +221,88 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             sender.sendMessage("§7DEV-016 DB: §e" + databaseService.health().status());
         }
         return true;
+    }
+
+
+    private void initializeDevMap() {
+        try {
+            devMapDefinition = new DevMapLoader(this).loadDefault();
+            devMapService = new DevMapService(gameState);
+            mapStructurePlacer = new MapStructurePlacer(this);
+            getLogger().info("DEV-MAP-002 map definition ready: " + devMapDefinition.mapId()
+                    + " points=" + devMapDefinition.points().size()
+                    + ", edges=" + devMapDefinition.edges().size());
+        } catch (RuntimeException ex) {
+            devMapDefinition = null;
+            devMapService = null;
+            mapStructurePlacer = null;
+            getLogger().severe("DEV-MAP-002 map definition failed: " + ex.getMessage());
+        }
+    }
+
+    private boolean handleDevMap(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.map")) {
+            sender.sendMessage("§cNo permission: danta.admin.map");
+            return true;
+        }
+        if (devMapDefinition == null || devMapService == null || mapStructurePlacer == null) {
+            sender.sendMessage("§cDEV map is unavailable. Check the server console.");
+            return true;
+        }
+
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "status";
+        try {
+            switch (sub) {
+                case "status" -> {
+                    sender.sendMessage("§6[Danta DEV Map] §e" + devMapDefinition.mapId());
+                    sender.sendMessage("§fWorld: §e" + devMapDefinition.worldName());
+                    sender.sendMessage("§fDefinition: §e" + devMapDefinition.points().size()
+                            + " points / " + devMapDefinition.edges().size() + " edges");
+                    sender.sendMessage("§fCurrent GameState: §e" + gameState.strategicPoints().size()
+                            + " points / " + gameState.strategicEdges().size() + " edges");
+                    sender.sendMessage("§7Config: plugins/DantaServer/maps/dev-test-map.yml");
+                }
+                case "load", "import" -> {
+                    DevMapService.ImportResult result = devMapService.importDefinition(devMapDefinition);
+                    flushDevMapState("devmap-import");
+                    sendDevMapImportResult(sender, result);
+                }
+                case "place" -> {
+                    MapStructurePlacer.PlacementResult result = mapStructurePlacer.placeAll(devMapDefinition);
+                    sender.sendMessage("§aDEV map markers placed: §e" + result.placed()
+                            + " §7failed=" + result.failed());
+                    for (String failure : result.failures()) sender.sendMessage("§c- " + failure);
+                }
+                case "apply" -> {
+                    DevMapService.ImportResult importResult = devMapService.importDefinition(devMapDefinition);
+                    flushDevMapState("devmap-apply");
+                    sendDevMapImportResult(sender, importResult);
+                    MapStructurePlacer.PlacementResult placement = mapStructurePlacer.placeAll(devMapDefinition);
+                    sender.sendMessage("§aDEV map markers placed: §e" + placement.placed()
+                            + " §7failed=" + placement.failed());
+                    for (String failure : placement.failures()) sender.sendMessage("§c- " + failure);
+                }
+                default -> sender.sendMessage("§e/danta devmap <status|load|place|apply>");
+            }
+        } catch (RuntimeException ex) {
+            sender.sendMessage("§cDEV map command failed: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private void sendDevMapImportResult(CommandSender sender, DevMapService.ImportResult result) {
+        sender.sendMessage("§aDEV map logical data imported.");
+        sender.sendMessage("§fNations: §e+" + result.createdNations() + " §7existing=" + result.existingNations());
+        sender.sendMessage("§fPoints: §e+" + result.createdPoints() + " §7existing=" + result.existingPoints());
+        sender.sendMessage("§fEdges: §e+" + result.createdEdges() + " §7existing=" + result.existingEdges());
+    }
+
+    private void flushDevMapState(String reason) {
+        if (snapshotService == null || databaseService == null) return;
+        if (!databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
+            if (error != null) getLogger().warning("DEV-MAP-002 snapshot flush failed: " + rootMessage(error));
+        });
     }
 
 
