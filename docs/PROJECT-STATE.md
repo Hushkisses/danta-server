@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-14
-Checkpoint: DEV-MAP-001 logical test map defined
+Checkpoint: DEV-MAP-002 structure/template pipeline implemented
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -37,6 +37,7 @@ Checkpoint: DEV-MAP-001 logical test map defined
 - DEV-024.1 Korean UI display layer: COMPLETE
 - DEV-025 /지도 minimal GUI: COMPLETE, real client verified
 - DEV-MAP-001 10-point logical test map: COMPLETE
+- DEV-MAP-002 structure/template placement pipeline: IMPLEMENTED, live test pending
 
 ## Important implementation decisions
 - Internal IDs/enums remain English; player-facing GUI text is Korean through UiText.
@@ -53,12 +54,12 @@ Checkpoint: DEV-MAP-001 logical test map defined
 Known examples include nation red, nation blue, strategic point farm_a, strategic point capital_red, and edge road_1. Exact local values live in the representative's PostgreSQL snapshot and are not source-controlled.
 
 ## Open items
-1. DEV-MAP-002: minimal structure/template auto-placement pipeline.
+1. DEV-MAP-002 requires representative-side live server verification.
 2. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
 3. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-MAP-002
+1. Verify DEV-MAP-002 live on the representative's dev server.
 2. DEV-030 Army domain
 3. DEV-031 ArmyOrder/Route
 4. DEV-032 movement-time calculation
