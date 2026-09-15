@@ -1584,6 +1584,18 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                                 + ", ID=" + pending.constructionId());
                     }
                 }
+                case "visual-sync" -> {
+                    requireArgs(args, 4, "/danta facility visual-sync <거점-id> <시설-id>");
+                    var result = facilityAppearanceService.sync(args[2], args[3]);
+                    switch (result) {
+                        case SYNCED -> sender.sendMessage("§a시설 외형을 동기화했습니다.");
+                        case CHUNK_UNLOADED -> sender.sendMessage("§e대상 청크가 로드되지 않아 외형 동기화를 대기열에 등록했습니다.");
+                        case TEMPLATE_MISSING -> sender.sendMessage("§e해당 등급의 NBT 구조물 파일이 없어 외형 동기화를 대기합니다: §7"
+                                + facilityAppearanceService.templateKey(facilityService.facility(args[2], args[3]).orElseThrow()));
+                        case WORLD_UNAVAILABLE -> sender.sendMessage("§e대상 월드가 로드되지 않아 외형 동기화를 대기열에 등록했습니다.");
+                    }
+                }
+                case "visual-status" -> sender.sendMessage("§6[시설 외형 동기화] §7대기=" + facilityAppearanceService.pendingCount() + "개");
                 case "show" -> {
                     requireArgs(args, 3, "/danta facility show <거점-id>");
                     requireStrategicPoint(args[2]);
@@ -1596,7 +1608,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                                 + ", 남은 서버시간≈" + (remaining / 1000L) + "초");
                     }
                 }
-                default -> sender.sendMessage("§e/danta facility <build|upgrade|list|show>");
+                default -> sender.sendMessage("§e/danta facility <build|upgrade|list|show|visual-sync|visual-status>");
             }
         } catch (RuntimeException ex) {
             sendCommandError(sender, "시설", ex);
