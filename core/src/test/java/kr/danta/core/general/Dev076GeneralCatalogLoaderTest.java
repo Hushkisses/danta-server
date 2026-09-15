@@ -16,7 +16,7 @@ class Dev076GeneralCatalogLoaderTest {
                 generals:
                   - id: general_alpha
                     displayName: 테스트 장수
-                    grade: B
+                    grade: A
                     level: 3
                     stats:
                       command: 10
@@ -30,7 +30,7 @@ class Dev076GeneralCatalogLoaderTest {
         assertEquals(1, defs.size());
         GeneralDefinition d = defs.getFirst();
         assertEquals("테스트 장수", d.displayName());
-        assertEquals(GeneralGrade.B, d.grade());
+        assertEquals(GeneralGrade.A, d.grade());
         assertEquals(new GeneralStats(10,20,30,40), d.stats());
         assertEquals(List.of("archer_specialist","steady"), d.traitIds());
         assertEquals(List.of("rally"), d.abilityIds());
@@ -50,12 +50,28 @@ class Dev076GeneralCatalogLoaderTest {
         assertThrows(IllegalArgumentException.class, () -> loader.load(stream(unknown)));
     }
 
+    @Test void lowerGradesCannotHaveSpecialTraitsOrAbilities() {
+        for (GeneralGrade grade : List.of(GeneralGrade.F, GeneralGrade.D, GeneralGrade.C, GeneralGrade.B)) {
+            assertThrows(IllegalArgumentException.class, () -> new GeneralDefinition(
+                    "x","X",grade,1,GeneralStats.zero(), List.of("special"), List.of()));
+            assertThrows(IllegalArgumentException.class, () -> new GeneralDefinition(
+                    "x","X",grade,1,GeneralStats.zero(), List.of(), List.of("special")));
+        }
+    }
+
+    @Test void aAndSGradesMayHaveSpecialTraitsOrAbilities() {
+        for (GeneralGrade grade : List.of(GeneralGrade.A, GeneralGrade.S)) {
+            assertDoesNotThrow(() -> new GeneralDefinition(
+                    "x","X",grade,1,GeneralStats.zero(), List.of("special"), List.of("unique")));
+        }
+    }
+
     @Test void enforcesDesignTraitAbilityCardinality() {
         assertThrows(IllegalArgumentException.class, () -> new GeneralDefinition(
-                "x","X",GeneralGrade.F,1,GeneralStats.zero(),
+                "x","X",GeneralGrade.A,1,GeneralStats.zero(),
                 List.of("a","b","c"), List.of()));
         assertThrows(IllegalArgumentException.class, () -> new GeneralDefinition(
-                "x","X",GeneralGrade.F,1,GeneralStats.zero(),
+                "x","X",GeneralGrade.S,1,GeneralStats.zero(),
                 List.of(), List.of("a","b")));
     }
 
