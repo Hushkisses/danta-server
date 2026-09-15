@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076 COMPLETE; DEV-080 Facility I~III / slots IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-080 COMPLETE; next: DEV-081 construction Runtime Scheduler
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -71,9 +71,10 @@ Checkpoint: DEV-076 COMPLETE; DEV-080 Facility I~III / slots IMPLEMENTED; Window
 - DEV-071 General stats baseline: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution plan names the four axes 통솔/무력/지략/병참 while current implementation followed design v0.3 wording 통솔/무력/지력/정치. Reconciliation remains open.
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 - DEV-076 initial elite general data/acquisition-persistence foundation: COMPLETE, A×7/S×3 catalog + Paper restart recovery + duplicate-acquisition Korean rejection verified.
+- DEV-080 Facility I~III / slots: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified.
 
 ## Implemented tickets awaiting live verification
-- DEV-080 Facility I~III / slots: IMPLEMENTED — logical tier/slot rules + automated tests added; Windows quick-deploy/Paper boot verification pending.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -113,10 +114,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Verify DEV-080 with Windows quick-deploy and Paper boot.
-2. COMPLETE DEV-080 after verification.
-3. Proceed to DEV-081 construction Runtime Scheduler and add authoritative facility/construction persistence there.
-4. DEV-082 world appearance sync follows DEV-081.
+1. Proceed to DEV-081 construction Runtime Scheduler and add authoritative facility/construction persistence there.
+2. DEV-082 world appearance sync follows DEV-081.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
