@@ -1,6 +1,7 @@
 package kr.danta.core.army;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** DEV-030 army aggregate. Troop composition is intentionally deferred to DEV-040. */
 public final class ArmyState {
@@ -11,6 +12,7 @@ public final class ArmyState {
     private long baseTroops;
     private ExpeditionSupplyLevel expeditionSupplyLevel;
     private long carriedFood;
+    private String commanderGeneralId;
 
     public ArmyState(String armyId, String ownerNationId, String locationPointId,
                      ArmyStatus status, long baseTroops) {
@@ -36,6 +38,15 @@ public final class ArmyState {
     public synchronized long baseTroops() { return baseTroops; }
     public synchronized ExpeditionSupplyLevel expeditionSupplyLevel() { return expeditionSupplyLevel; }
     public synchronized long carriedFood() { return carriedFood; }
+    public synchronized Optional<String> commanderGeneralId() { return Optional.ofNullable(commanderGeneralId); }
+
+    public synchronized void setCommanderGeneralId(String generalId) {
+        this.commanderGeneralId = requireId(generalId, "generalId");
+    }
+
+    public synchronized void clearCommanderGeneralId() {
+        this.commanderGeneralId = null;
+    }
 
     public synchronized void setExpeditionSupply(ExpeditionSupplyLevel level, long carriedFood) {
         this.expeditionSupplyLevel = Objects.requireNonNull(level, "level");
