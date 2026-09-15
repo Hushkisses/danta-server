@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: execution-plan DEV-042 loss/retreat minimum model implemented; awaiting Windows verification
+Checkpoint: DEV-043 NPC basic garrison implemented; awaiting Windows build/test verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -48,13 +48,14 @@ Checkpoint: execution-plan DEV-042 loss/retreat minimum model implemented; await
 - DEV-036 minimal army GUI: COMPLETE, Windows client GUI verified
 - DEV-040 basic troop types: COMPLETE, Windows build/test and Paper boot verified
 - DEV-041 CombatResolver v0: COMPLETE, Windows build/test and Paper boot verified
+- Execution-plan DEV-042 loss/retreat minimum model: COMPLETE, Windows simulator values verified
 
 ## Implemented tickets awaiting live verification
-- Execution-plan DEV-042 loss/retreat minimum model: IMPLEMENTED
-  - Temporary representative-approved prototype rates: winner 10%, loser 25%; loser emits retreatRequired=true; draw uses temporary symmetric 10% and no forced retreat.
-  - Rates are centralized placeholders, not final v0.3 balance truth.
-  - Pure core result does not yet mutate ArmyState or execute retreat paths.
-  - Awaiting Windows build/test, simulator output, and normal Paper boot verification.
+- DEV-043 NPC basic garrison: IMPLEMENTED
+  - GameState now holds one garrison per strategic point; NPC control uses no fake nation ID.
+  - Creation validates point existence and duplicate garrisons.
+  - Snapshot persistence is intentionally deferred to DEV-044 when the combat-to-occupation lifecycle is established.
+  - Awaiting representative's Windows build/test and normal Paper boot verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -81,8 +82,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. Execution-plan DEV-042 Windows verification
-2. Execution-plan DEV-043 NPC basic garrison
+1. DEV-043 Windows build/test verification
+2. DEV-044 combat-to-occupation
 
 ## Manual verification baseline
 A checkpoint is healthy if:
