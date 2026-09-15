@@ -19,9 +19,10 @@ public record GameSnapshot(
         List<ArmyOperationQueueSnapshot> armyOperationQueues,
         List<PersonalWalletSnapshot> personalWallets,
         List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
-        List<LocalResourceStockpileSnapshot> localResourceStockpiles
+        List<LocalResourceStockpileSnapshot> localResourceStockpiles,
+        List<GeneralSnapshot> generals
 ) {
-    public static final int CURRENT_SCHEMA = 11;
+    public static final int CURRENT_SCHEMA = 12;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -41,6 +42,7 @@ public record GameSnapshot(
         personalWallets = personalWallets == null ? List.of() : List.copyOf(personalWallets);
         strategicResourceStockpiles = strategicResourceStockpiles == null ? List.of() : List.copyOf(strategicResourceStockpiles);
         localResourceStockpiles = localResourceStockpiles == null ? List.of() : List.copyOf(localResourceStockpiles);
+        generals = generals == null ? List.of() : List.copyOf(generals);
     }
 
     /** Backward source-compatible DEV-030 constructor: armies existed before orders/queues. */
@@ -51,7 +53,7 @@ public record GameSnapshot(
                         List<ArmySnapshot> armies) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies,
-                List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
     /** Backward source-compatible constructor used by pre-DEV-050 callers/tests. */
@@ -63,7 +65,7 @@ public record GameSnapshot(
                         List<ArmyOperationQueueSnapshot> armyOperationQueues) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, List.of(), List.of(), List.of());
+                armyOperationQueues, List.of(), List.of(), List.of(), List.of());
     }
     /** Backward source-compatible DEV-050 constructor with wallets but no strategic resources. */
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
@@ -74,7 +76,7 @@ public record GameSnapshot(
                         List<ArmyOperationQueueSnapshot> armyOperationQueues, List<PersonalWalletSnapshot> personalWallets) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, personalWallets, List.of(), List.of());
+                armyOperationQueues, personalWallets, List.of(), List.of(), List.of());
     }
 
     /** Backward source-compatible DEV-051 constructor without local stockpiles. */
@@ -87,7 +89,7 @@ public record GameSnapshot(
                         List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, personalWallets, strategicResourceStockpiles, List.of());
+                armyOperationQueues, personalWallets, strategicResourceStockpiles, List.of(), List.of());
     }
 
 }
