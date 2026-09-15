@@ -8,6 +8,9 @@ dependencies {
     implementation(project(":core"))
     compileOnly("io.papermc.paper:paper-api:26.2.build.123-stable")
 
+    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+
     // DEV-016: bundled because Paper does not provide the PostgreSQL JDBC driver.
     bundled("org.postgresql:postgresql:42.7.13")
 }

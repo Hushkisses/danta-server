@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-031 ArmyOrder/Route implemented; awaiting Windows build and live verification
+Checkpoint: DEV-031.1 player-facing Korean output implemented; awaiting Windows build and live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -39,15 +39,17 @@ Checkpoint: DEV-031 ArmyOrder/Route implemented; awaiting Windows build and live
 - DEV-MAP-001 10-point logical test map: COMPLETE
 - DEV-MAP-002 structure/template placement pipeline: COMPLETE, live server verified
 - DEV-030 Army domain: COMPLETE, Windows build and restart recovery verified
+- DEV-031 ArmyOrder/Route: COMPLETE, Windows build and Paper command checks verified
 
 ## Implemented tickets awaiting live verification
-- DEV-031 ArmyOrder/Route: IMPLEMENTED
-  - One-leg adjacent movement orders are validated and stored in memory.
-  - `/danta army move` and `/danta army order` DEV commands added.
+- DEV-031.1 player-facing Korean output: IMPLEMENTED
+  - Legacy command feedback, warnings, status labels, and rejection reasons are Korean by default.
+  - Raw diagnostic errors are logged to the server console instead of being shown to players.
   - Awaiting representative's Windows Gradle build and Paper command test.
 
 ## Important implementation decisions
-- Internal IDs/enums remain English; player-facing GUI text is Korean through UiText.
+- All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
+- Internal IDs/enums/log diagnostics remain English; new features must add `UiText` mappings before exposing domain values to players.
 - Strategic-point ownership changes go through TerritoryService and emit domain events.
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
@@ -67,7 +69,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-031 Windows build and Paper command verification
+1. DEV-031.1 Windows build and Paper command verification
 2. DEV-032 movement-time calculation
 3. DEV-033 runtime movement scheduling/restart recovery
 4. DEV-034 sequential operation queue

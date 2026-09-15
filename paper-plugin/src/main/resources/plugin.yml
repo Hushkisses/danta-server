@@ -4,64 +4,64 @@ main: kr.danta.paper.DantaPlugin
 api-version: '26.2'
 author: Danta
 load: POSTWORLD
-description: Danta asynchronous nation strategy server plugin
+description: 단타 비동기 국가 전략 서버 플러그인
 
 commands:
   danta:
-    description: Shows Danta Server development information.
+    description: 단타 서버 개발 정보를 표시합니다.
     usage: /danta
     permission: danta.command.danta
 
   nationgui:
-    description: Opens the Danta nation information GUI.
+    description: 단타 국가 정보 화면을 엽니다.
     aliases: [국가]
-    usage: /국가 [nation-id]
+    usage: /국가 [국가-id]
     permission: danta.command.nation
 
   mapgui:
-    description: Opens the Danta strategic map GUI.
+    description: 단타 전략 지도 화면을 엽니다.
     aliases: [지도]
     usage: /지도
     permission: danta.command.map
 
 permissions:
   danta.command.danta:
-    description: Allows use of /danta.
+    description: /danta 명령 사용을 허용합니다.
     default: true
 
   danta.admin.runtime:
-    description: Allows DEV runtime clock administration.
+    description: 개발용 서버 시간 관리를 허용합니다.
     default: op
 
   danta.admin.db:
-    description: Allows DEV PostgreSQL administration and repository tests.
+    description: 개발용 PostgreSQL 관리와 저장소 테스트를 허용합니다.
     default: op
 
 
   danta.admin.nation:
-    description: Allows DEV nation domain administration.
+    description: 개발용 국가 관리를 허용합니다.
     default: op
 
   danta.admin.point:
-    description: Allows DEV strategic point domain administration.
+    description: 개발용 전략 거점 관리를 허용합니다.
     default: op
 
   danta.admin.edge:
-    description: Allows DEV strategic edge domain administration.
+    description: 개발용 전략 간선 관리를 허용합니다.
     default: op
 
   danta.admin.army:
-    description: Allows DEV army domain administration.
+    description: 개발용 군단 관리를 허용합니다.
     default: op
 
   danta.command.nation:
-    description: Allows use of the nation information GUI.
+    description: 국가 정보 화면 사용을 허용합니다.
     default: true
 
   danta.command.map:
-    description: Allows use of the strategic map GUI.
+    description: 전략 지도 화면 사용을 허용합니다.
     default: true
 
   danta.admin.map:
-    description: Allows DEV test-map import and structure placement.
+    description: 개발용 시험 지도 불러오기와 구조물 배치를 허용합니다.
     default: op

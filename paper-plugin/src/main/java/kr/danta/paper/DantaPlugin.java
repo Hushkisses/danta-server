@@ -36,6 +36,7 @@ import kr.danta.paper.persistence.SnapshotService;
 import kr.danta.paper.runtime.PropertiesRuntimeClockRepository;
 import kr.danta.paper.ui.NationGuiController;
 import kr.danta.paper.ui.MapGuiController;
+import kr.danta.paper.ui.UiText;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -214,18 +215,18 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("army")) return handleArmy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
-        sender.sendMessage("§6[Danta Server DEV]");
-        sender.sendMessage("§fPlugin: §e" + getPluginMeta().getVersion());
-        sender.sendMessage("§fCore: §e" + DantaCore.VERSION);
-        sender.sendMessage("§fMinecraft/Paper target: §e26.2 / build 123");
-        sender.sendMessage("§fJava target: §e25");
-        sender.sendMessage("§fRuntime: §e" + formatRuntime(runtimeClock.elapsedMillis())
-                + (runtimeClock.isPaused() ? " §c[PAUSED]" : "") + " §7x" + runtimeClock.speedMultiplier());
-        sender.sendMessage("§7DEV-015 scheduler queued=" + runtimeScheduler.size());
+        sender.sendMessage("§6[단타 서버 개발 정보]");
+        sender.sendMessage("§f플러그인 버전: §e" + getPluginMeta().getVersion());
+        sender.sendMessage("§f코어 버전: §e" + DantaCore.VERSION);
+        sender.sendMessage("§fMinecraft/Paper 대상: §e26.2 / 빌드 123");
+        sender.sendMessage("§fJava 대상: §e25");
+        sender.sendMessage("§f서버 가동 시간: §e" + formatRuntime(runtimeClock.elapsedMillis())
+                + (runtimeClock.isPaused() ? " §c[일시정지]" : "") + " §7x" + runtimeClock.speedMultiplier());
+        sender.sendMessage("§7예약 작업 수: " + runtimeScheduler.size());
         if (databaseService == null) {
-            sender.sendMessage("§7DEV-016 DB: §cCONFIG ERROR");
+            sender.sendMessage("§7데이터베이스: §c설정 오류");
         } else {
-            sender.sendMessage("§7DEV-016 DB: §e" + databaseService.health().status());
+            sender.sendMessage("§7데이터베이스: §e" + UiText.databaseStatus(databaseService.health().status()));
         }
         return true;
     }
@@ -249,11 +250,11 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleDevMap(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.map")) {
-            sender.sendMessage("§cNo permission: danta.admin.map");
+            sender.sendMessage("§c개발 지도 관리 권한이 없습니다.");
             return true;
         }
         if (devMapDefinition == null || devMapService == null || mapStructurePlacer == null) {
-            sender.sendMessage("§cDEV map is unavailable. Check the server console.");
+            sender.sendMessage("§c개발 지도를 사용할 수 없습니다. 서버 콘솔을 확인해 주세요.");
             return true;
         }
 
@@ -261,13 +262,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         try {
             switch (sub) {
                 case "status" -> {
-                    sender.sendMessage("§6[Danta DEV Map] §e" + devMapDefinition.mapId());
-                    sender.sendMessage("§fWorld: §e" + devMapDefinition.worldName());
-                    sender.sendMessage("§fDefinition: §e" + devMapDefinition.points().size()
-                            + " points / " + devMapDefinition.edges().size() + " edges");
-                    sender.sendMessage("§fCurrent GameState: §e" + gameState.strategicPoints().size()
-                            + " points / " + gameState.strategicEdges().size() + " edges");
-                    sender.sendMessage("§7Config: plugins/DantaServer/maps/dev-test-map.yml");
+                    sender.sendMessage("§6[단타 개발 지도] §e" + devMapDefinition.mapId());
+                    sender.sendMessage("§f월드: §e" + devMapDefinition.worldName());
+                    sender.sendMessage("§f설정 데이터: §e거점 " + devMapDefinition.points().size()
+                            + "개 / 간선 " + devMapDefinition.edges().size() + "개");
+                    sender.sendMessage("§f현재 게임 상태: §e거점 " + gameState.strategicPoints().size()
+                            + "개 / 간선 " + gameState.strategicEdges().size() + "개");
+                    sender.sendMessage("§7설정 파일: plugins/DantaServer/maps/dev-test-map.yml");
                 }
                 case "load", "import" -> {
                     DevMapService.ImportResult result = devMapService.importDefinition(devMapDefinition);
@@ -276,32 +277,32 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "place" -> {
                     MapStructurePlacer.PlacementResult result = mapStructurePlacer.placeAll(devMapDefinition);
-                    sender.sendMessage("§aDEV map markers placed: §e" + result.placed()
-                            + " §7failed=" + result.failed());
-                    for (String failure : result.failures()) sender.sendMessage("§c- " + failure);
+                    sender.sendMessage("§a개발 지도 표식 배치 완료: §e" + result.placed()
+                            + "개 §7실패=" + result.failed() + "개");
+                    for (String failure : result.failures()) sender.sendMessage("§c- 배치 실패(콘솔 확인)");
                 }
                 case "apply" -> {
                     DevMapService.ImportResult importResult = devMapService.importDefinition(devMapDefinition);
                     flushDevMapState("devmap-apply");
                     sendDevMapImportResult(sender, importResult);
                     MapStructurePlacer.PlacementResult placement = mapStructurePlacer.placeAll(devMapDefinition);
-                    sender.sendMessage("§aDEV map markers placed: §e" + placement.placed()
-                            + " §7failed=" + placement.failed());
-                    for (String failure : placement.failures()) sender.sendMessage("§c- " + failure);
+                    sender.sendMessage("§a개발 지도 표식 배치 완료: §e" + placement.placed()
+                            + "개 §7실패=" + placement.failed() + "개");
+                    for (String failure : placement.failures()) sender.sendMessage("§c- 배치 실패(콘솔 확인)");
                 }
                 default -> sender.sendMessage("§e/danta devmap <status|load|place|apply>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cDEV map command failed: " + ex.getMessage());
+            sendCommandError(sender, "개발 지도", ex);
         }
         return true;
     }
 
     private void sendDevMapImportResult(CommandSender sender, DevMapService.ImportResult result) {
-        sender.sendMessage("§aDEV map logical data imported.");
-        sender.sendMessage("§fNations: §e+" + result.createdNations() + " §7existing=" + result.existingNations());
-        sender.sendMessage("§fPoints: §e+" + result.createdPoints() + " §7existing=" + result.existingPoints());
-        sender.sendMessage("§fEdges: §e+" + result.createdEdges() + " §7existing=" + result.existingEdges());
+        sender.sendMessage("§a개발 지도 논리 데이터를 불러왔습니다.");
+        sender.sendMessage("§f국가: §e신규 " + result.createdNations() + "개 §7기존=" + result.existingNations() + "개");
+        sender.sendMessage("§f거점: §e신규 " + result.createdPoints() + "개 §7기존=" + result.existingPoints() + "개");
+        sender.sendMessage("§f간선: §e신규 " + result.createdEdges() + "개 §7기존=" + result.existingEdges() + "개");
     }
 
     private void flushDevMapState(String reason) {
@@ -325,14 +326,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleNationGuiCommand(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cThe nation GUI can only be opened by a player.");
+            sender.sendMessage("§c국가 화면은 플레이어만 열 수 있습니다.");
             return true;
         }
         String nationId = args.length >= 1 ? args[0] : null;
         try {
             nationGuiController.open(player, nationId);
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cNation GUI failed: " + ex.getMessage());
+            sendCommandError(sender, "국가 화면", ex);
         }
         return true;
     }
@@ -340,14 +341,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleStrategicEdge(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.edge")) {
-            sender.sendMessage("§cNo permission: danta.admin.edge");
+            sender.sendMessage("§c전략 간선 관리 권한이 없습니다.");
             return true;
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
         try {
             switch (sub) {
                 case "create" -> {
-                    requireArgs(args, 7, "/danta edge create <id> <point-a> <point-b> <travel-seconds> <tag[,tag...]|none>");
+                    requireArgs(args, 7, "/danta edge create <간선-id> <거점-a> <거점-b> <이동-초> <특성[,특성...]|none>");
                     String id = args[2];
                     String pointA = args[3];
                     String pointB = args[4];
@@ -361,49 +362,49 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                             Math.multiplyExact(travelSeconds, 1000L), parseBattlefieldTags(args[6]));
                     gameState.addStrategicEdge(edge);
                     flushStrategicEdgeState("edge-create:" + id);
-                    sender.sendMessage("§aStrategic edge created: §e" + id + " §f(" + pointA + " <-> " + pointB + ")");
+                    sender.sendMessage("§a전략 간선을 생성했습니다: §e" + id + " §f(" + pointA + " <-> " + pointB + ")");
                 }
                 case "list" -> {
-                    sender.sendMessage("§6[Danta Strategic Edges] §7count=" + gameState.strategicEdges().size());
+                    sender.sendMessage("§6[전략 간선 목록] §7총 " + gameState.strategicEdges().size() + "개");
                     for (StrategicEdge edge : gameState.strategicEdges()) {
                         sender.sendMessage("§e" + edge.edgeId() + " §f" + edge.pointAId() + " <-> " + edge.pointBId()
-                                + " §7travel=" + formatTravel(edge.baseTravelMillis()) + ", tags=" + edge.battlefieldTags());
+                                + " §7이동시간=" + formatTravel(edge.baseTravelMillis()) + ", 전장=" + formatBattlefieldTags(edge));
                     }
                 }
                 case "show" -> {
-                    requireArgs(args, 3, "/danta edge show <id>");
+                    requireArgs(args, 3, "/danta edge show <간선-id>");
                     sendStrategicEdge(sender, requireStrategicEdge(args[2]));
                 }
                 case "travel" -> {
-                    requireArgs(args, 4, "/danta edge travel <id> <seconds>");
+                    requireArgs(args, 4, "/danta edge travel <간선-id> <초>");
                     StrategicEdge edge = requireStrategicEdge(args[2]);
                     long seconds = Long.parseLong(args[3]);
                     if (seconds <= 0 || seconds > 86_400L) throw new IllegalArgumentException("seconds must be 1..86400");
                     edge.setBaseTravelMillis(Math.multiplyExact(seconds, 1000L));
                     flushStrategicEdgeState("edge-travel:" + edge.edgeId());
-                    sender.sendMessage("§aTravel time updated: §e" + formatTravel(edge.baseTravelMillis()));
+                    sender.sendMessage("§a이동시간을 변경했습니다: §e" + formatTravel(edge.baseTravelMillis()));
                 }
                 case "tags" -> {
-                    requireArgs(args, 4, "/danta edge tags <id> <tag[,tag...]|none>");
+                    requireArgs(args, 4, "/danta edge tags <간선-id> <특성[,특성...]|none>");
                     StrategicEdge edge = requireStrategicEdge(args[2]);
                     edge.setBattlefieldTags(parseBattlefieldTags(args[3]));
                     flushStrategicEdgeState("edge-tags:" + edge.edgeId());
-                    sender.sendMessage("§aBattlefield tags updated: §e" + edge.battlefieldTags());
+                    sender.sendMessage("§a전장 특성을 변경했습니다: §e" + formatBattlefieldTags(edge));
                 }
                 case "neighbors" -> {
-                    requireArgs(args, 3, "/danta edge neighbors <point-id>");
+                    requireArgs(args, 3, "/danta edge neighbors <거점-id>");
                     StrategicPoint point = requireStrategicPoint(args[2]);
                     var edges = gameState.edgesForPoint(point.pointId());
-                    sender.sendMessage("§6[Neighbors] §e" + point.pointId() + " §7count=" + edges.size());
+                    sender.sendMessage("§6[인접 거점] §e" + point.pointId() + " §7총 " + edges.size() + "개");
                     for (StrategicEdge edge : edges) {
-                        sender.sendMessage("§f- §e" + edge.otherPoint(point.pointId()) + " §7via=" + edge.edgeId()
-                                + ", travel=" + formatTravel(edge.baseTravelMillis()) + ", tags=" + edge.battlefieldTags());
+                        sender.sendMessage("§f- §e" + edge.otherPoint(point.pointId()) + " §7간선=" + edge.edgeId()
+                                + ", 이동시간=" + formatTravel(edge.baseTravelMillis()) + ", 전장=" + formatBattlefieldTags(edge));
                     }
                 }
                 default -> sender.sendMessage("§e/danta edge <create|list|show|travel|tags|neighbors>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cStrategic edge command failed: " + ex.getMessage());
+            sendCommandError(sender, "전략 간선", ex);
         }
         return true;
     }
@@ -414,10 +415,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private void sendStrategicEdge(CommandSender sender, StrategicEdge edge) {
-        sender.sendMessage("§6[Danta Strategic Edge] §e" + edge.edgeId());
-        sender.sendMessage("§fEndpoints: §e" + edge.pointAId() + " §f<-> §e" + edge.pointBId());
-        sender.sendMessage("§fBase travel: §e" + formatTravel(edge.baseTravelMillis()));
-        sender.sendMessage("§fBattlefield tags: §e" + edge.battlefieldTags());
+        sender.sendMessage("§6[전략 간선] §e" + edge.edgeId());
+        sender.sendMessage("§f연결 거점: §e" + edge.pointAId() + " §f<-> §e" + edge.pointBId());
+        sender.sendMessage("§f기본 이동시간: §e" + formatTravel(edge.baseTravelMillis()));
+        sender.sendMessage("§f전장 특성: §e" + formatBattlefieldTags(edge));
     }
 
     private java.util.Set<BattlefieldTag> parseBattlefieldTags(String raw) {
@@ -436,7 +437,16 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         long totalSeconds = Math.max(0L, millis / 1000L);
         long minutes = totalSeconds / 60L;
         long seconds = totalSeconds % 60L;
-        return minutes + "m " + seconds + "s";
+        return minutes + "분 " + seconds + "초";
+    }
+
+    private String formatBattlefieldTags(StrategicEdge edge) {
+        if (edge.battlefieldTags().isEmpty()) return "없음";
+        return edge.battlefieldTags().stream()
+                .map(UiText::battlefieldTag)
+                .sorted()
+                .reduce((left, right) -> left + ", " + right)
+                .orElse("없음");
     }
 
     private void flushStrategicEdgeState(String reason) {
@@ -450,14 +460,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleStrategicPoint(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.point")) {
-            sender.sendMessage("§cNo permission: danta.admin.point");
+            sender.sendMessage("§c전략 거점 관리 권한이 없습니다.");
             return true;
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
         try {
             switch (sub) {
                 case "create" -> {
-                    requireArgs(args, 10, "/danta point create <id> <type> <world> <x> <y> <z> <slots> <display name>");
+                    requireArgs(args, 10, "/danta point create <거점-id> <종류> <월드> <x> <y> <z> <슬롯> <표시-이름>");
                     String id = args[2];
                     StrategicPointType type = StrategicPointType.valueOf(args[3].toUpperCase(Locale.ROOT));
                     String world = args[4];
@@ -469,54 +479,54 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     StrategicPoint point = new StrategicPoint(id, name, type, new PointPosition(world, x, y, z), slots);
                     gameState.addStrategicPoint(point);
                     flushStrategicPointState("point-create:" + id);
-                    sender.sendMessage("§aStrategic point created: §e" + id + " §f(" + name + ")");
+                    sender.sendMessage("§a전략 거점을 생성했습니다: §e" + id + " §f(" + name + ")");
                 }
                 case "list" -> {
-                    sender.sendMessage("§6[Danta Strategic Points] §7count=" + gameState.strategicPoints().size());
+                    sender.sendMessage("§6[전략 거점 목록] §7총 " + gameState.strategicPoints().size() + "개");
                     for (StrategicPoint point : gameState.strategicPoints()) {
                         PointPosition pos = point.position();
                         sender.sendMessage("§e" + point.pointId() + " §f" + point.displayName()
-                                + " §7type=" + point.type() + ", owner=" + point.ownerNationId().orElse("-")
-                                + ", pos=" + pos.worldName() + ":" + pos.x() + "," + pos.y() + "," + pos.z());
+                                + " §7종류=" + UiText.strategicPointType(point.type()) + ", 소유국=" + point.ownerNationId().orElse("없음")
+                                + ", 위치=" + pos.worldName() + ":" + pos.x() + "," + pos.y() + "," + pos.z());
                     }
                 }
                 case "show" -> {
-                    requireArgs(args, 3, "/danta point show <id>");
+                    requireArgs(args, 3, "/danta point show <거점-id>");
                     sendStrategicPoint(sender, requireStrategicPoint(args[2]));
                 }
                 case "owner" -> {
-                    requireArgs(args, 4, "/danta point owner <id> <nation-id|none>");
+                    requireArgs(args, 4, "/danta point owner <거점-id> <국가-id|none>");
                     TerritoryService.OwnershipChangeResult result = territoryService.changeOwner(
                             args[2], args[3], "admin-command");
                     if (result.changed()) {
-                        sender.sendMessage("§aOwner updated: §e"
-                                + (result.previousOwnerNationId() == null ? "none" : result.previousOwnerNationId())
+                        sender.sendMessage("§a소유국을 변경했습니다: §e"
+                                + (result.previousOwnerNationId() == null ? "없음" : result.previousOwnerNationId())
                                 + " §f-> §e"
-                                + (result.newOwnerNationId() == null ? "none" : result.newOwnerNationId()));
+                                + (result.newOwnerNationId() == null ? "없음" : result.newOwnerNationId()));
                     } else {
-                        sender.sendMessage("§7Owner unchanged: §e"
-                                + (result.newOwnerNationId() == null ? "none" : result.newOwnerNationId()));
+                        sender.sendMessage("§7소유국이 이미 동일합니다: §e"
+                                + (result.newOwnerNationId() == null ? "없음" : result.newOwnerNationId()));
                     }
                 }
                 case "production" -> {
-                    requireArgs(args, 5, "/danta point production <id> <resource-key> <per-hour>");
+                    requireArgs(args, 5, "/danta point production <거점-id> <자원-key> <시간당-생산량>");
                     StrategicPoint point = requireStrategicPoint(args[2]);
                     point.setBaseProduction(args[3], Long.parseLong(args[4]));
                     flushStrategicPointState("point-production:" + point.pointId());
-                    sender.sendMessage("§aProduction updated: §e" + args[3].toLowerCase(Locale.ROOT)
-                            + "=" + point.baseProductionPerHour().getOrDefault(args[3].toLowerCase(Locale.ROOT), 0L) + "/h");
+                    sender.sendMessage("§a시간당 생산량을 변경했습니다: §e" + args[3].toLowerCase(Locale.ROOT)
+                            + "=" + point.baseProductionPerHour().getOrDefault(args[3].toLowerCase(Locale.ROOT), 0L) + "/시간");
                 }
                 case "slots" -> {
-                    requireArgs(args, 4, "/danta point slots <id> <0-16>");
+                    requireArgs(args, 4, "/danta point slots <거점-id> <0-16>");
                     StrategicPoint point = requireStrategicPoint(args[2]);
                     point.setFacilitySlots(Integer.parseInt(args[3]));
                     flushStrategicPointState("point-slots:" + point.pointId());
-                    sender.sendMessage("§aFacility slots updated: §e" + point.facilitySlots());
+                    sender.sendMessage("§a시설 슬롯 수를 변경했습니다: §e" + point.facilitySlots());
                 }
                 default -> sender.sendMessage("§e/danta point <create|list|show|owner|production|slots>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cStrategic point command failed: " + ex.getMessage());
+            sendCommandError(sender, "전략 거점", ex);
         }
         return true;
     }
@@ -528,13 +538,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private void sendStrategicPoint(CommandSender sender, StrategicPoint point) {
         PointPosition pos = point.position();
-        sender.sendMessage("§6[Danta Strategic Point] §e" + point.pointId());
-        sender.sendMessage("§fName: §e" + point.displayName());
-        sender.sendMessage("§fType: §e" + point.type());
-        sender.sendMessage("§fOwner: §e" + point.ownerNationId().orElse("none"));
-        sender.sendMessage("§fPosition: §e" + pos.worldName() + " " + pos.x() + " " + pos.y() + " " + pos.z());
-        sender.sendMessage("§fFacility slots: §e" + point.facilitySlots());
-        sender.sendMessage("§fBase production/h: §e" + point.baseProductionPerHour());
+        sender.sendMessage("§6[전략 거점] §e" + point.pointId());
+        sender.sendMessage("§f이름: §e" + point.displayName());
+        sender.sendMessage("§f종류: §e" + UiText.strategicPointType(point.type()));
+        sender.sendMessage("§f소유국: §e" + point.ownerNationId().orElse("없음"));
+        sender.sendMessage("§f위치: §e" + pos.worldName() + " " + pos.x() + " " + pos.y() + " " + pos.z());
+        sender.sendMessage("§f시설 슬롯: §e" + point.facilitySlots());
+        sender.sendMessage("§f기본 시간당 생산량: §e" + point.baseProductionPerHour());
     }
 
     private void flushStrategicPointState(String reason) {
@@ -547,68 +557,68 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleArmy(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.army")) {
-            sender.sendMessage("§cNo permission: danta.admin.army");
+            sender.sendMessage("§c군단 관리 권한이 없습니다.");
             return true;
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
         try {
             switch (sub) {
                 case "create" -> {
-                    requireArgs(args, 6, "/danta army create <id> <nation-id> <point-id> <base-troops>");
+                    requireArgs(args, 6, "/danta army create <군단-id> <국가-id> <거점-id> <기본-병력>");
                     ArmyState army = new ArmyState(args[2], args[3], args[4], ArmyStatus.STATIONED,
                             Long.parseLong(args[5]));
                     gameState.addArmy(army);
                     flushArmyState("army-create:" + army.armyId());
-                    sender.sendMessage("§aArmy created: §e" + army.armyId() + " §7owner="
-                            + army.ownerNationId() + ", location=" + army.locationPointId());
+                    sender.sendMessage("§a군단을 생성했습니다: §e" + army.armyId() + " §7소유국="
+                            + army.ownerNationId() + ", 위치=" + army.locationPointId());
                 }
                 case "list" -> {
-                    sender.sendMessage("§6[Danta Armies] §7count=" + gameState.armies().size());
+                    sender.sendMessage("§6[단타 군단 목록] §7총 " + gameState.armies().size() + "개");
                     for (ArmyState army : gameState.armies()) sendArmy(sender, army);
                 }
                 case "show" -> {
-                    requireArgs(args, 3, "/danta army show <id>");
+                    requireArgs(args, 3, "/danta army show <군단-id>");
                     sendArmy(sender, requireArmy(args[2]));
                 }
                 case "troops" -> {
-                    requireArgs(args, 4, "/danta army troops <id> <base-troops>");
+                    requireArgs(args, 4, "/danta army troops <군단-id> <기본-병력>");
                     ArmyState army = requireArmy(args[2]);
                     army.setBaseTroops(Long.parseLong(args[3]));
                     flushArmyState("army-troops:" + army.armyId());
-                    sender.sendMessage("§aArmy base troops updated: §e" + army.baseTroops());
+                    sender.sendMessage("§a군단의 기본 병력을 변경했습니다: §e" + army.baseTroops());
                 }
                 case "status" -> {
-                    requireArgs(args, 4, "/danta army status <id> <STATIONED|MOVING|IN_BATTLE>");
+                    requireArgs(args, 4, "/danta army status <군단-id> <STATIONED|MOVING|IN_BATTLE>");
                     ArmyState army = requireArmy(args[2]);
                     army.setStatus(ArmyStatus.valueOf(args[3].toUpperCase(Locale.ROOT)));
                     flushArmyState("army-status:" + army.armyId());
-                    sender.sendMessage("§aArmy status updated: §e" + army.status());
+                    sender.sendMessage("§a군단 상태를 변경했습니다: §e" + UiText.armyStatus(army.status()));
                 }
                 case "location" -> {
-                    requireArgs(args, 4, "/danta army location <id> <point-id>");
+                    requireArgs(args, 4, "/danta army location <군단-id> <거점-id>");
                     ArmyState army = requireArmy(args[2]);
                     requireStrategicPoint(args[3]);
                     army.setLocationPointId(args[3]);
                     flushArmyState("army-location:" + army.armyId());
-                    sender.sendMessage("§aArmy location updated: §e" + army.locationPointId());
+                    sender.sendMessage("§a군단 위치를 변경했습니다: §e" + army.locationPointId());
                 }
                 case "move" -> {
-                    requireArgs(args, 4, "/danta army move <id> <destination-point-id>");
+                    requireArgs(args, 4, "/danta army move <군단-id> <목적지-거점-id>");
                     ArmyOrder order = armyOrderService.issueMoveOrder(args[2], args[3]);
-                    sender.sendMessage("§aMove order accepted: §e" + order.orderId());
+                    sender.sendMessage("§a이동 명령을 접수했습니다: §e" + order.orderId());
                     sendArmyOrder(sender, order);
                 }
                 case "order" -> {
-                    requireArgs(args, 3, "/danta army order <id>");
+                    requireArgs(args, 3, "/danta army order <군단-id>");
                     ArmyState army = requireArmy(args[2]);
                     var order = gameState.armyOrder(army.armyId());
-                    if (order.isEmpty()) sender.sendMessage("§7No current order for army: §e" + army.armyId());
+                    if (order.isEmpty()) sender.sendMessage("§7현재 등록된 군단 명령이 없습니다: §e" + army.armyId());
                     else sendArmyOrder(sender, order.get());
                 }
                 default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cArmy command failed: " + ex.getMessage());
+            sendCommandError(sender, "군단", ex);
         }
         return true;
     }
@@ -619,16 +629,17 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private void sendArmy(CommandSender sender, ArmyState army) {
-        sender.sendMessage("§e" + army.armyId() + " §7owner=" + army.ownerNationId()
-                + ", location=" + army.locationPointId() + ", status=" + army.status()
-                + ", baseTroops=" + army.baseTroops());
+        sender.sendMessage("§e" + army.armyId() + " §7소유국=" + army.ownerNationId()
+                + ", 위치=" + army.locationPointId() + ", 상태=" + UiText.armyStatus(army.status())
+                + ", 기본 병력=" + army.baseTroops());
     }
 
     private void sendArmyOrder(CommandSender sender, ArmyOrder order) {
-        sender.sendMessage("§6[Army Order] §e" + order.orderId());
-        sender.sendMessage("§fArmy: §e" + order.armyId() + " §7type=" + order.type() + ", status=" + order.status());
-        sender.sendMessage("§fRoute: §e" + order.route().originPointId() + " §f-> §e"
-                + order.route().destinationPointId() + " §7via=" + order.route().edgeId());
+        sender.sendMessage("§6[군단 명령] §e" + order.orderId());
+        sender.sendMessage("§f군단: §e" + order.armyId() + " §7종류=" + UiText.armyOrderType(order.type())
+                + ", 상태=" + UiText.armyOrderStatus(order.status()));
+        sender.sendMessage("§f경로: §e" + order.route().originPointId() + " §f-> §e"
+                + order.route().destinationPointId() + " §7간선=" + order.route().edgeId());
     }
 
     private void flushArmyState(String reason) {
@@ -641,60 +652,60 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleNation(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.nation")) {
-            sender.sendMessage("§cNo permission: danta.admin.nation");
+            sender.sendMessage("§c국가 관리 권한이 없습니다.");
             return true;
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
         try {
             switch (sub) {
                 case "create" -> {
-                    requireArgs(args, 4, "/danta nation create <id> <display name>");
+                    requireArgs(args, 4, "/danta nation create <국가-id> <표시-이름>");
                     String id = args[2];
                     String name = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
                     NationState nation = new NationState(id, name);
                     gameState.addNation(nation);
                     flushNationState("nation-create:" + id);
-                    sender.sendMessage("§aNation created: §e" + id + " §f(" + name + ")");
+                    sender.sendMessage("§a국가를 생성했습니다: §e" + id + " §f(" + name + ")");
                 }
                 case "list" -> {
-                    sender.sendMessage("§6[Danta Nations] §7count=" + gameState.nations().size());
+                    sender.sendMessage("§6[단타 국가 목록] §7총 " + gameState.nations().size() + "개");
                     for (NationState nation : gameState.nations()) {
                         sender.sendMessage("§e" + nation.nationId() + " §f" + nation.displayName()
-                                + " §7capital=" + nation.capitalPointId().orElse("-")
-                                + ", treasury=" + nation.treasury() + "G, status=" + nation.status());
+                                + " §7수도=" + nation.capitalPointId().orElse("없음")
+                                + ", 국고=" + nation.treasury() + "G, 상태=" + UiText.nationStatus(nation.status()));
                     }
                 }
                 case "show" -> {
-                    requireArgs(args, 3, "/danta nation show <id>");
+                    requireArgs(args, 3, "/danta nation show <국가-id>");
                     sendNation(sender, requireNation(args[2]));
                 }
                 case "capital" -> {
-                    requireArgs(args, 4, "/danta nation capital <id> <point-id|none>");
+                    requireArgs(args, 4, "/danta nation capital <국가-id> <거점-id|none>");
                     NationState nation = requireNation(args[2]);
                     String capitalPointId = args[3].equalsIgnoreCase("none") ? null : args[3];
                     if (capitalPointId != null) requireStrategicPoint(capitalPointId);
                     nation.setCapitalPointId(capitalPointId);
                     flushNationState("nation-capital:" + nation.nationId());
-                    sender.sendMessage("§aCapital updated: §e" + nation.capitalPointId().orElse("none"));
+                    sender.sendMessage("§a수도를 변경했습니다: §e" + nation.capitalPointId().orElse("없음"));
                 }
                 case "treasury" -> {
-                    requireArgs(args, 4, "/danta nation treasury <id> <gold>");
+                    requireArgs(args, 4, "/danta nation treasury <국가-id> <금화>");
                     NationState nation = requireNation(args[2]);
                     nation.setTreasury(Long.parseLong(args[3]));
                     flushNationState("nation-treasury:" + nation.nationId());
-                    sender.sendMessage("§aTreasury updated: §e" + nation.treasury() + "G");
+                    sender.sendMessage("§a국고를 변경했습니다: §e" + nation.treasury() + "G");
                 }
                 case "status" -> {
-                    requireArgs(args, 4, "/danta nation status <id> <ACTIVE|VASSAL>");
+                    requireArgs(args, 4, "/danta nation status <국가-id> <ACTIVE|VASSAL>");
                     NationState nation = requireNation(args[2]);
                     nation.setStatus(NationStatus.valueOf(args[3].toUpperCase(Locale.ROOT)));
                     flushNationState("nation-status:" + nation.nationId());
-                    sender.sendMessage("§aNation status updated: §e" + nation.status());
+                    sender.sendMessage("§a국가 상태를 변경했습니다: §e" + UiText.nationStatus(nation.status()));
                 }
                 default -> sender.sendMessage("§e/danta nation <create|list|show|capital|treasury|status>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cNation command failed: " + ex.getMessage());
+            sendCommandError(sender, "국가", ex);
         }
         return true;
     }
@@ -705,11 +716,11 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private void sendNation(CommandSender sender, NationState nation) {
-        sender.sendMessage("§6[Danta Nation] §e" + nation.nationId());
-        sender.sendMessage("§fName: §e" + nation.displayName());
-        sender.sendMessage("§fCapital: §e" + nation.capitalPointId().orElse("-"));
-        sender.sendMessage("§fTreasury: §e" + nation.treasury() + "G");
-        sender.sendMessage("§fStatus: §e" + nation.status());
+        sender.sendMessage("§6[단타 국가] §e" + nation.nationId());
+        sender.sendMessage("§f이름: §e" + nation.displayName());
+        sender.sendMessage("§f수도: §e" + nation.capitalPointId().orElse("없음"));
+        sender.sendMessage("§f국고: §e" + nation.treasury() + "G");
+        sender.sendMessage("§f상태: §e" + UiText.nationStatus(nation.status()));
     }
 
     private void flushNationState(String reason) {
@@ -730,49 +741,53 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private boolean handleSnapshot(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.db")) {
-            sender.sendMessage("§cNo permission: danta.admin.db");
+            sender.sendMessage("§c스냅샷 관리 권한이 없습니다.");
             return true;
         }
         if (snapshotService == null || databaseService == null || databaseService.health().status().name().equals("DISABLED")) {
-            sender.sendMessage("§cSnapshot service requires enabled PostgreSQL.");
+            sender.sendMessage("§c스냅샷 기능을 사용하려면 PostgreSQL이 활성화되어 있어야 합니다.");
             return true;
         }
         String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "save";
         switch (sub) {
             case "save" -> {
-                sender.sendMessage("§eSaving snapshot asynchronously...");
-                snapshotService.saveAsync("manual").whenComplete((ignored, error) -> runSync(() ->
-                        sender.sendMessage(error == null ? "§aSnapshot saved." : "§cSnapshot failed: " + rootMessage(error))));
+                sender.sendMessage("§e스냅샷을 비동기로 저장하고 있습니다...");
+                snapshotService.saveAsync("manual").whenComplete((ignored, error) -> runSync(() -> {
+                    if (error == null) sender.sendMessage("§a스냅샷을 저장했습니다.");
+                    else sendAsyncFailure(sender, "스냅샷 저장에 실패했습니다.", "Manual snapshot save failed", error);
+                }));
             }
             case "important" -> {
                 String reason = args.length >= 3 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "manual-test";
-                sender.sendMessage("§eFlushing important snapshot asynchronously...");
-                snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> runSync(() ->
-                        sender.sendMessage(error == null ? "§aImportant flush complete." : "§cImportant flush failed: " + rootMessage(error))));
+                sender.sendMessage("§e중요 스냅샷을 비동기로 저장하고 있습니다...");
+                snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> runSync(() -> {
+                    if (error == null) sender.sendMessage("§a중요 스냅샷 저장을 완료했습니다.");
+                    else sendAsyncFailure(sender, "중요 스냅샷 저장에 실패했습니다.", "Important snapshot flush failed", error);
+                }));
             }
             case "load" -> {
-                sender.sendMessage("§eLoading snapshot asynchronously...");
+                sender.sendMessage("§e스냅샷을 비동기로 불러오고 있습니다...");
                 snapshotService.loadAsync().whenComplete((snapshot, error) -> runSync(() -> {
-                    if (error != null) sender.sendMessage("§cSnapshot load failed: " + rootMessage(error));
-                    else if (snapshot.isEmpty()) sender.sendMessage("§7No snapshot exists.");
+                    if (error != null) sendAsyncFailure(sender, "스냅샷 불러오기에 실패했습니다.", "Manual snapshot load failed", error);
+                    else if (snapshot.isEmpty()) sender.sendMessage("§7저장된 스냅샷이 없습니다.");
                     else {
                         snapshotService.apply(snapshot.get());
                         persistRuntime();
-                        sender.sendMessage("§aSnapshot restored. Runtime=§e" + formatRuntime(runtimeClock.elapsedMillis()));
+                        sender.sendMessage("§a스냅샷을 복원했습니다. 서버 시간=§e" + formatRuntime(runtimeClock.elapsedMillis()));
                     }
                 }));
             }
-            default -> sender.sendMessage("§e/danta snapshot <save|important [reason]|load>");
+            default -> sender.sendMessage("§e/danta snapshot <save|important [사유]|load>");
         }
         return true;
     }
     private boolean handleDatabase(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.db")) {
-            sender.sendMessage("§cNo permission: danta.admin.db");
+            sender.sendMessage("§c데이터베이스 관리 권한이 없습니다.");
             return true;
         }
         if (databaseService == null) {
-            sender.sendMessage("§cDatabase service was not initialized. Check server console/config.");
+            sender.sendMessage("§c데이터베이스 기능이 초기화되지 않았습니다. 서버 콘솔과 설정을 확인해 주세요.");
             return true;
         }
 
@@ -781,74 +796,75 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             switch (sub) {
                 case "status" -> sendDatabaseStatus(sender);
                 case "reconnect" -> {
-                    sender.sendMessage("§eStarting asynchronous PostgreSQL connection test...");
+                    sender.sendMessage("§ePostgreSQL 연결을 비동기로 확인하고 있습니다...");
                     databaseService.initializeAsync().whenComplete((ready, error) -> runSync(() -> {
                         if (error != null || !Boolean.TRUE.equals(ready)) {
-                            sender.sendMessage("§cPostgreSQL connection failed. /danta db status");
+                            if (error != null) getLogger().warning("PostgreSQL reconnect failed: " + rootMessage(error));
+                            sender.sendMessage("§cPostgreSQL 연결에 실패했습니다. /danta db status로 상태를 확인해 주세요.");
                         } else {
-                            sender.sendMessage("§aPostgreSQL READY.");
+                            sender.sendMessage("§aPostgreSQL 연결이 정상입니다.");
                         }
                     }));
                 }
                 case "ping" -> {
-                    sender.sendMessage("§ePinging PostgreSQL asynchronously...");
+                    sender.sendMessage("§ePostgreSQL 응답을 비동기로 확인하고 있습니다...");
                     databaseService.pingAsync().whenComplete((ok, error) -> runSync(() -> {
-                        if (error != null) sender.sendMessage("§cDB ping failed: " + rootMessage(error));
-                        else sender.sendMessage(Boolean.TRUE.equals(ok) ? "§aDB ping: OK" : "§cDB ping: unexpected result");
+                        if (error != null) sendAsyncFailure(sender, "DB 응답 확인에 실패했습니다.", "Database ping failed", error);
+                        else sender.sendMessage(Boolean.TRUE.equals(ok) ? "§aDB 응답이 정상입니다." : "§cDB 응답이 올바르지 않습니다.");
                     }));
                 }
                 case "put" -> {
-                    requireArgs(args, 4, "/danta db put <key> <value>");
+                    requireArgs(args, 4, "/danta db put <키> <값>");
                     String key = args[2];
                     String value = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
                     devRepository.save("dev016", key, value).whenComplete((ignored, error) -> runSync(() -> {
-                        if (error != null) sender.sendMessage("§cDB write failed: " + rootMessage(error));
-                        else sender.sendMessage("§aSaved asynchronously: §e" + key);
+                        if (error != null) sendAsyncFailure(sender, "DB 저장에 실패했습니다.", "Database write failed", error);
+                        else sender.sendMessage("§a비동기 저장을 완료했습니다: §e" + key);
                     }));
                 }
                 case "get" -> {
-                    requireArgs(args, 3, "/danta db get <key>");
+                    requireArgs(args, 3, "/danta db get <키>");
                     String key = args[2];
                     devRepository.find("dev016", key).whenComplete((value, error) -> runSync(() -> {
-                        if (error != null) sender.sendMessage("§cDB read failed: " + rootMessage(error));
+                        if (error != null) sendAsyncFailure(sender, "DB 조회에 실패했습니다.", "Database read failed", error);
                         else sender.sendMessage(value.map(v -> "§a" + key + " = §e" + v)
-                                .orElse("§7No value for key: " + key));
+                                .orElse("§7해당 키에 저장된 값이 없습니다: " + key));
                     }));
                 }
                 case "delete" -> {
-                    requireArgs(args, 3, "/danta db delete <key>");
+                    requireArgs(args, 3, "/danta db delete <키>");
                     String key = args[2];
                     devRepository.delete("dev016", key).whenComplete((deleted, error) -> runSync(() -> {
-                        if (error != null) sender.sendMessage("§cDB delete failed: " + rootMessage(error));
+                        if (error != null) sendAsyncFailure(sender, "DB 삭제에 실패했습니다.", "Database delete failed", error);
                         else sender.sendMessage(Boolean.TRUE.equals(deleted)
-                                ? "§aDeleted: §e" + key
-                                : "§7Nothing to delete: " + key);
+                                ? "§a삭제했습니다: §e" + key
+                                : "§7삭제할 값이 없습니다: " + key);
                     }));
                 }
                 default -> sender.sendMessage("§e/danta db <status|reconnect|ping|put|get|delete>");
             }
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cDatabase command failed: " + ex.getMessage());
+            sendCommandError(sender, "데이터베이스", ex);
         }
         return true;
     }
 
     private void sendDatabaseStatus(CommandSender sender) {
         DatabaseHealth health = databaseService.health();
-        sender.sendMessage("§6[Danta PostgreSQL]");
-        sender.sendMessage("§fStatus: §e" + health.status());
-        sender.sendMessage("§fTarget: §e" + health.target());
-        if (health.lastError() != null) sender.sendMessage("§fLast error: §c" + health.lastError());
-        sender.sendMessage("§7Config: plugins/DantaServer/database.properties");
+        sender.sendMessage("§6[단타 PostgreSQL]");
+        sender.sendMessage("§f상태: §e" + UiText.databaseStatus(health.status()));
+        sender.sendMessage("§f연결 대상: §e" + health.target());
+        if (health.lastError() != null) sender.sendMessage("§f최근 오류: §c발생함(자세한 내용은 서버 콘솔 확인)");
+        sender.sendMessage("§7설정 파일: plugins/DantaServer/database.properties");
     }
 
     private boolean handleRuntime(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.runtime")) {
-            sender.sendMessage("§cNo permission: danta.admin.runtime"); return true;
+            sender.sendMessage("§c서버 시간 관리 권한이 없습니다."); return true;
         }
         if (args.length == 1 || args[1].equalsIgnoreCase("status")) {
-            sender.sendMessage("§6[Danta Runtime] §e" + formatRuntime(runtimeClock.elapsedMillis())
-                    + " §7paused=" + runtimeClock.isPaused() + ", speed=x" + runtimeClock.speedMultiplier());
+            sender.sendMessage("§6[단타 서버 시간] §e" + formatRuntime(runtimeClock.elapsedMillis())
+                    + " §7일시정지=" + yesNo(runtimeClock.isPaused()) + ", 배속=x" + runtimeClock.speedMultiplier());
             return true;
         }
         try {
@@ -860,14 +876,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     runtimeClock.setSpeedMultiplier(Double.parseDouble(args[2]));
                 }
                 case "set" -> {
-                    requireArgs(args, 3, "/danta runtime set <seconds>");
+                    requireArgs(args, 3, "/danta runtime set <초>");
                     long seconds = Long.parseLong(args[2]);
                     if (seconds < 0 || seconds > Long.MAX_VALUE / 1000L) throw new IllegalArgumentException("invalid seconds");
                     runtimeClock.setElapsedMillis(seconds * 1000L);
                 }
                 case "save" -> persistRuntime();
                 case "schedule" -> {
-                    requireArgs(args, 3, "/danta runtime schedule <runtime-seconds> [message]");
+                    requireArgs(args, 3, "/danta runtime schedule <서버시간-초> [메시지]");
                     long seconds = Long.parseLong(args[2]);
                     if (seconds < 0) throw new IllegalArgumentException("runtime-seconds must be >= 0");
                     String message = args.length >= 4
@@ -875,25 +891,25 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                             : "DEV-015 test";
                     RuntimeScheduledTask task = runtimeScheduler.scheduleAfter(
                             Duration.ofSeconds(seconds), "dev.echo", Map.of("message", message));
-                    sender.sendMessage("§aScheduled: §e" + task.id()
-                            + " §7dueRuntime=" + formatRuntime(task.dueRuntimeMillis()));
+                    sender.sendMessage("§a예약 작업을 등록했습니다: §e" + task.id()
+                            + " §7실행 예정 시간=" + formatRuntime(task.dueRuntimeMillis()));
                     return true;
                 }
                 case "scheduler" -> {
-                    sender.sendMessage("§6[Danta Runtime Scheduler] §equeued=" + runtimeScheduler.size());
+                    sender.sendMessage("§6[단타 서버 시간 예약 작업] §e대기=" + runtimeScheduler.size() + "개");
                     runtimeScheduler.nextTask().ifPresentOrElse(
-                            task -> sender.sendMessage("§fNext: §e" + task.id()
-                                    + " §7type=" + task.taskType()
-                                    + ", due=" + formatRuntime(task.dueRuntimeMillis())),
-                            () -> sender.sendMessage("§7No queued runtime tasks."));
+                            task -> sender.sendMessage("§f다음 작업: §e" + task.id()
+                                    + " §7종류=" + task.taskType()
+                                    + ", 실행 예정 시간=" + formatRuntime(task.dueRuntimeMillis())),
+                            () -> sender.sendMessage("§7대기 중인 예약 작업이 없습니다."));
                     return true;
                 }
                 case "cancel" -> {
-                    requireArgs(args, 3, "/danta runtime cancel <task-uuid>");
+                    requireArgs(args, 3, "/danta runtime cancel <작업-uuid>");
                     UUID taskId = UUID.fromString(args[2]);
                     sender.sendMessage(runtimeScheduler.cancel(taskId)
-                            ? "§aCancelled runtime task: §e" + taskId
-                            : "§cRuntime task not found: " + taskId);
+                            ? "§a예약 작업을 취소했습니다: §e" + taskId
+                            : "§c해당 예약 작업을 찾을 수 없습니다: " + taskId);
                     return true;
                 }
                 default -> {
@@ -902,10 +918,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
             }
             persistRuntime();
-            sender.sendMessage("§aRuntime updated: §e" + formatRuntime(runtimeClock.elapsedMillis())
-                    + " §7paused=" + runtimeClock.isPaused() + ", speed=x" + runtimeClock.speedMultiplier());
+            sender.sendMessage("§a서버 시간을 변경했습니다: §e" + formatRuntime(runtimeClock.elapsedMillis())
+                    + " §7일시정지=" + yesNo(runtimeClock.isPaused()) + ", 배속=x" + runtimeClock.speedMultiplier());
         } catch (RuntimeException ex) {
-            sender.sendMessage("§cRuntime command failed: " + ex.getMessage());
+            sendCommandError(sender, "서버 시간", ex);
         }
         return true;
     }
@@ -924,6 +940,20 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private void runSync(Runnable action) {
         if (!isEnabled()) return;
         getServer().getScheduler().runTask(this, action);
+    }
+
+    private void sendCommandError(CommandSender sender, String context, RuntimeException error) {
+        getLogger().warning("Player command failed: context=" + context + ", error=" + rootMessage(error));
+        sender.sendMessage("§c" + context + " 요청을 처리하지 못했습니다: " + UiText.playerError(error));
+    }
+
+    private void sendAsyncFailure(CommandSender sender, String playerMessage, String logContext, Throwable error) {
+        getLogger().warning(logContext + ": " + rootMessage(error));
+        sender.sendMessage("§c" + playerMessage + " 자세한 내용은 서버 콘솔을 확인해 주세요.");
+    }
+
+    private static String yesNo(boolean value) {
+        return value ? "예" : "아니요";
     }
 
     private static String rootMessage(Throwable error) {
