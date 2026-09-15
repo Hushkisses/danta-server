@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-036 minimal army GUI complete; DEV-040 is next
+Checkpoint: DEV-040 basic troop types implemented; awaiting Windows build verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -48,7 +48,10 @@ Checkpoint: DEV-036 minimal army GUI complete; DEV-040 is next
 - DEV-036 minimal army GUI: COMPLETE, Windows client GUI verified
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-040 basic troop types: IMPLEMENTED
+  - Core defines infantry/spearmen/archers/cavalry, frontline/ranged/mobile roles, and the v0.3 x1.25 soft-counter cycle.
+  - Base-power coefficients remain neutral x1.0 because v0.3 does not assign distinct basic coefficients.
+  - Awaiting representative's Windows build/test and normal Paper boot verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -75,7 +78,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-040 basic troop types: infantry/spearmen/archers/cavalry data
+1. DEV-040 Windows build/test verification
 2. DEV-041 CombatResolver v0
 
 ## Manual verification baseline
