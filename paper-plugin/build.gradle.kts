@@ -10,6 +10,7 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // DEV-016: bundled because Paper does not provide the PostgreSQL JDBC driver.
     bundled("org.postgresql:postgresql:42.7.13")
