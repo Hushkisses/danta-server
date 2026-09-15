@@ -4,6 +4,7 @@ import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.army.ArmyOrderStatus;
 import kr.danta.core.army.ArmyOrderType;
 import kr.danta.core.nation.NationStatus;
+import kr.danta.core.economy.StrategicResource;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
 
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v8; DEV-050 writes v8. */
+/** Dependency-free snapshot codec. Reads schema v1-v9; DEV-051 writes v9. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -30,7 +31,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -89,15 +90,56 @@ public final class GameSnapshotCodec {
         }
         if (schema == 8) {
             if (p.length != 14) throw new IllegalArgumentException("invalid schema v8 field count");
-            return new GameSnapshot(schema,
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]));
         }
+        if (schema == 9) {
+            if (p.length != 15) throw new IllegalArgumentException("invalid schema v9 field count");
+            return new GameSnapshot(schema,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
+
+
+    private static String encodeStrategicResources(List<StrategicResourceStockpileSnapshot> stockpiles) {
+        if (stockpiles == null || stockpiles.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (StrategicResourceStockpileSnapshot stockpile : stockpiles) {
+            String values = java.util.Arrays.stream(StrategicResource.values())
+                    .map(r -> r.name() + ":" + stockpile.amounts().getOrDefault(r, 0L))
+                    .reduce((a, b) -> a + "+" + b).orElse("");
+            rows.add(enc(stockpile.nationId()) + "," + enc(values));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<StrategicResourceStockpileSnapshot> decodeStrategicResources(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<StrategicResourceStockpileSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 2) throw new IllegalArgumentException("invalid strategic resource row");
+            Map<StrategicResource, Long> values = new java.util.EnumMap<>(StrategicResource.class);
+            String decoded = dec(f[1]);
+            if (decoded != null && !decoded.isEmpty()) {
+                for (String pair : decoded.split("\\+", -1)) {
+                    int colon = pair.lastIndexOf(':');
+                    values.put(StrategicResource.valueOf(pair.substring(0, colon)), Long.parseLong(pair.substring(colon + 1)));
+                }
+            }
+            result.add(new StrategicResourceStockpileSnapshot(dec(f[0]), values));
+        }
+        return List.copyOf(result);
+    }
 
     private static String encodePersonalWallets(List<PersonalWalletSnapshot> wallets) {
         if (wallets == null || wallets.isEmpty()) return "-";
