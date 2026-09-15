@@ -37,6 +37,27 @@ public final class SupplyConnectivityService {
         return false;
     }
 
+    public long totalAmount(String nationId, StrategicResource resource) {
+        long total = gameState.strategicResourceStockpile(nationId).map(s -> s.amount(resource)).orElse(0L);
+        for (StrategicPoint point : gameState.strategicPoints()) {
+            if (!point.ownerNationId().map(nationId::equals).orElse(false)) continue;
+            total = Math.addExact(total, gameState.localResourceStockpile(point.pointId())
+                    .map(s -> s.amount(resource)).orElse(0L));
+        }
+        return total;
+    }
+
+    public long availableAmount(String nationId, StrategicResource resource) {
+        long available = gameState.strategicResourceStockpile(nationId).map(s -> s.amount(resource)).orElse(0L);
+        for (StrategicPoint point : gameState.strategicPoints()) {
+            if (!point.ownerNationId().map(nationId::equals).orElse(false)) continue;
+            if (!isConnectedToCapital(nationId, point.pointId())) continue;
+            available = Math.addExact(available, gameState.localResourceStockpile(point.pointId())
+                    .map(s -> s.amount(resource)).orElse(0L));
+        }
+        return available;
+    }
+
     private boolean ownedBy(String pointId, String nationId) {
         return gameState.strategicPoint(pointId).flatMap(StrategicPoint::ownerNationId)
                 .map(nationId::equals).orElse(false);
