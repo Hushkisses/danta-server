@@ -34,6 +34,13 @@ public final class DevMapService {
 
         for (DevMapDefinition.PointDef pointDef : definition.points()) {
             if (gameState.hasStrategicPoint(pointDef.id())) {
+                StrategicPoint existing = gameState.strategicPoint(pointDef.id()).orElseThrow();
+                existing.rename(pointDef.displayName());
+                existing.setType(pointDef.type());
+                existing.setOwnerNationId(pointDef.ownerNationId());
+                existing.setPosition(new PointPosition(definition.worldName(), pointDef.x(), pointDef.y(), pointDef.z()));
+                existing.setFacilitySlots(pointDef.facilitySlots());
+                existing.setBaseProduction(pointDef.production());
                 existingPoints++;
                 continue;
             }
