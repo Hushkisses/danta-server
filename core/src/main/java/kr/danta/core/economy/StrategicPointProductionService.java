@@ -10,9 +10,11 @@ import java.util.Objects;
 /** DEV-053 applies v0.3 point base production on each 30-minute EconomyTick. */
 public final class StrategicPointProductionService {
     private final GameState gameState;
+    private final SupplyConnectivityService supplyConnectivity;
 
     public StrategicPointProductionService(GameState gameState) {
         this.gameState = Objects.requireNonNull(gameState, "gameState");
+        this.supplyConnectivity = new SupplyConnectivityService(gameState);
     }
 
     public ProductionResult produceOneTick() {
@@ -32,7 +34,11 @@ public final class StrategicPointProductionService {
                 }
                 StrategicResource resource = parseResource(key);
                 if (resource != null) {
-                    gameState.getOrCreateStrategicResourceStockpile(nationId).deposit(resource, perTick);
+                    if (supplyConnectivity.isConnectedToCapital(nationId, point.pointId())) {
+                        gameState.getOrCreateStrategicResourceStockpile(nationId).deposit(resource, perTick);
+                    } else {
+                        gameState.getOrCreateLocalResourceStockpile(point.pointId()).deposit(resource, perTick);
+                    }
                     resources.computeIfAbsent(nationId, ignored -> new LinkedHashMap<>())
                             .merge(resource, perTick, Math::addExact);
                 }
