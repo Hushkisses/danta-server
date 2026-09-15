@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-031.1 player-facing Korean output complete; DEV-032 is next
+Checkpoint: DEV-032 movement-time calculation implemented; awaiting Windows build and live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -43,7 +43,10 @@ Checkpoint: DEV-031.1 player-facing Korean output complete; DEV-032 is next
 - DEV-031.1 player-facing Korean output: COMPLETE, Windows build and Paper command checks verified
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-032 movement-time calculation: IMPLEMENTED
+  - Effective duration uses StrategicEdge base travel time plus coarse route-tag modifiers.
+  - `/danta army eta` and move-order ETA preview are player-facing Korean.
+  - Awaiting representative's Windows Gradle build and Paper command checks.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -58,6 +61,7 @@ Checkpoint: DEV-031.1 player-facing Korean output complete; DEV-032 is next
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
 - DEV-030 intentionally stores a single base-troop count; troop-type composition remains DEV-040.
 - DEV-031 pending orders remain memory-only until DEV-033 persists runtime movement state.
+- DEV-032 route modifiers: ROAD x0.90, MOUNTAIN_PASS x1.20, FOREST_PATH x1.10, CANYON x1.15, SEA_ROUTE x0.90, LANDING_ROUTE x1.25; PLAIN/COASTAL neutral. Future authoritative commander/research/supply modifiers layer onto the calculator instead of being guessed now.
 
 ## Current test data (local dev server only)
 Known examples include nation red, nation blue, strategic point farm_a, strategic point capital_red, and edge road_1. Exact local values live in the representative's PostgreSQL snapshot and are not source-controlled.
@@ -67,7 +71,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-032 movement-time calculation
+1. DEV-032 Windows build and Paper live verification
 2. DEV-033 runtime movement scheduling/restart recovery
 3. DEV-034 sequential operation queue
 4. DEV-035 advance-stop conditions
