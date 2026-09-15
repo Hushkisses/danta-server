@@ -48,6 +48,10 @@ import kr.danta.core.runtime.RuntimeClockState;
 import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
+import kr.danta.core.research.ResearchDefinition;
+import kr.danta.core.research.ResearchField;
+import kr.danta.core.research.ResearchService;
+import kr.danta.core.research.ResearchTier;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.state.GameState;
@@ -109,6 +113,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private FacilityService facilityService;
     private FacilityConstructionService facilityConstructionService;
     private FacilityAppearanceService facilityAppearanceService;
+    private ResearchService researchService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -173,6 +178,17 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                         + " [id=" + task.id() + "]"));
         runtimeScheduler.registerHandler("army.move.arrive", task ->
                 completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
+        // DEV-084 verification-only definitions. Final/sample research content is DEV-088 data, not these values.
+        java.util.Map<String, ResearchDefinition> devResearchDefinitions = java.util.Map.of(
+                "dev084_alpha", new ResearchDefinition("dev084_alpha", "개발 검증 연구 A", ResearchField.MILITARY,
+                        ResearchTier.TIER_1, 30_000L, 0L, java.util.Map.of(), java.util.List.of(), null, null),
+                "dev084_beta", new ResearchDefinition("dev084_beta", "개발 검증 연구 B", ResearchField.INDUSTRY,
+                        ResearchTier.TIER_1, 45_000L, 0L, java.util.Map.of(), java.util.List.of(), null, null));
+        researchService = new ResearchService(runtimeScheduler, devResearchDefinitions);
+        runtimeScheduler.registerHandler(ResearchService.TASK_TYPE, task -> {
+            researchService.complete(UUID.fromString(task.payload().get("entryId")), task.payload().get("nationId"));
+            flushResearchState("research-complete:" + task.payload().get("nationId") + ":" + task.payload().get("entryId"));
+        });
         facilityService = new FacilityService(gameState);
         facilityConstructionService = new FacilityConstructionService(gameState, facilityService, runtimeScheduler);
         facilityAppearanceService = new FacilityAppearanceService(getServer(), gameState, facilityService);
@@ -238,6 +254,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             devRepository = new PostgresKeyValueRepository(databaseService);
             snapshotService = new SnapshotService(devRepository, runtimeClock, gameState, getLogger());
             snapshotService.bindFacilities(facilityService, facilityConstructionService);
+            snapshotService.bindResearch(researchService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
@@ -315,6 +332,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("general")) return handleGeneral(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("facility")) return handleFacility(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("research")) return handleResearch(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
         sender.sendMessage("§f플러그인 버전: §e" + getPluginMeta().getVersion());
@@ -1545,6 +1563,65 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private static String formatRuntime(long millis) {
         long s = Math.max(0L, millis / 1000L);
         return String.format("%02d:%02d:%02d", s / 3600L, (s % 3600L) / 60L, s % 60L);
+    }
+
+    private boolean handleResearch(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.point")) {
+            sender.sendMessage("§c연구 관리 권한이 없습니다.");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "show";
+        try {
+            switch (sub) {
+                case "reserve" -> {
+                    requireArgs(args, 4, "/danta research reserve <국가-id> <dev084_alpha|dev084_beta>");
+                    var entry = researchService.reserve(args[2], args[3]);
+                    flushResearchState("research-reserve:" + entry.entryId());
+                    sender.sendMessage("§a개발 검증용 연구를 예약했습니다: §e" + entry.researchId()
+                            + " §7국가=" + args[2] + (entry.active() ? ", 즉시 연구 시작" : ", 대기열 등록"));
+                    sender.sendMessage("§7연구 예약 ID: " + entry.entryId());
+                }
+                case "slots" -> {
+                    requireArgs(args, 4, "/danta research slots <국가-id> <1|2>");
+                    int slots = Integer.parseInt(args[3]);
+                    researchService.setResearchSlots(args[2], slots);
+                    flushResearchState("research-slots:" + args[2]);
+                    sender.sendMessage("§a동시 연구 슬롯을 §e" + slots + "개§a로 설정했습니다.");
+                }
+                case "cancel" -> {
+                    requireArgs(args, 4, "/danta research cancel <국가-id> <예약-id>");
+                    var cancelled = researchService.cancel(args[2], UUID.fromString(args[3]));
+                    flushResearchState("research-cancel:" + cancelled.entryId());
+                    sender.sendMessage("§a연구 예약을 취소했습니다: §e" + cancelled.researchId());
+                }
+                case "show" -> {
+                    requireArgs(args, 3, "/danta research show <국가-id>");
+                    var state = researchService.state(args[2]);
+                    sender.sendMessage("§6[국가 연구] §e" + state.nationId() + " §7동시 슬롯=" + state.researchSlots());
+                    sender.sendMessage("§7완료 연구: " + (state.completed().isEmpty() ? "없음" : String.join(", ", state.completed())));
+                    sender.sendMessage("§7연구 대기열: " + state.queue().size() + "개");
+                    for (var entry : state.queue()) {
+                        if (entry.active()) {
+                            long remaining = Math.max(0L, entry.dueRuntimeMillis() - runtimeClock.elapsedMillis());
+                            sender.sendMessage("§f- §e" + entry.researchId() + " §6[연구 중] §7남은 서버시간≈"
+                                    + (remaining / 1000L) + "초, ID=" + entry.entryId());
+                        } else {
+                            sender.sendMessage("§f- §e" + entry.researchId() + " §7[예약 대기], ID=" + entry.entryId());
+                        }
+                    }
+                }
+                default -> sender.sendMessage("§e/danta research <reserve|slots|cancel|show>");
+            }
+        } catch (RuntimeException ex) {
+            sendCommandError(sender, "연구", ex);
+        }
+        return true;
+    }
+
+    private void flushResearchState(String reason) {
+        if (snapshotService == null || databaseService == null
+                || !databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason);
     }
 
     private boolean handleFacility(CommandSender sender, String[] args) {
