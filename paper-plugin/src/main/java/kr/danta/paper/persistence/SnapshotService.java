@@ -31,6 +31,8 @@ import kr.danta.core.general.GeneralHealthStatus;
 import kr.danta.core.snapshot.GeneralSnapshot;
 import kr.danta.core.snapshot.FacilitySnapshot;
 import kr.danta.core.snapshot.FacilityConstructionSnapshot;
+import kr.danta.core.snapshot.ResearchStateSnapshot;
+import kr.danta.core.snapshot.ResearchQueueSnapshot;
 import kr.danta.core.facility.FacilityService;
 import kr.danta.core.facility.FacilityState;
 import kr.danta.core.facility.FacilityConstructionService;
