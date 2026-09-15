@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-053 strategic-point production implemented; awaiting Windows production verification
+Checkpoint: DEV-054 local stockpile/supply isolation implemented; awaiting Windows live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -55,12 +55,14 @@ Checkpoint: DEV-053 strategic-point production implemented; awaiting Windows pro
 - DEV-050 treasury/personal-wallet separation: COMPLETE, Windows contribution/rejection/restart recovery verified
 - DEV-051 strategic resources: COMPLETE, Windows five-resource display/set/restart recovery verified
 - DEV-052 EconomyTick: COMPLETE, Windows runtime boundary/pause/restart behavior verified
+- DEV-053 strategic-point production: COMPLETE, Windows exact production/restart persistence verified
 
 ## Implemented tickets awaiting live verification
-- DEV-053 strategic-point production: IMPLEMENTED
-  - Owned point baseProductionPerHour is settled each 30-minute EconomyTick at half the hourly amount.
-  - Strategic resources go to national stockpile; gold goes to treasury; unowned points produce nothing.
-  - Awaiting Windows exact-delta/restart verification.
+- DEV-054 local stockpile/supply isolation: IMPLEMENTED
+  - Isolated owned-point production is retained locally instead of entering national available stock or disappearing.
+  - Own-territory path to capital determines connectivity; reconnecting makes retained local stock available again.
+  - Snapshot schema v10 persists local stockpiles.
+  - Awaiting Windows isolation/reconnection/restart verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -69,7 +71,7 @@ Checkpoint: DEV-053 strategic-point production implemented; awaiting Windows pro
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
 - DB work is asynchronous; GameState remains authoritative in memory during play.
-- Snapshot schema v9 adds national strategic-resource stockpiles after DEV-050 personal wallets; legacy v1-v8 snapshots remain readable.
+- Snapshot schema v10 adds local strategic-resource stockpiles after national stockpiles; legacy v1-v9 snapshots remain readable.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
@@ -87,8 +89,13 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-053 Windows exact production/restart verification
-2. DEV-054 local stockpile/supply isolation
+1. DEV-054 Windows isolation/reconnection/restart verification
+2. DEV-055 supply consumption
+
+## Automated verification baseline
+- DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
+- Core-domain DEV tests should be added whenever behavior can be verified without a Minecraft client.
+- Live Paper/client checks remain for integration, restart persistence, GUI, and player-visible behavior that unit tests cannot prove.
 
 ## Manual verification baseline
 A checkpoint is healthy if:
