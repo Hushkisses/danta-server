@@ -4,11 +4,10 @@ import kr.danta.core.facility.FacilityService;
 import kr.danta.core.facility.FacilityState;
 import kr.danta.core.state.GameState;
 import org.bukkit.Location;
-import org.bukkit.Mirror;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.StructureType;
 import org.bukkit.World;
+import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.structure.Structure;
 
