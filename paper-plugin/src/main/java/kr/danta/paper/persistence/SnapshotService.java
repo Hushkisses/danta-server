@@ -95,9 +95,6 @@ public final class SnapshotService {
             gameState.addStrategicResourceStockpile(new StrategicResourceStockpile(resources.nationId(), resources.amounts()));
         }
         gameState.clearLocalResourceStockpiles();
-        for (LocalResourceStockpileSnapshot local : snapshot.localResourceStockpiles()) {
-            gameState.addLocalResourceStockpile(new LocalResourceStockpile(local.pointId(), local.amounts()));
-        }
         gameState.clearStrategicEdges();
         gameState.clearStrategicPoints();
         for (StrategicPointSnapshot point : snapshot.strategicPoints()) {
@@ -109,6 +106,10 @@ public final class SnapshotService {
         for (StrategicEdgeSnapshot edge : snapshot.strategicEdges()) {
             gameState.addStrategicEdge(new StrategicEdge(edge.edgeId(), edge.pointAId(), edge.pointBId(),
                     edge.baseTravelMillis(), edge.battlefieldTags()));
+        }
+        // Local stockpiles reference strategic points, so restore them only after points exist.
+        for (LocalResourceStockpileSnapshot local : snapshot.localResourceStockpiles()) {
+            gameState.addLocalResourceStockpile(new LocalResourceStockpile(local.pointId(), local.amounts()));
         }
         gameState.clearArmies();
         for (ArmySnapshot army : snapshot.armies()) {
