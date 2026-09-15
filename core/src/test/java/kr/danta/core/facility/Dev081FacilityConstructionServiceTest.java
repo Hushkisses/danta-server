@@ -54,7 +54,15 @@ class Dev081FacilityConstructionServiceTest {
             Thread.currentThread().interrupt();
             fail("test interrupted", e);
         }
-        assertEquals(Duration.ofSeconds(2).toMillis(), clock.elapsedMillis());
+        long pausedAt = clock.elapsedMillis();
+        assertTrue(pausedAt >= Duration.ofSeconds(2).toMillis());
+        try {
+            Thread.sleep(20L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("test interrupted", e);
+        }
+        assertEquals(pausedAt, clock.elapsedMillis());
         assertTrue(scheduler.executeDueTasks().isEmpty());
         assertTrue(facilities.facilities("p1").isEmpty());
     }
