@@ -97,6 +97,11 @@ public final class UiText {
         if (message.startsWith("destination is not adjacent")) return "목적지가 군단의 현재 위치와 인접하지 않습니다.";
         if (message.startsWith("army is already at destination")) return "군단이 이미 해당 목적지에 있습니다.";
         if (message.startsWith("army must be STATIONED")) return "군단이 주둔 중일 때만 이동 명령을 내릴 수 있습니다.";
+        if (message.startsWith("army has no current order")) return "해당 군단에는 현재 이동 명령이 없습니다.";
+        if (message.startsWith("army location no longer matches order origin")) return "군단 위치가 이동 명령의 출발지와 일치하지 않습니다.";
+        if (message.startsWith("movement order route no longer matches strategic edge")) return "이동 명령의 경로 정보가 현재 전략 간선과 일치하지 않습니다.";
+        if (message.startsWith("order belongs to another army")) return "이동 명령과 군단 정보가 일치하지 않습니다.";
+        if (message.startsWith("order is not a movement order")) return "현재 명령은 이동시간을 계산할 수 있는 이동 명령이 아닙니다.";
         if (message.startsWith("army not found")) return "해당 군단을 찾을 수 없습니다.";
         if (message.startsWith("strategic point not found")) return "해당 전략 거점을 찾을 수 없습니다.";
         if (message.startsWith("nation not found")) return "해당 국가를 찾을 수 없습니다.";
