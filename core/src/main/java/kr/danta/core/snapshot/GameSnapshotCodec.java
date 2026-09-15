@@ -1,6 +1,7 @@
 package kr.danta.core.snapshot;
 
 import kr.danta.core.army.ArmyStatus;
+import kr.danta.core.army.ExpeditionSupplyLevel;
 import kr.danta.core.army.ArmyOrderStatus;
 import kr.danta.core.army.ArmyOrderType;
 import kr.danta.core.nation.NationStatus;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v10; DEV-054 writes v10. */
+/** Dependency-free snapshot codec. Reads schema v1-v11; DEV-056 writes v11. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -105,9 +106,9 @@ public final class GameSnapshotCodec {
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]));
         }
-        if (schema == 10) {
-            if (p.length != 16) throw new IllegalArgumentException("invalid schema v10 field count");
-            return new GameSnapshot(schema,
+        if (schema == 10 || schema == 11) {
+            if (p.length != 16) throw new IllegalArgumentException("invalid schema v" + schema + " field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
@@ -272,7 +273,8 @@ public final class GameSnapshotCodec {
         List<String> rows = new ArrayList<>();
         for (ArmySnapshot army : armies) {
             rows.add(String.join(",", enc(army.armyId()), enc(army.ownerNationId()),
-                    enc(army.locationPointId()), army.status().name(), Long.toString(army.baseTroops())));
+                    enc(army.locationPointId()), army.status().name(), Long.toString(army.baseTroops()),
+                    army.expeditionSupplyLevel() == null ? "-" : army.expeditionSupplyLevel().name(), Long.toString(army.carriedFood())));
         }
         return String.join(";", rows);
     }
@@ -282,9 +284,11 @@ public final class GameSnapshotCodec {
         List<ArmySnapshot> result = new ArrayList<>();
         for (String row : payload.split(";", -1)) {
             String[] f = row.split(",", -1);
-            if (f.length != 5) throw new IllegalArgumentException("invalid army snapshot row");
+            if (f.length != 5 && f.length != 7) throw new IllegalArgumentException("invalid army snapshot row");
+            ExpeditionSupplyLevel supply = f.length == 7 && !f[5].equals("-") ? ExpeditionSupplyLevel.valueOf(f[5]) : null;
+            long carriedFood = f.length == 7 ? Long.parseLong(f[6]) : 0L;
             result.add(new ArmySnapshot(dec(f[0]), dec(f[1]), dec(f[2]),
-                    ArmyStatus.valueOf(f[3]), Long.parseLong(f[4])));
+                    ArmyStatus.valueOf(f[3]), Long.parseLong(f[4]), supply, carriedFood));
         }
         return List.copyOf(result);
     }
