@@ -17,6 +17,8 @@ import kr.danta.core.combat.TroopType;
 import kr.danta.core.DantaCore;
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
+import kr.danta.core.army.ExpeditionSupplyLevel;
+import kr.danta.core.army.ExpeditionSupplyService;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyOrderService;
 import kr.danta.core.army.ArmyMovementTime;
@@ -89,6 +91,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
+    private ExpeditionSupplyService expeditionSupplyService;
     private long economyTicksProcessed;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
@@ -139,6 +142,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
         strategicPointProductionService = new StrategicPointProductionService(gameState);
         armySupplyService = new ArmySupplyService(gameState);
+        expeditionSupplyService = new ExpeditionSupplyService(gameState);
 
         runtimeScheduler = new RuntimeScheduler(runtimeClock);
         runtimeScheduler.registerHandler("dev.echo", task ->
@@ -836,6 +840,15 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     flushArmyState("army-location:" + army.armyId());
                     sender.sendMessage("§a군단 위치를 변경했습니다: §e" + army.locationPointId());
                 }
+                case "supply" -> {
+                    requireArgs(args, 4, "/danta army supply <군단-id> <LIGHT|STANDARD|HEAVY>");
+                    ArmyState army = requireArmy(args[2]);
+                    ExpeditionSupplyLevel level = ExpeditionSupplyLevel.valueOf(args[3].toUpperCase(Locale.ROOT));
+                    ExpeditionSupplyService.LoadResult result = expeditionSupplyService.load(army.armyId(), level);
+                    flushArmyState("army-expedition-supply:" + army.armyId());
+                    sender.sendMessage("§a출정 보급을 적재했습니다: §e" + level.displayName()
+                            + " §7식량=" + result.loadedFood() + ", 국가 잔여 식량=" + result.nationFoodRemaining());
+                }
                 case "move" -> {
                     requireArgs(args, 4, "/danta army move <군단-id> <목적지-거점-id>");
                     ArmyOrder order = armyOrderService.issueMoveOrder(args[2], args[3]);
@@ -885,7 +898,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     sender.sendMessage("§f경로 수정치: §ex" + String.format(Locale.ROOT, "%.3f", movementTime.multiplier()));
                     sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
                 }
-                default -> sender.sendMessage("§e/danta army <create|list|gui|show|troops|status|location|move|order|eta|queue|queue-show>");
+                default -> sender.sendMessage("§e/danta army <create|list|gui|show|troops|status|location|supply|move|order|eta|queue|queue-show>");
             }
         } catch (RuntimeException ex) {
             sendCommandError(sender, "군단", ex);
@@ -901,7 +914,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private void sendArmy(CommandSender sender, ArmyState army) {
         sender.sendMessage("§e" + army.armyId() + " §7소유국=" + army.ownerNationId()
                 + ", 위치=" + army.locationPointId() + ", 상태=" + UiText.armyStatus(army.status())
-                + ", 기본 병력=" + army.baseTroops());
+                + ", 기본 병력=" + army.baseTroops()
+                + ", 출정보급=" + (army.expeditionSupplyLevel() == null ? "미적재" : army.expeditionSupplyLevel().displayName())
+                + ", 휴대식량=" + army.carriedFood());
     }
 
     private void sendArmyOrder(CommandSender sender, ArmyOrder order) {
