@@ -24,6 +24,7 @@ public final class GeneralState {
     private GeneralTroopSynergy troopSynergy;
     private final Map<String, GeneralTrait> traitsById = new LinkedHashMap<>();
     private final Map<String, GeneralAbility> abilitiesById = new LinkedHashMap<>();
+    private GeneralRecoveryState recoveryState;
 
     public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level) {
         this(generalId, ownerNationId, grade, level, GeneralStats.zero());
@@ -45,6 +46,18 @@ public final class GeneralState {
     public synchronized Optional<GeneralTroopSynergy> troopSynergy() { return Optional.ofNullable(troopSynergy); }
     public synchronized List<GeneralTrait> traits() { return List.copyOf(new ArrayList<>(traitsById.values())); }
     public synchronized List<GeneralAbility> abilities() { return List.copyOf(new ArrayList<>(abilitiesById.values())); }
+    public synchronized GeneralHealthStatus healthStatus() {
+        return recoveryState == null ? GeneralHealthStatus.HEALTHY : recoveryState.status();
+    }
+    public synchronized Optional<GeneralRecoveryState> recoveryState() { return Optional.ofNullable(recoveryState); }
+
+    public synchronized void setRecoveryState(GeneralRecoveryState recoveryState) {
+        this.recoveryState = Objects.requireNonNull(recoveryState, "recoveryState");
+    }
+
+    public synchronized void clearRecoveryState() {
+        this.recoveryState = null;
+    }
 
     public synchronized boolean addTrait(GeneralTrait trait) {
         Objects.requireNonNull(trait, "trait");
