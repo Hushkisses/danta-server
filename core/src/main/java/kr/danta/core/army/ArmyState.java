@@ -9,6 +9,8 @@ public final class ArmyState {
     private String locationPointId;
     private ArmyStatus status;
     private long baseTroops;
+    private ExpeditionSupplyLevel expeditionSupplyLevel;
+    private long carriedFood;
 
     public ArmyState(String armyId, String ownerNationId, String locationPointId,
                      ArmyStatus status, long baseTroops) {
@@ -19,11 +21,27 @@ public final class ArmyState {
         setBaseTroops(baseTroops);
     }
 
+    public ArmyState(String armyId, String ownerNationId, String locationPointId,
+                     ArmyStatus status, long baseTroops, ExpeditionSupplyLevel expeditionSupplyLevel, long carriedFood) {
+        this(armyId, ownerNationId, locationPointId, status, baseTroops);
+        if (carriedFood < 0L) throw new IllegalArgumentException("carriedFood must be >= 0");
+        this.expeditionSupplyLevel = expeditionSupplyLevel;
+        this.carriedFood = carriedFood;
+    }
+
     public String armyId() { return armyId; }
     public String ownerNationId() { return ownerNationId; }
     public synchronized String locationPointId() { return locationPointId; }
     public synchronized ArmyStatus status() { return status; }
     public synchronized long baseTroops() { return baseTroops; }
+    public synchronized ExpeditionSupplyLevel expeditionSupplyLevel() { return expeditionSupplyLevel; }
+    public synchronized long carriedFood() { return carriedFood; }
+
+    public synchronized void setExpeditionSupply(ExpeditionSupplyLevel level, long carriedFood) {
+        this.expeditionSupplyLevel = Objects.requireNonNull(level, "level");
+        if (carriedFood < 0L) throw new IllegalArgumentException("carriedFood must be >= 0");
+        this.carriedFood = carriedFood;
+    }
 
     public synchronized void setLocationPointId(String locationPointId) {
         this.locationPointId = requireId(locationPointId, "locationPointId");
