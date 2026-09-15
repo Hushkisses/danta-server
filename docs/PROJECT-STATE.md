@@ -50,7 +50,8 @@ Checkpoint: DEV-035 advance-stop conditions implemented; awaiting Windows live v
   - Sequential advance evaluates a typed stop policy after each arrival.
   - CAPITAL/MAJOR arrivals stop and clear the remaining operation queue; central_market is now MAJOR in the dev map for verification.
   - COMBAT and SUPPLY stop reasons/hooks exist, but authoritative combat/supply state arrives in later planned phases and is not fabricated into Army.
-  - Awaiting representative's Windows major-point stop and restart-persistence checks.
+  - First Windows test exposed stale external/existing dev-map point data; hotfix refreshes bundled map resource with backup and updates existing point definitions on import.
+  - Awaiting representative's Windows major-point stop and restart-persistence re-test.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
