@@ -4,6 +4,7 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.combat.GarrisonState;
 import kr.danta.core.economy.PersonalWallet;
+import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -25,6 +26,7 @@ public final class GameState {
     private final Map<String, ArmyOrder> armyOrdersByArmyId = new LinkedHashMap<>();
     private final Map<String, GarrisonState> garrisonsByPointId = new LinkedHashMap<>();
     private final Map<String, PersonalWallet> personalWalletsByPlayerId = new LinkedHashMap<>();
+    private final Map<String, StrategicResourceStockpile> strategicResourcesByNationId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -229,6 +231,30 @@ public final class GameState {
 
     public synchronized void clearPersonalWallets() {
         personalWalletsByPlayerId.clear();
+    }
+
+    public synchronized StrategicResourceStockpile getOrCreateStrategicResourceStockpile(String nationId) {
+        if (!nationsById.containsKey(nationId)) throw new IllegalArgumentException("nation does not exist: " + nationId);
+        return strategicResourcesByNationId.computeIfAbsent(nationId, StrategicResourceStockpile::new);
+    }
+
+    public synchronized Optional<StrategicResourceStockpile> strategicResourceStockpile(String nationId) {
+        return Optional.ofNullable(strategicResourcesByNationId.get(nationId));
+    }
+
+    public synchronized List<StrategicResourceStockpile> strategicResourceStockpiles() {
+        return List.copyOf(new ArrayList<>(strategicResourcesByNationId.values()));
+    }
+
+    public synchronized void addStrategicResourceStockpile(StrategicResourceStockpile stockpile) {
+        Objects.requireNonNull(stockpile, "stockpile");
+        if (!nationsById.containsKey(stockpile.nationId()))
+            throw new IllegalArgumentException("nation does not exist: " + stockpile.nationId());
+        strategicResourcesByNationId.put(stockpile.nationId(), stockpile);
+    }
+
+    public synchronized void clearStrategicResourceStockpiles() {
+        strategicResourcesByNationId.clear();
     }
 
 }
