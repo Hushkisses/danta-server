@@ -33,6 +33,24 @@ public final class FacilityService {
         return upgraded;
     }
 
+    public synchronized Optional<FacilityState> facility(String pointId, String facilityId) {
+        Objects.requireNonNull(facilityId, "facilityId");
+        var facilities = byPoint.get(pointId);
+        return facilities == null ? Optional.empty() : Optional.ofNullable(facilities.get(facilityId));
+    }
+
+    /** Restore authoritative installed state without consuming construction time again. */
+    public synchronized void restore(String pointId, FacilityState state) {
+        Objects.requireNonNull(state, "state");
+        var point = gameState.strategicPoint(pointId).orElseThrow(() -> new IllegalArgumentException("point not found: " + pointId));
+        var facilities = byPoint.computeIfAbsent(pointId, ignored -> new LinkedHashMap<>());
+        if (facilities.containsKey(state.facilityId())) throw new IllegalArgumentException("facility already exists: " + state.facilityId());
+        if (facilities.size() >= point.facilitySlots()) throw new IllegalStateException("facility slots full: " + pointId);
+        facilities.put(state.facilityId(), state);
+    }
+
+    public synchronized void clear() { byPoint.clear(); }
+
     public synchronized List<FacilityState> facilities(String pointId) {
         var facilities = byPoint.get(pointId);
         return facilities == null ? List.of() : List.copyOf(facilities.values());
