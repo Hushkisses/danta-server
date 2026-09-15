@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-083 COMPLETE; DEV-084 ResearchState/Queue core IMPLEMENTED awaiting Windows automated verification/integration
+Checkpoint: DEV-083 COMPLETE; DEV-084 core automated verification passed, Snapshot v14/Paper/restart integration IMPLEMENTED awaiting Windows live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -76,7 +76,7 @@ Checkpoint: DEV-083 COMPLETE; DEV-084 ResearchState/Queue core IMPLEMENTED await
 - DEV-083 ResearchDefinition data loader: COMPLETE, Windows quick-deploy automated tests/build verified.
 
 ## Implemented tickets awaiting live verification
-- DEV-084 ResearchState/Queue: core state + FIFO reservation queue + existing RuntimeScheduler integration + JUnit coverage implemented; Windows automated verification pending, then Snapshot/Paper integration before live restart verification.
+- DEV-084 ResearchState/Queue: core automated verification passed. Snapshot schema v14 + Paper dev commands + RuntimeScheduler recovery integration implemented; Windows quick-deploy/Paper/FIFO/pause/restart/completion persistence verification pending. dev084_alpha/beta are verification-only provisional definitions, not final research content.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -118,7 +118,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-084 core with Windows quick-deploy, then finish Snapshot/Paper integration and live restart verification before COMPLETE.
+2. Verify DEV-084 integration with Windows quick-deploy, Paper boot, FIFO queue, runtime pause, restart-mid-research recovery, and completion persistence. Keep IMPLEMENTED until those pass.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
