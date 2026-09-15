@@ -1,6 +1,6 @@
 # DEV-076F — General acquisition boundary + persistence foundation
 
-Status: IMPLEMENTED — Windows automated verification pending
+Status: IMPLEMENTED — automated build/tests verified; live Paper restart verification pending
 
 ## Implemented
 - GeneralAcquisitionService converts an unowned catalog GeneralDefinition into nation-owned GeneralState only after the calling content system has resolved eligibility/payment/reward.
@@ -17,3 +17,6 @@ Status: IMPLEMENTED — Windows automated verification pending
 - final acquisition cap enforcement (design mentions early/late targets, but exact phase/cap policy is not yet authoritative).
 
 Acquisition is therefore a common domain boundary, not a fake recruitment/raid implementation.
+
+## Live verification support
+Development-only admin commands now expose catalog acquisition, general inspection, strategic-point assignment and army-command assignment. All state-changing commands immediately request an important snapshot flush. This is verification tooling, not the final player recruitment UI/content.
