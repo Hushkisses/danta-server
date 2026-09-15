@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076F acquisition boundary + general snapshot schema v12 IMPLEMENTED; Windows verification/restart test pending
+Checkpoint: DEV-076F automated tests/build VERIFIED; development live-verification commands IMPLEMENTED; Paper acquire/assign/restart recovery test pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076F acquisition boundary + general snapshot schema v12 IMPLEMEN
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-076F acquisition + persistence foundation: IMPLEMENTED — unique catalog acquisition boundary and snapshot schema v12 for owned general state/assignment/injury/captivity; Windows quick-deploy + Paper restart verification pending
+- DEV-076F acquisition + persistence foundation: IMPLEMENTED — automated tests/build passed; development commands added for catalog acquisition + point/army assignment + inspection; Paper acquire/assign/restart recovery verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
