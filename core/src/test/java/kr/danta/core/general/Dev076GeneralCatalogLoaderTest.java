@@ -75,10 +75,14 @@ class Dev076GeneralCatalogLoaderTest {
                 List.of(), List.of("a","b")));
     }
 
-    @Test void shippedCatalogIsIntentionallyEmptyUntilContentApproval() {
+    @Test void shippedCatalogContainsExactlySevenAAndThreeSGenerals() {
         try (var in = getClass().getResourceAsStream("/generals/initial-generals.yml")) {
             assertNotNull(in);
-            assertTrue(loader.load(in).isEmpty());
+            List<GeneralDefinition> defs = loader.load(in);
+            assertEquals(10, defs.size());
+            assertEquals(7, defs.stream().filter(d -> d.grade() == GeneralGrade.A).count());
+            assertEquals(3, defs.stream().filter(d -> d.grade() == GeneralGrade.S).count());
+            assertTrue(defs.stream().allMatch(d -> d.abilityIds().size() == 1));
         } catch (java.io.IOException e) {
             fail(e);
         }
