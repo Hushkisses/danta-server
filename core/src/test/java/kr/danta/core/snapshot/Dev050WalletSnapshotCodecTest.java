@@ -12,7 +12,7 @@ class Dev050WalletSnapshotCodecTest {
                 null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(new PersonalWalletSnapshot("player-1", 700)));
         GameSnapshot decoded = GameSnapshotCodec.decode(GameSnapshotCodec.encode(snapshot));
-        assertEquals(8, decoded.schemaVersion());
+        assertEquals(GameSnapshot.CURRENT_SCHEMA, decoded.schemaVersion());
         assertEquals(1, decoded.personalWallets().size());
         assertEquals("player-1", decoded.personalWallets().get(0).playerId());
         assertEquals(700, decoded.personalWallets().get(0).balance());
