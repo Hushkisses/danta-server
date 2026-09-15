@@ -5,8 +5,10 @@ import kr.danta.core.state.GameState;
 import kr.danta.core.territory.PointPosition;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.territory.StrategicEdge;
 import org.junit.jupiter.api.Test;
 import java.util.Map;
+import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class Dev053PointProductionTest {
@@ -19,6 +21,7 @@ class Dev053PointProductionTest {
                 new PointPosition("world", 0, 64, 0), 2, Map.of("food", 200L)));
         state.addStrategicPoint(new StrategicPoint("mine", "Mine", StrategicPointType.MINE, "red",
                 new PointPosition("world", 1, 64, 0), 2, Map.of("iron", 120L)));
+        state.addStrategicEdge(new StrategicEdge("farm-mine", "farm", "mine", 1_000L, Set.of()));
         new StrategicPointProductionService(state).produceOneTick();
         StrategicResourceStockpile stock = state.getOrCreateStrategicResourceStockpile("red");
         assertEquals(100, stock.amount(StrategicResource.FOOD));
