@@ -16,9 +16,10 @@ public record GameSnapshot(
         List<StrategicEdgeSnapshot> strategicEdges,
         List<ArmySnapshot> armies,
         List<ArmyOrderSnapshot> armyOrders,
-        List<ArmyOperationQueueSnapshot> armyOperationQueues
+        List<ArmyOperationQueueSnapshot> armyOperationQueues,
+        List<PersonalWalletSnapshot> personalWallets
 ) {
-    public static final int CURRENT_SCHEMA = 7;
+    public static final int CURRENT_SCHEMA = 8;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -35,5 +36,18 @@ public record GameSnapshot(
         armies = armies == null ? List.of() : List.copyOf(armies);
         armyOrders = armyOrders == null ? List.of() : List.copyOf(armyOrders);
         armyOperationQueues = armyOperationQueues == null ? List.of() : List.copyOf(armyOperationQueues);
+        personalWallets = personalWallets == null ? List.of() : List.copyOf(personalWallets);
+    }
+
+    /** Backward source-compatible constructor used by pre-DEV-050 callers/tests. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
+                        boolean runtimePaused, double runtimeSpeedMultiplier, String seasonId,
+                        String seasonDisplayName, List<NationSnapshot> nations,
+                        List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies, List<ArmyOrderSnapshot> armyOrders,
+                        List<ArmyOperationQueueSnapshot> armyOperationQueues) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
+                armyOperationQueues, List.of());
     }
 }
