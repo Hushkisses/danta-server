@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-055 army food/supply consumption baseline COMPLETE; next DEV-056 expedition supply selection
+Checkpoint: DEV-056 expedition supply selection IMPLEMENTED; awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -60,7 +60,10 @@ Checkpoint: DEV-055 army food/supply consumption baseline COMPLETE; next DEV-056
 - DEV-055 army food/supply consumption baseline: COMPLETE, Windows automated + stationed/moving EconomyTick verification passed
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-056 expedition supply selection: IMPLEMENTED
+  - LIGHT/STANDARD/HEAVY (경량/표준/대량), provisional 100/300/600 FOOD.
+  - Stationed armies can load supply; national FOOD is deducted atomically.
+  - Army display + snapshot schema v11 persist selected tier and carried FOOD; old snapshots remain readable.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -87,7 +90,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-056 expedition supply selection
+1. DEV-056 Windows automated/Paper/restart verification
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
