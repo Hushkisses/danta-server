@@ -7,6 +7,8 @@ import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyOrderService;
 import kr.danta.core.army.ArmyMovementTime;
 import kr.danta.core.army.ArmyMovementTimeService;
+import kr.danta.core.army.ArmyOperationQueue;
+import kr.danta.core.army.ArmyOperationQueueService;
 import kr.danta.core.event.DomainEventBus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
@@ -18,6 +20,7 @@ import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
+import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.PointPosition;
@@ -69,6 +72,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
     private ArmyMovementTimeService armyMovementTimeService;
+    private ArmyOperationQueueService armyOperationQueueService;
+    private final java.util.Map<String, ArmyOperationQueue> armyOperationQueues = new java.util.LinkedHashMap<>();
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
     private DevMapDefinition devMapDefinition;
@@ -88,6 +93,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         territoryService = new TerritoryService(gameState, eventBus);
         armyOrderService = new ArmyOrderService(gameState);
         armyMovementTimeService = new ArmyMovementTimeService(gameState);
+        armyOperationQueueService = new ArmyOperationQueueService(gameState);
         nationGuiController = new NationGuiController(gameState);
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
@@ -635,6 +641,24 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     if (order.isEmpty()) sender.sendMessage("§7현재 등록된 군단 명령이 없습니다: §e" + army.armyId());
                     else sendArmyOrder(sender, order.get());
                 }
+                case "queue" -> {
+                    requireArgs(args, 4, "/danta army queue <군단-id> <목적지1> [목적지2 ...]");
+                    ArmyOperationQueue queue = armyOperationQueueService.create(
+                            args[2], Arrays.asList(Arrays.copyOfRange(args, 3, args.length)));
+                    armyOperationQueues.put(queue.armyId(), queue);
+                    syncOperationQueuesToSnapshot();
+                    startQueuedLeg(queue.armyId());
+                    flushArmyState("army-operation-queue:" + queue.armyId());
+                    sender.sendMessage("§a연속 작전을 시작했습니다: §e" + queue.armyId());
+                    sender.sendMessage("§f예약 경로: §e" + String.join(" §f-> §e", queue.destinations()));
+                }
+                case "queue-show" -> {
+                    requireArgs(args, 3, "/danta army queue-show <군단-id>");
+                    ArmyOperationQueue queue = armyOperationQueues.get(args[2]);
+                    if (queue == null) sender.sendMessage("§7현재 등록된 연속 작전이 없습니다: §e" + args[2]);
+                    else sender.sendMessage("§6[연속 작전] §e" + queue.armyId() + " §f남은 경로: §e"
+                            + String.join(" §f-> §e", queue.destinations()));
+                }
                 case "eta" -> {
                     requireArgs(args, 3, "/danta army eta <군단-id>");
                     ArmyMovementTime movementTime = armyMovementTimeService.calculateForArmy(args[2]);
@@ -643,7 +667,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     sender.sendMessage("§f경로 수정치: §ex" + String.format(Locale.ROOT, "%.3f", movementTime.multiplier()));
                     sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
                 }
-                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order|eta>");
+                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order|eta|queue|queue-show>");
             }
         } catch (RuntimeException ex) {
             sendCommandError(sender, "군단", ex);
@@ -979,6 +1003,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private void restoreArmyMovements() {
         if (snapshotService == null || runtimeScheduler == null) return;
         pendingMovementSnapshots.clear();
+        armyOperationQueues.clear();
+        for (ArmyOperationQueueSnapshot queue : snapshotService.armyOperationQueues()) {
+            if (!queue.destinations().isEmpty()) armyOperationQueues.put(queue.armyId(), new ArmyOperationQueue(queue.armyId(), queue.destinations()));
+        }
         for (ArmyOrderSnapshot movement : snapshotService.restoredArmyOrders()) {
             pendingMovementSnapshots.put(movement.armyId(), movement);
             RuntimeScheduledTask task = new RuntimeScheduledTask(
@@ -1002,8 +1030,41 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         army.setStatus(ArmyStatus.STATIONED);
         gameState.removeArmyOrder(armyId);
         removeActiveMovement(armyId);
+
+        ArmyOperationQueue queue = armyOperationQueues.get(armyId);
+        if (queue != null) {
+            if (queue.hasFollowingLeg()) {
+                ArmyOperationQueue remaining = queue.afterArrival();
+                armyOperationQueues.put(armyId, remaining);
+                syncOperationQueuesToSnapshot();
+                startQueuedLeg(armyId);
+            } else {
+                armyOperationQueues.remove(armyId);
+                syncOperationQueuesToSnapshot();
+            }
+        }
         flushArmyState("army-move-arrive:" + armyId);
         getLogger().info("[ArmyMovement] arrived: army=" + armyId + ", point=" + army.locationPointId());
+    }
+
+    private void startQueuedLeg(String armyId) {
+        ArmyOperationQueue queue = armyOperationQueues.get(armyId);
+        if (queue == null) return;
+        ArmyOrder order = armyOrderService.issueMoveOrder(armyId, queue.nextDestination());
+        ArmyMovementTime movementTime = armyMovementTimeService.calculateForArmy(armyId);
+        RuntimeScheduledTask task = runtimeScheduler.scheduleAfter(
+                movementTime.effectiveDuration(), "army.move.arrive",
+                Map.of("armyId", armyId, "orderId", order.orderId()));
+        requireArmy(armyId).setStatus(ArmyStatus.MOVING);
+        updateActiveMovement(order, task.dueRuntimeMillis());
+        syncOperationQueuesToSnapshot();
+    }
+
+    private void syncOperationQueuesToSnapshot() {
+        if (snapshotService == null) return;
+        snapshotService.setArmyOperationQueues(armyOperationQueues.values().stream()
+                .map(queue -> new ArmyOperationQueueSnapshot(queue.armyId(), queue.destinations()))
+                .toList());
     }
 
     private void pumpRuntimeScheduler() {
