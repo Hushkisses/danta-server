@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v7; DEV-034 writes v7. */
+/** Dependency-free snapshot codec. Reads schema v1-v8; DEV-050 writes v8. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -30,7 +30,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -81,13 +81,42 @@ public final class GameSnapshotCodec {
         }
         if (schema == 7) {
             if (p.length != 13) throw new IllegalArgumentException("invalid schema v7 field count");
-            return new GameSnapshot(schema,
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]));
         }
+        if (schema == 8) {
+            if (p.length != 14) throw new IllegalArgumentException("invalid schema v8 field count");
+            return new GameSnapshot(schema,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
+    }
+
+
+    private static String encodePersonalWallets(List<PersonalWalletSnapshot> wallets) {
+        if (wallets == null || wallets.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (PersonalWalletSnapshot wallet : wallets) {
+            rows.add(enc(wallet.playerId()) + "," + wallet.balance());
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<PersonalWalletSnapshot> decodePersonalWallets(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<PersonalWalletSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 2) throw new IllegalArgumentException("invalid personal wallet snapshot row");
+            result.add(new PersonalWalletSnapshot(dec(f[0]), Long.parseLong(f[1])));
+        }
+        return List.copyOf(result);
     }
 
     private static String encodeNations(List<NationSnapshot> nations) {
