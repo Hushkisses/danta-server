@@ -41,7 +41,7 @@ public final class GameSnapshotCodec {
             if (p.length != 7) throw new IllegalArgumentException("invalid schema v1 field count");
             return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
-                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), List.of(), List.of(), List.of(), List.of());
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), List.of(), List.of(), List.of(), List.of(), List.of());
         }
         if (schema == 2) {
             if (p.length != 8) throw new IllegalArgumentException("invalid schema v2 field count");
