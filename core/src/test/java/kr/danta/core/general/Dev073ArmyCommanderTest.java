@@ -4,6 +4,7 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.state.GameState;
+import kr.danta.core.territory.PointPosition;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicPointType;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,8 @@ class Dev073ArmyCommanderTest {
         GameState s = new GameState();
         s.addNation(new NationState("red", "Red"));
         s.addNation(new NationState("blue", "Blue"));
-        s.addStrategicPoint(new StrategicPoint("p1", "P1", StrategicPointType.CAPITAL, "red"));
-        s.addStrategicPoint(new StrategicPoint("p2", "P2", StrategicPointType.NORMAL, "red"));
+        s.addStrategicPoint(new StrategicPoint("p1", "P1", StrategicPointType.CAPITAL, "red", new PointPosition("world", 0, 64, 0), 4, java.util.Map.of()));
+        s.addStrategicPoint(new StrategicPoint("p2", "P2", StrategicPointType.FARM, "red", new PointPosition("world", 100, 64, 0), 2, java.util.Map.of()));
         s.addGeneral(new GeneralState("g1", "red", GeneralGrade.B, 3));
         s.addGeneral(new GeneralState("g2", "blue", GeneralGrade.C, 2));
         s.addArmy(new ArmyState("a1", "red", "p1", ArmyStatus.STATIONED, 100));
