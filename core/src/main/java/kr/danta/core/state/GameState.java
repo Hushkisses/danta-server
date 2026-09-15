@@ -234,7 +234,7 @@ public final class GameState {
     }
 
     public synchronized StrategicResourceStockpile getOrCreateStrategicResourceStockpile(String nationId) {
-        if (!nationsById.containsKey(nationId)) throw new IllegalArgumentException("nation does not exist: " + nationId);
+        if (!nations.containsKey(nationId)) throw new IllegalArgumentException("nation does not exist: " + nationId);
         return strategicResourcesByNationId.computeIfAbsent(nationId, StrategicResourceStockpile::new);
     }
 
@@ -248,7 +248,7 @@ public final class GameState {
 
     public synchronized void addStrategicResourceStockpile(StrategicResourceStockpile stockpile) {
         Objects.requireNonNull(stockpile, "stockpile");
-        if (!nationsById.containsKey(stockpile.nationId()))
+        if (!nations.containsKey(stockpile.nationId()))
             throw new IllegalArgumentException("nation does not exist: " + stockpile.nationId());
         strategicResourcesByNationId.put(stockpile.nationId(), stockpile);
     }
