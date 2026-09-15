@@ -1,12 +1,15 @@
 package kr.danta.paper.persistence;
 
 import kr.danta.core.army.ArmyState;
+import kr.danta.core.army.ArmyOrder;
+import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.persistence.AsyncKeyValueRepository;
 import kr.danta.core.runtime.RuntimeClockService;
 import kr.danta.core.snapshot.GameSnapshot;
 import kr.danta.core.snapshot.GameSnapshotCodec;
 import kr.danta.core.snapshot.ArmySnapshot;
+import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.NationSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
@@ -33,6 +36,7 @@ public final class SnapshotService {
     private final RuntimeClockService runtimeClock;
     private final GameState gameState;
     private final Logger logger;
+    private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
 
     public SnapshotService(AsyncKeyValueRepository repository, RuntimeClockService runtimeClock,
                            GameState gameState, Logger logger) {
@@ -91,6 +95,15 @@ public final class SnapshotService {
             gameState.addArmy(new ArmyState(army.armyId(), army.ownerNationId(), army.locationPointId(),
                     army.status(), army.baseTroops()));
         }
+        restoredArmyOrders = snapshot.armyOrders();
+        for (ArmyOrderSnapshot order : snapshot.armyOrders()) {
+            gameState.addArmyOrder(new ArmyOrder(order.orderId(), order.armyId(), order.type(),
+                    new ArmyRoute(order.originPointId(), order.destinationPointId(), order.edgeId()), order.status()));
+        }
+    }
+
+    public List<ArmyOrderSnapshot> restoredArmyOrders() {
+        return List.copyOf(restoredArmyOrders);
     }
 
     public void flushOnShutdown() {
@@ -121,9 +134,16 @@ public final class SnapshotService {
                 .map(army -> new ArmySnapshot(army.armyId(), army.ownerNationId(), army.locationPointId(),
                         army.status(), army.baseTroops()))
                 .toList();
+        java.util.Map<String, Long> dueByArmy = restoredArmyOrders.stream()
+                .collect(java.util.stream.Collectors.toMap(ArmyOrderSnapshot::armyId, ArmyOrderSnapshot::dueRuntimeMillis, (a, b) -> b));
+        List<ArmyOrderSnapshot> armyOrders = gameState.armyOrders().stream()
+                .map(order -> new ArmyOrderSnapshot(order.orderId(), order.armyId(), order.type(),
+                        order.route().originPointId(), order.route().destinationPointId(), order.route().edgeId(),
+                        order.status(), dueByArmy.getOrDefault(order.armyId(), runtimeClock.elapsedMillis())))
+                .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies);
+                nations, points, edges, armies, armyOrders);
     }
 }
