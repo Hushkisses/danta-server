@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-033 runtime movement scheduling/restart recovery implemented; awaiting Windows live verification
+Checkpoint: DEV-033 runtime movement scheduling/restart recovery complete; DEV-034 is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -42,13 +42,10 @@ Checkpoint: DEV-033 runtime movement scheduling/restart recovery implemented; aw
 - DEV-031 ArmyOrder/Route: COMPLETE, Windows build and Paper command checks verified
 - DEV-031.1 player-facing Korean output: COMPLETE, Windows build and Paper command checks verified
 - DEV-032 movement-time calculation: COMPLETE, Windows build and Paper command checks verified
+- DEV-033 runtime movement scheduling/restart recovery: COMPLETE, Windows arrival and restart-mid-movement recovery verified
 
 ## Implemented tickets awaiting live verification
-- DEV-033 runtime movement scheduling/restart recovery: IMPLEMENTED
-  - Accepted movement orders schedule an `army.move.arrive` task against server runtime and set the army to MOVING.
-  - Active movement order + due runtime are persisted in snapshot schema v6; v1-v5 remain readable.
-  - Snapshot recovery restores movement tasks, and arrival updates location/status then removes the active order.
-  - Awaiting representative's Windows Gradle build, arrival, and restart-mid-movement checks.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -73,10 +70,9 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-033 Windows build and Paper live verification
-2. DEV-034 sequential operation queue
-3. DEV-035 advance-stop conditions
-4. DEV-036 army GUI
+1. DEV-034 sequential operation queue
+2. DEV-035 advance-stop conditions
+3. DEV-036 army GUI
 
 ## Manual verification baseline
 A checkpoint is healthy if:
