@@ -97,6 +97,9 @@ public final class UiText {
         if (message.startsWith("destination is not adjacent")) return "목적지가 군단의 현재 위치와 인접하지 않습니다.";
         if (message.startsWith("army is already at destination")) return "군단이 이미 해당 목적지에 있습니다.";
         if (message.startsWith("army must be STATIONED")) return "군단이 주둔 중일 때만 이동 명령을 내릴 수 있습니다.";
+        if (message.startsWith("operation queue must contain at least one destination")) return "연속 작전에는 목적지가 하나 이상 필요합니다.";
+        if (message.startsWith("operation route contains duplicate current point")) return "연속 작전 경로에 현재 위치와 같은 거점이 연속으로 포함되어 있습니다.";
+        if (message.startsWith("operation route contains non-adjacent leg")) return "연속 작전 경로에는 서로 직접 연결되지 않은 거점이 포함되어 있습니다.";
         if (message.startsWith("army has no current order")) return "해당 군단에는 현재 이동 명령이 없습니다.";
         if (message.startsWith("army location no longer matches order origin")) return "군단 위치가 이동 명령의 출발지와 일치하지 않습니다.";
         if (message.startsWith("movement order route no longer matches strategic edge")) return "이동 명령의 경로 정보가 현재 전략 간선과 일치하지 않습니다.";
