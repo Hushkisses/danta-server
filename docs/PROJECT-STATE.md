@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-075 prisoner/ransom/exchange/detention cap COMPLETE; next DEV-076 initial general data (~10)
+Checkpoint: DEV-076A initial-general YAML schema/loader IMPLEMENTED; Windows verification pending; DEV-076 roster content remains unresolved
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-075 prisoner/ransom/exchange/detention cap COMPLETE; next DEV-07
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-076A initial-general YAML schema/loader: IMPLEMENTED — strict data-driven catalog and tests added; shipped roster intentionally empty pending content approval; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -97,7 +97,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 ## Open items
 1. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
-3. General balance values unresolved by design v0.3: stat upper range, F-S base-stat distribution, Lv1-10 stat growth, exact command/martial/intelligence/politics effect coefficients, and fixed/random/selectable growth method.
+3. General balance values unresolved by design v0.3: stat upper range, F/D/C/B/A/S base-stat distribution, Lv1-10 stat growth, exact command/martial/strategy/logistics effect coefficients, and fixed/random/selectable growth method.
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 6. Source alignment corrected on DEV-074 re-check: design v0.3 and execution plan use 통솔/무력/지략/병참; GeneralStats now matches command/martial/strategy/logistics. Earlier intelligence/politics wording was an implementation mistake.
@@ -107,10 +107,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 10. DEV-073 does not define independent unassigned-general travel time/cost; no teleport/travel queue was invented. Commander/general snapshot persistence must be added together when general persistence becomes authoritative.
 11. DEV-074 injury balance remains unresolved: injury/severe-injury probabilities, exact recovery durations, stat/grade/equipment modifiers, and whether injured generals are unavailable or command with penalties.
 12. DEV-075 final prisoner rules remain unresolved by v0.3: exact detention cap within the provisional 1.5–2 runtime-hour range, capture probability, ransom formula, exchange transaction/UX, and automatic repatriation-vs-escape determination. Captivity persistence + expiry scheduler must be added with authoritative general persistence.
+13. DEV-076 roster content is unresolved: approximately 10 identities/names, grade distribution, starting levels/stats, trait/ability assignments, and initial ownership/acquisition placement. YAML schema/loader exists; do not populate final values without approval.
 
 ## Next execution order
-1. DEV-073 army commander assignment/movement
-3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan
+1. Verify DEV-076A YAML schema/loader on Windows.
+2. Approve and populate the approximately 10 initial generals; then integrate catalog at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
