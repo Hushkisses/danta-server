@@ -17,6 +17,7 @@ public final class StrategicPoint {
     private String ownerNationId;
     private PointPosition position;
     private int facilitySlots;
+    private String assignedGeneralId;
     private final Map<String, Long> baseProductionPerHour = new LinkedHashMap<>();
 
     public StrategicPoint(String pointId, String displayName, StrategicPointType type,
@@ -43,6 +44,15 @@ public final class StrategicPoint {
     public synchronized PointPosition position() { return position; }
     public synchronized int facilitySlots() { return facilitySlots; }
     public synchronized Map<String, Long> baseProductionPerHour() { return Map.copyOf(baseProductionPerHour); }
+    public synchronized Optional<String> assignedGeneralId() { return Optional.ofNullable(assignedGeneralId); }
+
+    public synchronized void setAssignedGeneralId(String generalId) {
+        this.assignedGeneralId = requireId(generalId, "generalId");
+    }
+
+    public synchronized void clearAssignedGeneralId() {
+        this.assignedGeneralId = null;
+    }
 
     public synchronized void rename(String displayName) { this.displayName = requireName(displayName); }
     public synchronized void setType(StrategicPointType type) { this.type = Objects.requireNonNull(type, "type"); }
