@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-083 COMPLETE; DEV-084 core automated verification passed, Snapshot v14/Paper/restart integration IMPLEMENTED awaiting Windows live verification
+Checkpoint: DEV-084 COMPLETE; DEV-082 NBT content verification deferred; next DEV-085 four-field/prerequisite eligibility
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -74,9 +74,9 @@ Checkpoint: DEV-083 COMPLETE; DEV-084 core automated verification passed, Snapsh
 - DEV-080 Facility I~III / slots: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified.
 - DEV-081 construction Runtime Scheduler: COMPLETE, Windows automated tests/build and live Paper construction/restart recovery verified.
 - DEV-083 ResearchDefinition data loader: COMPLETE, Windows quick-deploy automated tests/build verified.
+- DEV-084 ResearchState/Queue: COMPLETE. Windows quick-deploy, Paper boot, FIFO reservation, runtime pause, restart-mid-research recovery, automatic next-research start, completion persistence and Snapshot v14 recovery verified. dev084_alpha/beta remain verification-only provisional definitions, not final content.
 
 ## Implemented tickets awaiting live verification
-- DEV-084 ResearchState/Queue: core automated verification passed. Snapshot schema v14 + Paper dev commands + RuntimeScheduler recovery integration implemented; Windows quick-deploy/Paper/FIFO/pause/restart/completion persistence verification pending. dev084_alpha/beta are verification-only provisional definitions, not final research content.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -118,7 +118,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-084 integration with Windows quick-deploy, Paper boot, FIFO queue, runtime pause, restart-mid-research recovery, and completion persistence. Keep IMPLEMENTED until those pass.
+2. Proceed to DEV-085 four-field/prerequisite eligibility enforcement using DEV-083 definitions and DEV-084 authoritative ResearchState/Queue.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
