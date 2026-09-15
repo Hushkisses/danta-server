@@ -1,5 +1,6 @@
 package kr.danta.paper;
 
+import kr.danta.core.economy.EconomyTickService;
 import kr.danta.core.economy.StrategicResource;
 import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.economy.EconomyTransferService;
@@ -82,6 +83,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private GameState gameState;
     private DomainEventBus eventBus;
     private RuntimeScheduler runtimeScheduler;
+    private EconomyTickService economyTickService;
+    private long economyTicksProcessed;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
     private ArmyMovementTimeService armyMovementTimeService;
@@ -128,6 +131,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         runtimeRepository = new PropertiesRuntimeClockRepository(runtimeFile);
         restoreRuntime();
         runtimeClock.start();
+        economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
 
         runtimeScheduler = new RuntimeScheduler(runtimeClock);
         runtimeScheduler.registerHandler("dev.echo", task ->
@@ -250,6 +254,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("combat")) return handleCombat(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("economy")) return handleEconomy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("resource")) return handleResource(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("economy-tick")) return handleEconomyTick(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
@@ -590,6 +595,21 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
             if (error != null) getLogger().warning("DEV-021 strategic point snapshot flush failed: " + rootMessage(error));
         });
+    }
+
+    private boolean handleEconomyTick(CommandSender sender) {
+        if (!sender.hasPermission("danta.admin.nation")) {
+            sender.sendMessage("§c경제 상태 확인 권한이 없습니다.");
+            return true;
+        }
+        long now = runtimeClock.elapsedMillis();
+        long next = economyTickService == null ? now : economyTickService.nextTickRuntimeMillis();
+        sender.sendMessage("§6[경제 Tick]");
+        sender.sendMessage("§f처리 누적: §e" + economyTicksProcessed + "회");
+        sender.sendMessage("§f현재 서버시간: §e" + formatRuntime(now));
+        sender.sendMessage("§f다음 Tick: §e" + formatRuntime(next));
+        sender.sendMessage("§7경제 Tick은 서버 러닝타임 30분마다 발생합니다.");
+        return true;
     }
 
     private boolean handleResource(CommandSender sender, String[] args) {
@@ -1243,6 +1263,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private void pumpRuntimeScheduler() {
         if (runtimeScheduler == null) return;
+        pumpEconomyTicks();
         for (RuntimeTaskExecution execution : runtimeScheduler.executeDueTasks()) {
             if (!execution.success()) {
                 getLogger().severe("Runtime task failed: id=" + execution.task().id()
@@ -1250,6 +1271,15 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                         + ", error=" + execution.error().getMessage());
             }
         }
+    }
+
+    private void pumpEconomyTicks() {
+        if (economyTickService == null || runtimeClock == null) return;
+        int due = economyTickService.claimDueTicks(runtimeClock.elapsedMillis());
+        if (due <= 0) return;
+        economyTicksProcessed += due;
+        getLogger().info("[EconomyTick] " + due + "회 처리, 누적=" + economyTicksProcessed
+                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
     }
 
     private void runSync(Runnable action) {
