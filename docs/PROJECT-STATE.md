@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-082 IMPLEMENTED with NBT content verification deferred; DEV-083 IMPLEMENTED awaiting Windows automated verification
+Checkpoint: DEV-083 COMPLETE; DEV-082 NBT content verification deferred; next DEV-084 ResearchState/Queue
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -73,9 +73,9 @@ Checkpoint: DEV-082 IMPLEMENTED with NBT content verification deferred; DEV-083 
 - DEV-076 initial elite general data/acquisition-persistence foundation: COMPLETE, A×7/S×3 catalog + Paper restart recovery + duplicate-acquisition Korean rejection verified.
 - DEV-080 Facility I~III / slots: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified.
 - DEV-081 construction Runtime Scheduler: COMPLETE, Windows automated tests/build and live Paper construction/restart recovery verified.
+- DEV-083 ResearchDefinition data loader: COMPLETE, Windows quick-deploy automated tests/build verified.
 
 ## Implemented tickets awaiting live verification
-- DEV-083 ResearchDefinition data loader: IMPLEMENTED in core with strict YAML validation and JUnit coverage; Windows quick-deploy verification pending.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -117,7 +117,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-083 with Windows quick-deploy; if successful mark COMPLETE and proceed to DEV-084 ResearchState/Queue.
+2. Proceed to DEV-084 ResearchState/Queue.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
