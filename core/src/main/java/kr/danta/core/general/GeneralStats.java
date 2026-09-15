@@ -1,23 +1,21 @@
 package kr.danta.core.general;
 
 /**
- * DEV-071 four general stats defined by design v0.3.
- *
- * The design fixes the axes (command/martial/intelligence/politics) but does not
- * yet fix an authoritative numeric range or grade/level growth table. Values are
- * therefore non-negative raw stats; combat/economy coefficients are deferred.
+ * Four general stats fixed by design v0.3:
+ * command(통솔), martial(무력), strategy(지략), logistics(병참).
+ * Numeric ranges and effect coefficients remain balance data.
  */
 public record GeneralStats(
         int command,
         int martial,
-        int intelligence,
-        int politics
+        int strategy,
+        int logistics
 ) {
     public GeneralStats {
         requireNonNegative(command, "command");
         requireNonNegative(martial, "martial");
-        requireNonNegative(intelligence, "intelligence");
-        requireNonNegative(politics, "politics");
+        requireNonNegative(strategy, "strategy");
+        requireNonNegative(logistics, "logistics");
     }
 
     public static GeneralStats zero() {
