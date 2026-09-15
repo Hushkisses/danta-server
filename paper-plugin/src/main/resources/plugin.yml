@@ -50,6 +50,10 @@ permissions:
     description: Allows DEV strategic edge domain administration.
     default: op
 
+  danta.admin.army:
+    description: Allows DEV army domain administration.
+    default: op
+
   danta.command.nation:
     description: Allows use of the nation information GUI.
     default: true

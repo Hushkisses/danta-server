@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
-Updated: 2026-09-14
-Checkpoint: DEV-MAP-002 structure/template pipeline live-verified
+Updated: 2026-09-15
+Checkpoint: DEV-030 Army domain implemented; awaiting Windows build and live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -39,6 +39,13 @@ Checkpoint: DEV-MAP-002 structure/template pipeline live-verified
 - DEV-MAP-001 10-point logical test map: COMPLETE
 - DEV-MAP-002 structure/template placement pipeline: COMPLETE, live server verified
 
+## Implemented tickets awaiting live verification
+- DEV-030 Army domain: IMPLEMENTED
+  - Army owner/location/status/base-troop state added.
+  - Snapshot schema v5 persists and restores armies while reading v1-v4.
+  - `/danta army` DEV administration commands added.
+  - Awaiting representative's Windows Gradle build and Paper restart-recovery test.
+
 ## Important implementation decisions
 - Internal IDs/enums remain English; player-facing GUI text is Korean through UiText.
 - Strategic-point ownership changes go through TerritoryService and emit domain events.
@@ -49,6 +56,7 @@ Checkpoint: DEV-MAP-002 structure/template pipeline live-verified
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
+- DEV-030 intentionally stores a single base-troop count; troop-type composition remains DEV-040.
 
 ## Current test data (local dev server only)
 Known examples include nation red, nation blue, strategic point farm_a, strategic point capital_red, and edge road_1. Exact local values live in the representative's PostgreSQL snapshot and are not source-controlled.
@@ -58,7 +66,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-030 Army domain
+1. DEV-030 Windows build and Paper restart-recovery verification
 2. DEV-031 ArmyOrder/Route
 3. DEV-032 movement-time calculation
 4. DEV-033 runtime movement scheduling/restart recovery

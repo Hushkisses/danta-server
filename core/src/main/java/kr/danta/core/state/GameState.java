@@ -1,5 +1,6 @@
 package kr.danta.core.state;
 
+import kr.danta.core.army.ArmyState;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -17,6 +18,7 @@ public final class GameState {
     private final Map<String, NationState> nations = new LinkedHashMap<>();
     private final Map<String, StrategicPoint> strategicPoints = new LinkedHashMap<>();
     private final Map<String, StrategicEdge> strategicEdges = new LinkedHashMap<>();
+    private final Map<String, ArmyState> armies = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -110,5 +112,34 @@ public final class GameState {
     public synchronized void clearStrategicEdges() {
         strategicEdges.clear();
     }
-}
 
+    public synchronized void addArmy(ArmyState army) {
+        Objects.requireNonNull(army, "army");
+        if (armies.containsKey(army.armyId())) {
+            throw new IllegalArgumentException("army already exists: " + army.armyId());
+        }
+        if (!nations.containsKey(army.ownerNationId())) {
+            throw new IllegalArgumentException("army owner nation does not exist: " + army.ownerNationId());
+        }
+        if (!strategicPoints.containsKey(army.locationPointId())) {
+            throw new IllegalArgumentException("army location does not exist: " + army.locationPointId());
+        }
+        armies.put(army.armyId(), army);
+    }
+
+    public synchronized Optional<ArmyState> army(String armyId) {
+        return Optional.ofNullable(armies.get(armyId));
+    }
+
+    public synchronized List<ArmyState> armies() {
+        return List.copyOf(new ArrayList<>(armies.values()));
+    }
+
+    public synchronized boolean hasArmy(String armyId) {
+        return armies.containsKey(armyId);
+    }
+
+    public synchronized void clearArmies() {
+        armies.clear();
+    }
+}

@@ -1,6 +1,8 @@
 package kr.danta.paper;
 
 import kr.danta.core.DantaCore;
+import kr.danta.core.army.ArmyState;
+import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.event.DomainEventBus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
@@ -205,6 +207,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("point")) return handleStrategicPoint(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("edge")) return handleStrategicEdge(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("army")) return handleArmy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[Danta Server DEV]");
@@ -535,6 +538,80 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (!databaseService.health().status().name().equals("READY")) return;
         snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
             if (error != null) getLogger().warning("DEV-021 strategic point snapshot flush failed: " + rootMessage(error));
+        });
+    }
+
+    private boolean handleArmy(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.army")) {
+            sender.sendMessage("§cNo permission: danta.admin.army");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
+        try {
+            switch (sub) {
+                case "create" -> {
+                    requireArgs(args, 6, "/danta army create <id> <nation-id> <point-id> <base-troops>");
+                    ArmyState army = new ArmyState(args[2], args[3], args[4], ArmyStatus.STATIONED,
+                            Long.parseLong(args[5]));
+                    gameState.addArmy(army);
+                    flushArmyState("army-create:" + army.armyId());
+                    sender.sendMessage("§aArmy created: §e" + army.armyId() + " §7owner="
+                            + army.ownerNationId() + ", location=" + army.locationPointId());
+                }
+                case "list" -> {
+                    sender.sendMessage("§6[Danta Armies] §7count=" + gameState.armies().size());
+                    for (ArmyState army : gameState.armies()) sendArmy(sender, army);
+                }
+                case "show" -> {
+                    requireArgs(args, 3, "/danta army show <id>");
+                    sendArmy(sender, requireArmy(args[2]));
+                }
+                case "troops" -> {
+                    requireArgs(args, 4, "/danta army troops <id> <base-troops>");
+                    ArmyState army = requireArmy(args[2]);
+                    army.setBaseTroops(Long.parseLong(args[3]));
+                    flushArmyState("army-troops:" + army.armyId());
+                    sender.sendMessage("§aArmy base troops updated: §e" + army.baseTroops());
+                }
+                case "status" -> {
+                    requireArgs(args, 4, "/danta army status <id> <STATIONED|MOVING|IN_BATTLE>");
+                    ArmyState army = requireArmy(args[2]);
+                    army.setStatus(ArmyStatus.valueOf(args[3].toUpperCase(Locale.ROOT)));
+                    flushArmyState("army-status:" + army.armyId());
+                    sender.sendMessage("§aArmy status updated: §e" + army.status());
+                }
+                case "location" -> {
+                    requireArgs(args, 4, "/danta army location <id> <point-id>");
+                    ArmyState army = requireArmy(args[2]);
+                    requireStrategicPoint(args[3]);
+                    army.setLocationPointId(args[3]);
+                    flushArmyState("army-location:" + army.armyId());
+                    sender.sendMessage("§aArmy location updated: §e" + army.locationPointId());
+                }
+                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location>");
+            }
+        } catch (RuntimeException ex) {
+            sender.sendMessage("§cArmy command failed: " + ex.getMessage());
+        }
+        return true;
+    }
+
+    private ArmyState requireArmy(String armyId) {
+        return gameState.army(armyId)
+                .orElseThrow(() -> new IllegalArgumentException("army not found: " + armyId));
+    }
+
+    private void sendArmy(CommandSender sender, ArmyState army) {
+        sender.sendMessage("§e" + army.armyId() + " §7owner=" + army.ownerNationId()
+                + ", location=" + army.locationPointId() + ", status=" + army.status()
+                + ", baseTroops=" + army.baseTroops());
+    }
+
+    private void flushArmyState(String reason) {
+        if (snapshotService == null || databaseService == null) return;
+        if (!databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
+            if (error != null) getLogger().warning("DEV-030 army snapshot flush failed: " + rootMessage(error));
         });
     }
 

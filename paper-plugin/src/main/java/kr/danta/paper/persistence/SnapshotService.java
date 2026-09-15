@@ -1,10 +1,12 @@
 package kr.danta.paper.persistence;
 
+import kr.danta.core.army.ArmyState;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.persistence.AsyncKeyValueRepository;
 import kr.danta.core.runtime.RuntimeClockService;
 import kr.danta.core.snapshot.GameSnapshot;
 import kr.danta.core.snapshot.GameSnapshotCodec;
+import kr.danta.core.snapshot.ArmySnapshot;
 import kr.danta.core.snapshot.NationSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
@@ -84,6 +86,11 @@ public final class SnapshotService {
             gameState.addStrategicEdge(new StrategicEdge(edge.edgeId(), edge.pointAId(), edge.pointBId(),
                     edge.baseTravelMillis(), edge.battlefieldTags()));
         }
+        gameState.clearArmies();
+        for (ArmySnapshot army : snapshot.armies()) {
+            gameState.addArmy(new ArmyState(army.armyId(), army.ownerNationId(), army.locationPointId(),
+                    army.status(), army.baseTroops()));
+        }
     }
 
     public void flushOnShutdown() {
@@ -110,9 +117,13 @@ public final class SnapshotService {
                 .map(edge -> new StrategicEdgeSnapshot(edge.edgeId(), edge.pointAId(), edge.pointBId(),
                         edge.baseTravelMillis(), edge.battlefieldTags()))
                 .toList();
+        List<ArmySnapshot> armies = gameState.armies().stream()
+                .map(army -> new ArmySnapshot(army.armyId(), army.ownerNationId(), army.locationPointId(),
+                        army.status(), army.baseTroops()))
+                .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges);
+                nations, points, edges, armies);
     }
 }
