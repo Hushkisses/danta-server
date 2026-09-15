@@ -34,6 +34,9 @@ import kr.danta.core.snapshot.FacilityConstructionSnapshot;
 import kr.danta.core.facility.FacilityService;
 import kr.danta.core.facility.FacilityState;
 import kr.danta.core.facility.FacilityConstructionService;
+import kr.danta.core.research.ResearchQueueEntry;
+import kr.danta.core.research.ResearchService;
+import kr.danta.core.research.ResearchState;
 import kr.danta.core.facility.FacilityConstructionState;
 import kr.danta.core.state.SeasonState;
 import kr.danta.core.territory.PointPosition;
@@ -60,6 +63,7 @@ public final class SnapshotService {
     private final Logger logger;
     private volatile FacilityService facilityService;
     private volatile FacilityConstructionService facilityConstructionService;
+    private volatile ResearchService researchService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -69,6 +73,10 @@ public final class SnapshotService {
         this.runtimeClock = runtimeClock;
         this.gameState = gameState;
         this.logger = logger;
+    }
+
+    public void bindResearch(ResearchService researchService) {
+        this.researchService = Objects.requireNonNull(researchService, "researchService");
     }
 
     public void bindFacilities(FacilityService facilityService, FacilityConstructionService constructionService) {
@@ -167,6 +175,15 @@ public final class SnapshotService {
                 facilityConstructionService.restore(new FacilityConstructionState(
                         pending.constructionId(), pending.pointId(), pending.facilityId(),
                         pending.targetTier(), pending.dueRuntimeMillis()));
+            }
+        }
+        if (researchService != null) {
+            for (ResearchStateSnapshot research : snapshot.researchStates()) {
+                List<ResearchQueueEntry> queue = research.queue().stream()
+                        .map(q -> new ResearchQueueEntry(q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis()))
+                        .toList();
+                researchService.restore(ResearchState.restored(
+                        research.nationId(), research.researchSlots(), research.completed(), queue));
             }
         }
         // Restore assignments after points, armies and generals all exist.
@@ -268,10 +285,16 @@ public final class SnapshotService {
                         .map(p -> new FacilityConstructionSnapshot(p.constructionId(), p.pointId(), p.facilityId(),
                                 p.targetTier(), p.dueRuntimeMillis()))
                         .toList();
+        List<ResearchStateSnapshot> researchStates = researchService == null ? List.of() :
+                researchService.states().stream()
+                        .map(state -> new ResearchStateSnapshot(state.nationId(), state.researchSlots(), state.completed(),
+                                state.queue().stream().map(q -> new ResearchQueueSnapshot(
+                                        q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis())).toList()))
+                        .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions);
+                facilities, facilityConstructions, researchStates);
     }
 }
