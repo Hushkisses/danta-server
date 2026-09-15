@@ -2,7 +2,7 @@ package kr.danta.core.snapshot;
 
 import java.util.List;
 
-/** Restart-recovery snapshot. Armies: schema v5 (DEV-030). */
+/** Restart-recovery snapshot. Active army movements: schema v6 (DEV-033). */
 public record GameSnapshot(
         int schemaVersion,
         long createdAtEpochMillis,
@@ -14,9 +14,10 @@ public record GameSnapshot(
         List<NationSnapshot> nations,
         List<StrategicPointSnapshot> strategicPoints,
         List<StrategicEdgeSnapshot> strategicEdges,
-        List<ArmySnapshot> armies
+        List<ArmySnapshot> armies,
+        List<ArmyOrderSnapshot> armyOrders
 ) {
-    public static final int CURRENT_SCHEMA = 5;
+    public static final int CURRENT_SCHEMA = 6;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -31,5 +32,6 @@ public record GameSnapshot(
         strategicPoints = strategicPoints == null ? List.of() : List.copyOf(strategicPoints);
         strategicEdges = strategicEdges == null ? List.of() : List.copyOf(strategicEdges);
         armies = armies == null ? List.of() : List.copyOf(armies);
+        armyOrders = armyOrders == null ? List.of() : List.copyOf(armyOrders);
     }
 }
