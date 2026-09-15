@@ -89,7 +89,16 @@ public final class DevMapLoader {
 
     private void ensureExternalCopy() {
         File file = new File(plugin.getDataFolder(), RESOURCE_PATH);
-        if (!file.exists()) plugin.saveResource(RESOURCE_PATH, false);
+        if (file.exists()) {
+            File backup = new File(file.getParentFile(), "dev-test-map.previous.yml");
+            try {
+                java.nio.file.Files.copy(file.toPath(), backup.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            } catch (java.io.IOException ex) {
+                throw new IllegalStateException("failed to back up existing dev map definition", ex);
+            }
+        }
+        plugin.saveResource(RESOURCE_PATH, true);
     }
 
     private static String optionalId(Object value) {
