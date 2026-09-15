@@ -4,6 +4,10 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.state.GameState;
+import kr.danta.core.territory.PointPosition;
+import kr.danta.core.territory.StrategicPoint;
+import kr.danta.core.territory.StrategicPointType;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,6 +16,7 @@ class Dev055ArmySupplyTest {
     @Test void actionConsumesMuchMoreFoodThanNormalStationing() {
         GameState state = new GameState();
         state.addNation(new NationState("red", "Red"));
+        state.addStrategicPoint(new StrategicPoint("p1", "P1", StrategicPointType.CAPITAL, "red", new PointPosition("world", 0, 64, 0), 1, Map.of()));
         ArmyState army = new ArmyState("a1", "red", "p1", ArmyStatus.STATIONED, 1000);
         state.addArmy(army);
         ArmySupplyService service = new ArmySupplyService(state);
@@ -25,6 +30,7 @@ class Dev055ArmySupplyTest {
     @Test void tickNeverMakesFoodNegativeAndReportsShortfall() {
         GameState state = new GameState();
         state.addNation(new NationState("red", "Red"));
+        state.addStrategicPoint(new StrategicPoint("p1", "P1", StrategicPointType.CAPITAL, "red", new PointPosition("world", 0, 64, 0), 1, Map.of()));
         state.addArmy(new ArmyState("a1", "red", "p1", ArmyStatus.MOVING, 1000));
         state.getOrCreateStrategicResourceStockpile("red").set(StrategicResource.FOOD, 7);
         ArmySupplyService.TickResult result = new ArmySupplyService(state).consumeOneTick();
