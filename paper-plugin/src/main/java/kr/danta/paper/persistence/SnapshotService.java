@@ -5,6 +5,7 @@ import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.economy.PersonalWallet;
+import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.persistence.AsyncKeyValueRepository;
 import kr.danta.core.runtime.RuntimeClockService;
 import kr.danta.core.snapshot.GameSnapshot;
@@ -14,6 +15,7 @@ import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.snapshot.NationSnapshot;
 import kr.danta.core.snapshot.PersonalWalletSnapshot;
+import kr.danta.core.snapshot.StrategicResourceStockpileSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
 import kr.danta.core.state.GameState;
@@ -85,6 +87,10 @@ public final class SnapshotService {
         gameState.clearPersonalWallets();
         for (PersonalWalletSnapshot wallet : snapshot.personalWallets()) {
             gameState.addPersonalWallet(new PersonalWallet(wallet.playerId(), wallet.balance()));
+        }
+        gameState.clearStrategicResourceStockpiles();
+        for (StrategicResourceStockpileSnapshot resources : snapshot.strategicResourceStockpiles()) {
+            gameState.addStrategicResourceStockpile(new StrategicResourceStockpile(resources.nationId(), resources.amounts()));
         }
         gameState.clearStrategicEdges();
         gameState.clearStrategicPoints();
@@ -162,9 +168,12 @@ public final class SnapshotService {
         List<PersonalWalletSnapshot> wallets = gameState.personalWallets().stream()
                 .map(wallet -> new PersonalWalletSnapshot(wallet.playerId(), wallet.balance()))
                 .toList();
+        List<StrategicResourceStockpileSnapshot> resources = gameState.strategicResourceStockpiles().stream()
+                .map(stockpile -> new StrategicResourceStockpileSnapshot(stockpile.nationId(), stockpile.amounts()))
+                .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets);
+                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources);
     }
 }
