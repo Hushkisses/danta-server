@@ -1,5 +1,7 @@
 package kr.danta.paper;
 
+import kr.danta.core.economy.EconomyTransferService;
+import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.combat.CombatLossPolicy;
 import kr.danta.core.combat.CombatReport;
 import kr.danta.core.combat.CombatReportFormatter;
@@ -244,6 +246,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("edge")) return handleStrategicEdge(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("army")) return handleArmy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("combat")) return handleCombat(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("economy")) return handleEconomy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
@@ -584,6 +587,61 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
             if (error != null) getLogger().warning("DEV-021 strategic point snapshot flush failed: " + rootMessage(error));
         });
+    }
+
+    private boolean handleEconomy(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.nation")) {
+            sender.sendMessage("§c경제 관리 권한이 없습니다.");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "show";
+        try {
+            switch (sub) {
+                case "wallet-set" -> {
+                    requireArgs(args, 4, "/danta economy wallet-set <플레이어-id> <금액>");
+                    long amount = Long.parseLong(args[3]);
+                    PersonalWallet wallet = gameState.getOrCreatePersonalWallet(args[2]);
+                    long current = wallet.balance();
+                    if (amount < 0) throw new IllegalArgumentException("금액은 0 이상이어야 합니다.");
+                    if (amount > current) wallet.deposit(amount - current);
+                    else if (amount < current && !wallet.tryWithdraw(current - amount))
+                        throw new IllegalStateException("개인지갑 금액 변경에 실패했습니다.");
+                    flushStrategicPointState("economy-wallet-set:" + args[2]);
+                    sender.sendMessage("§a개인지갑을 설정했습니다: §e" + args[2] + " §7잔액=" + wallet.balance() + "G");
+                }
+                case "show" -> {
+                    requireArgs(args, 4, "/danta economy show <플레이어-id> <국가-id>");
+                    PersonalWallet wallet = gameState.getOrCreatePersonalWallet(args[2]);
+                    NationState nation = gameState.nation(args[3])
+                            .orElseThrow(() -> new IllegalArgumentException("국가를 찾을 수 없습니다: " + args[3]));
+                    sender.sendMessage("§6[경제 상태]");
+                    sender.sendMessage("§f개인지갑: §e" + wallet.balance() + "G");
+                    sender.sendMessage("§f국고(" + nation.displayName() + "): §e" + nation.treasury() + "G");
+                }
+                case "contribute" -> {
+                    requireArgs(args, 5, "/danta economy contribute <플레이어-id> <국가-id> <금액>");
+                    long amount = Long.parseLong(args[4]);
+                    var result = new EconomyTransferService(gameState).contributeToTreasury(args[2], args[3], amount);
+                    if (!result.transferred()) {
+                        sender.sendMessage("§c개인지갑 잔액이 부족해 출자할 수 없습니다.");
+                    } else {
+                        flushStrategicPointState("economy-contribute:" + args[2] + ":" + args[3]);
+                        sender.sendMessage("§a국고에 출자했습니다: §e" + amount + "G §7개인지갑="
+                                + result.personalBalance() + "G, 국고=" + result.treasuryBalance() + "G");
+                    }
+                }
+                case "withdraw" -> sender.sendMessage("§c국고에서 개인지갑으로 직접 인출할 수 없습니다.");
+                default -> sender.sendMessage("§e사용법: /danta economy <wallet-set|show|contribute|withdraw>");
+            }
+        } catch (NumberFormatException ex) {
+            sender.sendMessage("§c금액은 정수로 입력해 주세요.");
+        } catch (IllegalArgumentException ex) {
+            sender.sendMessage("§c경제 작업을 처리할 수 없습니다: " + ex.getMessage());
+        } catch (RuntimeException ex) {
+            getLogger().warning("[Economy] command failed: " + rootMessage(ex));
+            sender.sendMessage("§c경제 작업 중 오류가 발생했습니다. 서버 콘솔을 확인해 주세요.");
+        }
+        return true;
     }
 
     private boolean handleCombat(CommandSender sender, String[] args) {
