@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-034 sequential operation queue complete; DEV-035 is next
+Checkpoint: DEV-035 advance-stop conditions implemented; awaiting Windows live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -46,7 +46,11 @@ Checkpoint: DEV-034 sequential operation queue complete; DEV-035 is next
 - DEV-034 sequential operation queue: COMPLETE, Windows multi-leg and restart-mid-route recovery verified
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-035 advance-stop conditions: IMPLEMENTED
+  - Sequential advance evaluates a typed stop policy after each arrival.
+  - CAPITAL/MAJOR arrivals stop and clear the remaining operation queue; central_market is now MAJOR in the dev map for verification.
+  - COMBAT and SUPPLY stop reasons/hooks exist, but authoritative combat/supply state arrives in later planned phases and is not fabricated into Army.
+  - Awaiting representative's Windows major-point stop and restart-persistence checks.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -62,6 +66,7 @@ Checkpoint: DEV-034 sequential operation queue complete; DEV-035 is next
 - DEV-030 intentionally stores a single base-troop count; troop-type composition remains DEV-040.
 - DEV-033 persists active one-leg movement orders and runtime deadlines; DEV-034 extends snapshot schema to v7 for remaining sequential destinations. Legacy v1-v6 snapshots remain readable.
 - DEV-034 intentionally uses explicit adjacent waypoints; automatic shortest/safe/stealth pathfinding remains a later expansion of the broader design.
+- DEV-035 fully wires major-point automatic stopping. Combat/supply stop hooks are typed now but wait for DEV-040+ combat and DEV-055+ supply state before live integration.
 - DEV-032 route modifiers: ROAD x0.90, MOUNTAIN_PASS x1.20, FOREST_PATH x1.10, CANYON x1.15, SEA_ROUTE x0.90, LANDING_ROUTE x1.25; PLAIN/COASTAL neutral. Future authoritative commander/research/supply modifiers layer onto the calculator instead of being guessed now.
 
 ## Current test data (local dev server only)
@@ -72,7 +77,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-035 advance-stop conditions
+1. DEV-035 Windows build and Paper live verification
 2. DEV-036 army GUI
 
 ## Manual verification baseline
