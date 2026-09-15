@@ -626,9 +626,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             return true;
         }
         try {
-            StrategicResourceStockpile stock = gameState.getOrCreateStrategicResourceStockpile(args[2]);
             String sub = args[1].toLowerCase(Locale.ROOT);
             if (sub.equals("show")) {
+                StrategicResourceStockpile stock = gameState.getOrCreateStrategicResourceStockpile(args[2]);
                 sender.sendMessage("§6[전략자원] §f" + args[2]);
                 sender.sendMessage("§f식량: §e" + stock.amount(StrategicResource.FOOD));
                 sender.sendMessage("§f목재: §e" + stock.amount(StrategicResource.WOOD));
@@ -663,6 +663,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             }
             if (sub.equals("set")) {
                 requireArgs(args, 5, "/danta resource set <국가-id> <food|wood|iron|rare_mineral|mana_stone> <수량>");
+                StrategicResourceStockpile stock = gameState.getOrCreateStrategicResourceStockpile(args[2]);
                 StrategicResource resource = StrategicResource.valueOf(args[3].toUpperCase(Locale.ROOT));
                 long amount = Long.parseLong(args[4]);
                 stock.set(resource, amount);
@@ -670,7 +671,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 sender.sendMessage("§a전략자원을 설정했습니다: §f" + resourceKorean(resource) + " §e" + amount);
                 return true;
             }
-            sender.sendMessage("§e사용법: /danta resource <show|set> <국가-id> [자원] [수량]");
+            sender.sendMessage("§e사용법: /danta resource <show|set|available|local-show> <국가/거점-id> [자원] [수량]");
         } catch (NumberFormatException ex) {
             sender.sendMessage("§c수량은 정수로 입력해 주세요.");
         } catch (IllegalArgumentException ex) {
