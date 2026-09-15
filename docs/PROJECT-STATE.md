@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-075 prisoner/ransom/exchange/detention cap IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-075 prisoner/ransom/exchange/detention cap COMPLETE; next DEV-076 initial general data (~10)
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-075 prisoner/ransom/exchange/detention cap IMPLEMENTED; Windows 
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-075 prisoner/ransom/exchange/detention cap: IMPLEMENTED — runtime captivity state, captor-authorized ransom/exchange release and forced deadline release; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
