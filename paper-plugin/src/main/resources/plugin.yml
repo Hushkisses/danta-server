@@ -54,6 +54,10 @@ permissions:
     description: 개발용 군단 관리를 허용합니다.
     default: op
 
+  danta.admin.general:
+    description: 개발용 장수 검증과 관리를 허용합니다.
+    default: op
+
   danta.command.nation:
     description: 국가 정보 화면 사용을 허용합니다.
     default: true
