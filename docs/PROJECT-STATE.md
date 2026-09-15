@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076E semantic ability hooks IMPLEMENTED after DEV-076D Windows verification; Windows verification of DEV-076E pending; numeric coefficients/bootstrap integration remain
+Checkpoint: DEV-076E semantic ability hooks VERIFIED; DEV-076 acquisition/ownership/persistence design next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076E semantic ability hooks IMPLEMENTED after DEV-076D Windows v
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-076E semantic ability hooks: IMPLEMENTED — all 10 provisional A/S abilities map to existing-system integration categories without numeric coefficients; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -112,8 +112,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Verify DEV-076E semantic ability hooks on Windows.
-2. Decide/implement authoritative initial acquisition/bootstrap ownership and general snapshot persistence, then COMPLETE DEV-076.
+1. Decide/implement authoritative initial acquisition/bootstrap ownership and general snapshot persistence, then COMPLETE DEV-076.
 3. Add configurable ability coefficients/effect consumers when balance values are approved. (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
