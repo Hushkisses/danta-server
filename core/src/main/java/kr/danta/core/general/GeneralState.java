@@ -2,6 +2,10 @@ package kr.danta.core.general;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * DEV-070 general aggregate baseline.
@@ -18,6 +22,8 @@ public final class GeneralState {
     private int level;
     private GeneralStats stats;
     private GeneralTroopSynergy troopSynergy;
+    private final Map<String, GeneralTrait> traitsById = new LinkedHashMap<>();
+    private final Map<String, GeneralAbility> abilitiesById = new LinkedHashMap<>();
 
     public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level) {
         this(generalId, ownerNationId, grade, level, GeneralStats.zero());
@@ -37,6 +43,28 @@ public final class GeneralState {
     public synchronized int level() { return level; }
     public synchronized GeneralStats stats() { return stats; }
     public synchronized Optional<GeneralTroopSynergy> troopSynergy() { return Optional.ofNullable(troopSynergy); }
+    public synchronized List<GeneralTrait> traits() { return List.copyOf(new ArrayList<>(traitsById.values())); }
+    public synchronized List<GeneralAbility> abilities() { return List.copyOf(new ArrayList<>(abilitiesById.values())); }
+
+    public synchronized boolean addTrait(GeneralTrait trait) {
+        Objects.requireNonNull(trait, "trait");
+        return traitsById.putIfAbsent(trait.traitId(), trait) == null;
+    }
+
+    public synchronized boolean removeTrait(String traitId) {
+        Objects.requireNonNull(traitId, "traitId");
+        return traitsById.remove(traitId) != null;
+    }
+
+    public synchronized boolean addAbility(GeneralAbility ability) {
+        Objects.requireNonNull(ability, "ability");
+        return abilitiesById.putIfAbsent(ability.abilityId(), ability) == null;
+    }
+
+    public synchronized boolean removeAbility(String abilityId) {
+        Objects.requireNonNull(abilityId, "abilityId");
+        return abilitiesById.remove(abilityId) != null;
+    }
 
     public synchronized void setTroopSynergy(GeneralTroopSynergy troopSynergy) {
         this.troopSynergy = Objects.requireNonNull(troopSynergy, "troopSynergy");
