@@ -9,8 +9,8 @@ class Dev071GeneralStatsTest {
         GeneralStats stats = new GeneralStats(12, 9, 15, 7);
         assertEquals(12, stats.command());
         assertEquals(9, stats.martial());
-        assertEquals(15, stats.intelligence());
-        assertEquals(7, stats.politics());
+        assertEquals(15, stats.strategy());
+        assertEquals(7, stats.logistics());
     }
 
     @Test void rejectsNegativeStatsButDoesNotInventUnfixedUpperCap() {
