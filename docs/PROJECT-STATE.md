@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-081 COMPLETE; next: DEV-082 facility world appearance sync
+Checkpoint: DEV-081 COMPLETE; DEV-082 IMPLEMENTED awaiting Windows/Paper/NBT live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -75,7 +75,7 @@ Checkpoint: DEV-081 COMPLETE; next: DEV-082 facility world appearance sync
 - DEV-081 construction Runtime Scheduler: COMPLETE, Windows automated tests/build and live Paper construction/restart recovery verified.
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-082 facility world appearance sync: vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation; Windows/Paper/NBT live verification pending.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -115,7 +115,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Proceed to DEV-082 facility world appearance sync.
+1. Complete DEV-082 Windows quick-deploy, Paper boot, NBT placement/upgrade, and unloaded-chunk pending-sync verification.
+2. After DEV-082 COMPLETE, proceed to DEV-083 ResearchDefinition data loader.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
