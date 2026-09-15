@@ -21,7 +21,7 @@ public record GameSnapshot(
         List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
         List<LocalResourceStockpileSnapshot> localResourceStockpiles
 ) {
-    public static final int CURRENT_SCHEMA = 10;
+    public static final int CURRENT_SCHEMA = 11;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
