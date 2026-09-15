@@ -29,6 +29,12 @@ import kr.danta.core.general.GeneralRecoveryState;
 import kr.danta.core.general.GeneralCaptivityState;
 import kr.danta.core.general.GeneralHealthStatus;
 import kr.danta.core.snapshot.GeneralSnapshot;
+import kr.danta.core.snapshot.FacilitySnapshot;
+import kr.danta.core.snapshot.FacilityConstructionSnapshot;
+import kr.danta.core.facility.FacilityService;
+import kr.danta.core.facility.FacilityState;
+import kr.danta.core.facility.FacilityConstructionService;
+import kr.danta.core.facility.FacilityConstructionState;
 import kr.danta.core.state.SeasonState;
 import kr.danta.core.territory.PointPosition;
 import kr.danta.core.territory.StrategicPoint;
@@ -37,6 +43,7 @@ import kr.danta.core.territory.StrategicEdge;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -51,6 +58,8 @@ public final class SnapshotService {
     private final RuntimeClockService runtimeClock;
     private final GameState gameState;
     private final Logger logger;
+    private volatile FacilityService facilityService;
+    private volatile FacilityConstructionService facilityConstructionService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -60,6 +69,11 @@ public final class SnapshotService {
         this.runtimeClock = runtimeClock;
         this.gameState = gameState;
         this.logger = logger;
+    }
+
+    public void bindFacilities(FacilityService facilityService, FacilityConstructionService constructionService) {
+        this.facilityService = Objects.requireNonNull(facilityService, "facilityService");
+        this.facilityConstructionService = Objects.requireNonNull(constructionService, "constructionService");
     }
 
     public CompletableFuture<Void> saveAsync(String reason) {
@@ -141,6 +155,19 @@ public final class SnapshotService {
                         general.capturedAtRuntimeMillis(), general.detentionEndsAtRuntimeMillis()));
             }
             gameState.addGeneral(restored);
+        }
+        if (facilityService != null) {
+            facilityService.clear();
+            for (FacilitySnapshot facility : snapshot.facilities()) {
+                facilityService.restore(facility.pointId(), new FacilityState(facility.facilityId(), facility.tier()));
+            }
+        }
+        if (facilityConstructionService != null) {
+            for (FacilityConstructionSnapshot pending : snapshot.facilityConstructions()) {
+                facilityConstructionService.restore(new FacilityConstructionState(
+                        pending.constructionId(), pending.pointId(), pending.facilityId(),
+                        pending.targetTier(), pending.dueRuntimeMillis()));
+            }
         }
         // Restore assignments after points, armies and generals all exist.
         for (GeneralSnapshot general : snapshot.generals()) {
@@ -231,9 +258,20 @@ public final class SnapshotService {
                     captivity == null ? null : captivity.capturedAtRuntimeMillis(),
                     captivity == null ? null : captivity.detentionEndsAtRuntimeMillis());
         }).toList();
+        List<FacilitySnapshot> facilities = facilityService == null ? List.of() :
+                gameState.strategicPoints().stream()
+                        .flatMap(point -> facilityService.facilities(point.pointId()).stream()
+                                .map(f -> new FacilitySnapshot(point.pointId(), f.facilityId(), f.tier())))
+                        .toList();
+        List<FacilityConstructionSnapshot> facilityConstructions = facilityConstructionService == null ? List.of() :
+                facilityConstructionService.pending().stream()
+                        .map(p -> new FacilityConstructionSnapshot(p.constructionId(), p.pointId(), p.facilityId(),
+                                p.targetTier(), p.dueRuntimeMillis()))
+                        .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals);
+                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
+                facilities, facilityConstructions);
     }
 }
