@@ -589,6 +589,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         });
     }
 
+    private void flushEconomyState(String reason) {
+        if (snapshotService == null || databaseService == null) return;
+        if (!databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
+            if (error != null) getLogger().warning("DEV-050 economy snapshot flush failed: " + rootMessage(error));
+        });
+    }
+
     private boolean handleEconomy(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.nation")) {
             sender.sendMessage("§c경제 관리 권한이 없습니다.");
