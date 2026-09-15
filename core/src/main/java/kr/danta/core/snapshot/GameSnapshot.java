@@ -43,6 +43,17 @@ public record GameSnapshot(
         localResourceStockpiles = localResourceStockpiles == null ? List.of() : List.copyOf(localResourceStockpiles);
     }
 
+    /** Backward source-compatible DEV-030 constructor: armies existed before orders/queues. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
+                        boolean runtimePaused, double runtimeSpeedMultiplier, String seasonId,
+                        String seasonDisplayName, List<NationSnapshot> nations,
+                        List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies,
+                List.of(), List.of(), List.of(), List.of(), List.of());
+    }
+
     /** Backward source-compatible constructor used by pre-DEV-050 callers/tests. */
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
                         boolean runtimePaused, double runtimeSpeedMultiplier, String seasonId,
