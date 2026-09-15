@@ -16,6 +16,12 @@ import kr.danta.core.combat.CombatResolver;
 import kr.danta.core.combat.CombatSideInput;
 import kr.danta.core.combat.TroopType;
 import kr.danta.core.DantaCore;
+import kr.danta.core.general.GeneralAcquisitionService;
+import kr.danta.core.general.GeneralCatalogLoader;
+import kr.danta.core.general.GeneralDefinition;
+import kr.danta.core.general.GeneralState;
+import kr.danta.core.general.PointGeneralAssignmentService;
+import kr.danta.core.general.ArmyCommanderService;
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.army.ExpeditionSupplyLevel;
@@ -93,6 +99,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
     private ExpeditionSupplyService expeditionSupplyService;
+    private GeneralAcquisitionService generalAcquisitionService;
+    private PointGeneralAssignmentService pointGeneralAssignmentService;
+    private ArmyCommanderService armyCommanderService;
+    private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
@@ -144,6 +154,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         strategicPointProductionService = new StrategicPointProductionService(gameState);
         armySupplyService = new ArmySupplyService(gameState);
         expeditionSupplyService = new ExpeditionSupplyService(gameState);
+        generalAcquisitionService = new GeneralAcquisitionService(gameState);
+        pointGeneralAssignmentService = new PointGeneralAssignmentService(gameState);
+        armyCommanderService = new ArmyCommanderService(gameState);
+        loadGeneralCatalog();
 
         runtimeScheduler = new RuntimeScheduler(runtimeClock);
         runtimeScheduler.registerHandler("dev.echo", task ->
@@ -268,6 +282,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("resource")) return handleResource(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("economy-tick")) return handleEconomyTick(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("general")) return handleGeneral(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
         sender.sendMessage("§f플러그인 버전: §e" + getPluginMeta().getVersion());
@@ -285,6 +300,115 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         return true;
     }
 
+
+
+    private void loadGeneralCatalog() {
+        try (var input = getResource("generals/initial-generals.yml")) {
+            if (input == null) throw new IllegalStateException("initial-generals.yml resource missing");
+            var definitions = new GeneralCatalogLoader().load(input);
+            java.util.LinkedHashMap<String, GeneralDefinition> byId = new java.util.LinkedHashMap<>();
+            for (GeneralDefinition definition : definitions) byId.put(definition.id(), definition);
+            generalCatalog = java.util.Map.copyOf(byId);
+            getLogger().info("[General] development catalog loaded: " + generalCatalog.size());
+        } catch (Exception ex) {
+            generalCatalog = java.util.Map.of();
+            getLogger().severe("[General] development catalog load failed: " + rootMessage(ex));
+        }
+    }
+
+    private boolean handleGeneral(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.general")) {
+            sender.sendMessage("§c장수 관리 권한이 없습니다.");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
+        try {
+            switch (sub) {
+                case "catalog" -> {
+                    sender.sendMessage("§6[개발용 장수 후보 목록] §7총 " + generalCatalog.size() + "명");
+                    for (GeneralDefinition definition : generalCatalog.values()) {
+                        sender.sendMessage("§e" + definition.id() + " §f" + definition.displayName()
+                                + " §7등급=" + definition.grade() + ", 레벨=" + definition.level());
+                    }
+                }
+                case "acquire" -> {
+                    requireArgs(args, 4, "/danta general acquire <장수-id> <국가-id>");
+                    GeneralDefinition definition = Optional.ofNullable(generalCatalog.get(args[2]))
+                            .orElseThrow(() -> new IllegalArgumentException("catalog general not found: " + args[2]));
+                    GeneralState general = generalAcquisitionService.acquire(definition, args[3]);
+                    flushGeneralState("general-acquire:" + general.generalId());
+                    sender.sendMessage("§a개발 검증용 장수를 등용했습니다: §e" + definition.displayName()
+                            + " §7(" + general.generalId() + "), 소유국=" + general.ownerNationId());
+                }
+                case "list" -> {
+                    sender.sendMessage("§6[소유 장수 목록] §7총 " + gameState.generals().size() + "명");
+                    for (GeneralState general : gameState.generals()) sendGeneral(sender, general);
+                }
+                case "show" -> {
+                    requireArgs(args, 3, "/danta general show <장수-id>");
+                    sendGeneral(sender, requireGeneral(args[2]));
+                }
+                case "point" -> {
+                    requireArgs(args, 4, "/danta general point <장수-id> <거점-id>");
+                    pointGeneralAssignmentService.assign(args[2], args[3]);
+                    flushGeneralState("general-point:" + args[2]);
+                    sender.sendMessage("§a장수를 거점에 배치했습니다: §e" + args[2] + " §7거점=" + args[3]);
+                }
+                case "point-move" -> {
+                    requireArgs(args, 4, "/danta general point-move <장수-id> <거점-id>");
+                    pointGeneralAssignmentService.move(args[2], args[3]);
+                    flushGeneralState("general-point-move:" + args[2]);
+                    sender.sendMessage("§a장수의 거점 배치를 변경했습니다: §e" + args[2] + " §7거점=" + args[3]);
+                }
+                case "point-clear" -> {
+                    requireArgs(args, 3, "/danta general point-clear <장수-id>");
+                    pointGeneralAssignmentService.unassign(args[2]);
+                    flushGeneralState("general-point-clear:" + args[2]);
+                    sender.sendMessage("§a장수의 거점 배치를 해제했습니다: §e" + args[2]);
+                }
+                case "army" -> {
+                    requireArgs(args, 4, "/danta general army <장수-id> <군단-id>");
+                    armyCommanderService.assign(args[2], args[3]);
+                    flushGeneralState("general-army:" + args[2]);
+                    sender.sendMessage("§a장수를 군단 지휘관으로 임명했습니다: §e" + args[2] + " §7군단=" + args[3]);
+                }
+                case "army-clear" -> {
+                    requireArgs(args, 3, "/danta general army-clear <장수-id>");
+                    armyCommanderService.unassign(args[2]);
+                    flushGeneralState("general-army-clear:" + args[2]);
+                    sender.sendMessage("§a장수의 군단 지휘를 해제했습니다: §e" + args[2]);
+                }
+                default -> sender.sendMessage("§e/danta general <catalog|acquire|list|show|point|point-move|point-clear|army|army-clear>");
+            }
+        } catch (RuntimeException ex) {
+            sendCommandError(sender, "장수", ex);
+        }
+        return true;
+    }
+
+    private GeneralState requireGeneral(String generalId) {
+        return gameState.general(generalId)
+                .orElseThrow(() -> new IllegalArgumentException("general not found: " + generalId));
+    }
+
+    private void sendGeneral(CommandSender sender, GeneralState general) {
+        sender.sendMessage("§6[장수] §e" + general.generalId());
+        sender.sendMessage("§f소유국: §e" + general.ownerNationId() + " §7등급=" + general.grade() + ", 레벨=" + general.level());
+        sender.sendMessage("§f능력치: §e통솔 " + general.stats().command() + " / 무력 " + general.stats().martial()
+                + " / 지략 " + general.stats().strategy() + " / 병참 " + general.stats().logistics());
+        sender.sendMessage("§f군단 지휘: §e" + gameState.commandedArmyId(general.generalId()).orElse("없음")
+                + " §f거점 배치: §e" + gameState.assignedPointId(general.generalId()).orElse("없음"));
+        sender.sendMessage("§f건강: §e" + general.healthStatus().name()
+                + " §f포로: §e" + (general.isCaptive() ? "예" : "아니요"));
+    }
+
+    private void flushGeneralState(String reason) {
+        if (snapshotService == null || databaseService == null) return;
+        if (!databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
+            if (error != null) getLogger().warning("DEV-076F general snapshot flush failed: " + rootMessage(error));
+        });
+    }
 
     private void initializeDevMap() {
         try {
