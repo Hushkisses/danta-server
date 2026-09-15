@@ -1,4 +1,85 @@
-# DEV-076 initial general catalog.
-# Intentionally empty until the representative approves the approximately 10
-# names/grades/stats/traits/abilities. Do not treat placeholder values as balance.
-generals: []
+# DEV-076D provisional initial elite roster.
+# Product-fixed: exactly A x7 + S x3; only A/S have special abilities.
+# Names, levels, stats, trait/ability identities below are PROVISIONAL content and may be rebalanced.
+# Numeric effect coefficients are NOT defined here yet.
+
+generals:
+  - id: ironwall
+    displayName: 철벽
+    grade: A
+    level: 4
+    stats: {command: 82, martial: 74, strategy: 58, logistics: 64}
+    traits: [infantry_command]
+    abilities: [iron_formation]
+
+  - id: gale
+    displayName: 질풍
+    grade: A
+    level: 4
+    stats: {command: 76, martial: 84, strategy: 61, logistics: 55}
+    traits: [cavalry_command]
+    abilities: [relentless_pursuit]
+
+  - id: rain_of_arrows
+    displayName: 화우
+    grade: A
+    level: 4
+    stats: {command: 78, martial: 67, strategy: 80, logistics: 57}
+    traits: [archer_command]
+    abilities: [volley_fire]
+
+  - id: treasurer
+    displayName: 재정관
+    grade: A
+    level: 4
+    stats: {command: 54, martial: 42, strategy: 78, logistics: 86}
+    traits: [civil_economy]
+    abilities: [prosperous_domain]
+
+  - id: steward
+    displayName: 산업관
+    grade: A
+    level: 4
+    stats: {command: 58, martial: 45, strategy: 74, logistics: 88}
+    traits: [civil_production]
+    abilities: [production_management]
+
+  - id: quartermaster
+    displayName: 병참관
+    grade: A
+    level: 4
+    stats: {command: 72, martial: 52, strategy: 70, logistics: 91}
+    traits: [logistics_specialist]
+    abilities: [supply_mastery]
+
+  - id: fortress_warden
+    displayName: 수문장
+    grade: A
+    level: 4
+    stats: {command: 86, martial: 70, strategy: 64, logistics: 72}
+    traits: [defense_specialist]
+    abilities: [fortress_command]
+
+  - id: grand_marshal
+    displayName: 대장군
+    grade: S
+    level: 5
+    stats: {command: 95, martial: 88, strategy: 82, logistics: 76}
+    traits: [combined_arms]
+    abilities: [supreme_command]
+
+  - id: chancellor
+    displayName: 재상
+    grade: S
+    level: 5
+    stats: {command: 68, martial: 48, strategy: 96, logistics: 94}
+    traits: [statecraft]
+    abilities: [grand_reform]
+
+  - id: conqueror
+    displayName: 정복자
+    grade: S
+    level: 5
+    stats: {command: 92, martial: 90, strategy: 84, logistics: 86}
+    traits: [expeditionary]
+    abilities: [deep_campaign]
