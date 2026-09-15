@@ -39,7 +39,7 @@ class Dev044CombatOccupationTest {
         assertEquals("red", f.state.strategicPoint("market").orElseThrow().ownerNationId().orElseThrow());
         assertFalse(f.state.hasGarrison("market"));
         assertEquals(1, events.size());
-        assertEquals("combat-occupation", events.getFirst().reason());
+        assertEquals("combat-occupation", events.get(0).reason());
     }
 
     @Test void drawCannotOccupy() {
