@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-056 expedition supply selection IMPLEMENTED; awaiting Windows verification
+Checkpoint: DEV-057 overextension/administrative demand v0 IMPLEMENTED; awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -58,12 +58,13 @@ Checkpoint: DEV-056 expedition supply selection IMPLEMENTED; awaiting Windows ve
 - DEV-053 strategic-point production: COMPLETE, Windows exact production/restart persistence verified
 - DEV-054 local stockpile/supply isolation: COMPLETE, Windows isolation/reconnection/restart persistence verified
 - DEV-055 army food/supply consumption baseline: COMPLETE, Windows automated + stationed/moving EconomyTick verification passed
+- DEV-056 expedition supply selection: COMPLETE, Windows automated/Paper/restart verification passed
 
 ## Implemented tickets awaiting live verification
-- DEV-056 expedition supply selection: IMPLEMENTED
-  - LIGHT/STANDARD/HEAVY (경량/표준/대량), provisional 100/300/600 FOOD.
-  - Stationed armies can load supply; national FOOD is deducted atomically.
-  - Army display + snapshot schema v11 persist selected tier and carried FOOD; old snapshots remain readable.
+- DEV-057 overextension/administrative demand v0: IMPLEMENTED
+  - Derived base capacity 6.0; demand normal 1, port 1.25, major 2, capital excluded in v0 pending separate treatment.
+  - Provisional progressive revenue multiplier: -10 percentage points per excess demand, floor 50%.
+  - Applies to GOLD point revenue only; no direct combat/resource-production penalty.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -90,7 +91,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-056 Windows automated/Paper/restart verification
+1. DEV-057 Windows automated/Paper verification
+2. DEV-060 CombatResolver v1
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
