@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-034 sequential operation queue implemented; awaiting Windows live verification
+Checkpoint: DEV-034 sequential operation queue complete; DEV-035 is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -43,13 +43,10 @@ Checkpoint: DEV-034 sequential operation queue implemented; awaiting Windows liv
 - DEV-031.1 player-facing Korean output: COMPLETE, Windows build and Paper command checks verified
 - DEV-032 movement-time calculation: COMPLETE, Windows build and Paper command checks verified
 - DEV-033 runtime movement scheduling/restart recovery: COMPLETE, Windows arrival and restart-mid-movement recovery verified
+- DEV-034 sequential operation queue: COMPLETE, Windows multi-leg and restart-mid-route recovery verified
 
 ## Implemented tickets awaiting live verification
-- DEV-034 sequential operation queue: IMPLEMENTED
-  - Explicit A->B->C... adjacent routes validate before departure and automatically schedule the next DEV-033 leg after arrival.
-  - Remaining route is persisted in snapshot schema v7; legacy v1-v6 remain readable.
-  - `/danta army queue` and `queue-show` provide the current development interface in Korean.
-  - Awaiting representative's Windows build, multi-leg completion, and restart-mid-route checks.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -75,9 +72,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-034 Windows build and Paper live verification
-2. DEV-035 advance-stop conditions
-3. DEV-036 army GUI
+1. DEV-035 advance-stop conditions
+2. DEV-036 army GUI
 
 ## Manual verification baseline
 A checkpoint is healthy if:
