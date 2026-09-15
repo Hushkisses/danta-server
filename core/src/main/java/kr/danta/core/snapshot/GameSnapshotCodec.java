@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v13; DEV-081 writes v13. */
+/** Dependency-free snapshot codec. Reads schema v1-v14; DEV-084 writes v14. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -35,7 +35,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -137,11 +137,61 @@ public final class GameSnapshotCodec {
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]));
         }
+        if (schema == 14) {
+            if (p.length != 20) throw new IllegalArgumentException("invalid schema v14 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
 
 
+
+    private static String encodeResearchStates(List<ResearchStateSnapshot> states) {
+        if (states == null || states.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (ResearchStateSnapshot state : states) {
+            String completed = String.join("+", state.completed());
+            String queue = state.queue().stream().map(q -> String.join("~",
+                    q.entryId().toString(), enc(q.researchId()),
+                    q.taskId() == null ? "-" : q.taskId().toString(),
+                    q.dueRuntimeMillis() == null ? "-" : Long.toString(q.dueRuntimeMillis())))
+                    .reduce((a,b) -> a + ":" + b).orElse("-");
+            rows.add(String.join(",", enc(state.nationId()), Integer.toString(state.researchSlots()), enc(completed), enc(queue)));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<ResearchStateSnapshot> decodeResearchStates(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<ResearchStateSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 4) throw new IllegalArgumentException("invalid research state snapshot row");
+            Set<String> completed = new LinkedHashSet<>();
+            String completedText = dec(f[2]);
+            if (completedText != null && !completedText.isEmpty()) completed.addAll(List.of(completedText.split("\\+")));
+            List<ResearchQueueSnapshot> queue = new ArrayList<>();
+            String queueText = dec(f[3]);
+            if (queueText != null && !queueText.equals("-") && !queueText.isEmpty()) {
+                for (String item : queueText.split(":", -1)) {
+                    String[] q = item.split("~", -1);
+                    if (q.length != 4) throw new IllegalArgumentException("invalid research queue snapshot row");
+                    queue.add(new ResearchQueueSnapshot(java.util.UUID.fromString(q[0]), dec(q[1]),
+                            q[2].equals("-") ? null : java.util.UUID.fromString(q[2]),
+                            q[3].equals("-") ? null : Long.parseLong(q[3])));
+                }
+            }
+            result.add(new ResearchStateSnapshot(dec(f[0]), Integer.parseInt(f[1]), completed, queue));
+        }
+        return List.copyOf(result);
+    }
 
     private static String encodeFacilities(List<FacilitySnapshot> facilities) {
         if (facilities == null || facilities.isEmpty()) return "-";
