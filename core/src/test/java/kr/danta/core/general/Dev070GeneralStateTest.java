@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Dev070GeneralStateTest {
     @Test void gradeLadderIsFThroughS() {
         assertArrayEquals(new GeneralGrade[]{
-                GeneralGrade.F, GeneralGrade.E, GeneralGrade.D, GeneralGrade.C,
+                GeneralGrade.F, GeneralGrade.D, GeneralGrade.C,
                 GeneralGrade.B, GeneralGrade.A, GeneralGrade.S
         }, GeneralGrade.values());
     }
