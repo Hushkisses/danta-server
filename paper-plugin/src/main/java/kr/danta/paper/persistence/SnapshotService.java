@@ -21,6 +21,14 @@ import kr.danta.core.snapshot.LocalResourceStockpileSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
 import kr.danta.core.state.GameState;
+import kr.danta.core.general.GeneralState;
+import kr.danta.core.general.GeneralStats;
+import kr.danta.core.general.GeneralTrait;
+import kr.danta.core.general.GeneralAbility;
+import kr.danta.core.general.GeneralRecoveryState;
+import kr.danta.core.general.GeneralCaptivityState;
+import kr.danta.core.general.GeneralHealthStatus;
+import kr.danta.core.snapshot.GeneralSnapshot;
 import kr.danta.core.state.SeasonState;
 import kr.danta.core.territory.PointPosition;
 import kr.danta.core.territory.StrategicPoint;
@@ -116,6 +124,32 @@ public final class SnapshotService {
             gameState.addArmy(new ArmyState(army.armyId(), army.ownerNationId(), army.locationPointId(),
                     army.status(), army.baseTroops(), army.expeditionSupplyLevel(), army.carriedFood()));
         }
+        gameState.clearGenerals();
+        for (GeneralSnapshot general : snapshot.generals()) {
+            GeneralState restored = new GeneralState(general.generalId(), general.ownerNationId(), general.grade(), general.level(),
+                    new GeneralStats(general.command(), general.martial(), general.strategy(), general.logistics()));
+            general.traitIds().forEach(id -> restored.addTrait(new GeneralTrait(id)));
+            general.abilityIds().forEach(id -> restored.addAbility(new GeneralAbility(id)));
+            if (general.healthStatus() != GeneralHealthStatus.HEALTHY
+                    && general.injuredAtRuntimeMillis() != null && general.recoveryReadyAtRuntimeMillis() != null) {
+                restored.setRecoveryState(new GeneralRecoveryState(general.healthStatus(),
+                        general.injuredAtRuntimeMillis(), general.recoveryReadyAtRuntimeMillis()));
+            }
+            if (general.captorNationId() != null && general.capturedAtRuntimeMillis() != null
+                    && general.detentionEndsAtRuntimeMillis() != null) {
+                restored.setCaptivityState(new GeneralCaptivityState(general.captorNationId(),
+                        general.capturedAtRuntimeMillis(), general.detentionEndsAtRuntimeMillis()));
+            }
+            gameState.addGeneral(restored);
+        }
+        // Restore assignments after points, armies and generals all exist.
+        for (GeneralSnapshot general : snapshot.generals()) {
+            if (general.commandedArmyId() != null) {
+                gameState.army(general.commandedArmyId()).ifPresent(a -> a.setCommanderGeneralId(general.generalId()));
+            } else if (general.assignedPointId() != null) {
+                gameState.strategicPoint(general.assignedPointId()).ifPresent(point -> point.setAssignedGeneralId(general.generalId()));
+            }
+        }
         restoredArmyOrders = snapshot.armyOrders();
         armyOperationQueues = snapshot.armyOperationQueues();
         for (ArmyOrderSnapshot order : snapshot.armyOrders()) {
@@ -181,9 +215,25 @@ public final class SnapshotService {
         List<LocalResourceStockpileSnapshot> localResources = gameState.localResourceStockpiles().stream()
                 .map(stockpile -> new LocalResourceStockpileSnapshot(stockpile.pointId(), stockpile.amounts()))
                 .toList();
+        List<GeneralSnapshot> generals = gameState.generals().stream().map(general -> {
+            var recovery = general.recoveryState().orElse(null);
+            var captivity = general.captivityState().orElse(null);
+            return new GeneralSnapshot(general.generalId(), general.ownerNationId(), general.grade(), general.level(),
+                    general.stats().command(), general.stats().martial(), general.stats().strategy(), general.stats().logistics(),
+                    general.traits().stream().map(GeneralTrait::traitId).toList(),
+                    general.abilities().stream().map(GeneralAbility::abilityId).toList(),
+                    gameState.commandedArmyId(general.generalId()).orElse(null),
+                    gameState.assignedPointId(general.generalId()).orElse(null),
+                    general.healthStatus(),
+                    recovery == null ? null : recovery.injuredAtRuntimeMillis(),
+                    recovery == null ? null : recovery.recoveryReadyAtRuntimeMillis(),
+                    captivity == null ? null : captivity.captorNationId(),
+                    captivity == null ? null : captivity.capturedAtRuntimeMillis(),
+                    captivity == null ? null : captivity.detentionEndsAtRuntimeMillis());
+        }).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources);
+                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals);
     }
 }
