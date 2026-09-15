@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076B A/S-only special-ability rule VERIFIED; initial roster fixed at A×7 + S×3; individual content design/approval next
+Checkpoint: DEV-076C strategic-point general assignment foundation IMPLEMENTED; Windows verification pending; elite roster design follows
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076B A/S-only special-ability rule VERIFIED; initial roster fixe
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-076C strategic-point general assignment foundation: IMPLEMENTED — max one general per point, friendly ownership, army-command/point-assignment exclusivity; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -108,9 +108,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 11. DEV-074 injury balance remains unresolved: injury/severe-injury probabilities, exact recovery durations, stat/grade/equipment modifiers, and whether injured generals are unavailable or command with penalties.
 12. DEV-075 final prisoner rules remain unresolved by v0.3: exact detention cap within the provisional 1.5–2 runtime-hour range, capture probability, ransom formula, exchange transaction/UX, and automatic repatriation-vs-escape determination. Captivity persistence + expiry scheduler must be added with authoritative general persistence.
 13. DEV-076 initial elite roster composition fixed 2026-09-15: exactly 10 generals = A grade 7 + S grade 3. Individual identities/names, starting levels/stats, A/S special-ability assignments, and initial ownership/acquisition placement remain unresolved. F/D/C/B are outside this initial elite roster and have no special abilities.
+14. Product rule fixed 2026-09-15: A/S special abilities may be combat, internal-affairs/strategic-point, or mixed. A strategic point may have at most one assigned general. Army command and point assignment are mutually exclusive; army presence does not automatically grant point administration effects.
+15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Design/approve the 10-person elite roster (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+1. Verify DEV-076C point-general assignment foundation on Windows.
+2. Design/approve the 10-person elite roster (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
