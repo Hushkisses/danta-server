@@ -26,10 +26,13 @@ public record GeneralDefinition(
         Objects.requireNonNull(stats, "stats");
         traitIds = validatedIds(traitIds, "traitIds");
         abilityIds = validatedIds(abilityIds, "abilityIds");
+        boolean specialGrade = grade == GeneralGrade.A || grade == GeneralGrade.S;
+        if (!specialGrade && (!traitIds.isEmpty() || !abilityIds.isEmpty()))
+            throw new IllegalArgumentException("only A/S generals may have traits or special abilities");
         if (traitIds.size() > 2)
-            throw new IllegalArgumentException("a general may have at most 2 base traits");
+            throw new IllegalArgumentException("an A/S general may have at most 2 traits");
         if (abilityIds.size() > 1)
-            throw new IllegalArgumentException("a general may have at most 1 unique ability");
+            throw new IllegalArgumentException("an A/S general may have at most 1 special ability");
     }
 
     private static List<String> validatedIds(List<String> values, String label) {
