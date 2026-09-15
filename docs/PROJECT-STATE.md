@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-035 advance-stop conditions implemented; awaiting Windows live verification
+Checkpoint: DEV-036 minimal army GUI implemented; awaiting Windows client verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -44,14 +44,13 @@ Checkpoint: DEV-035 advance-stop conditions implemented; awaiting Windows live v
 - DEV-032 movement-time calculation: COMPLETE, Windows build and Paper command checks verified
 - DEV-033 runtime movement scheduling/restart recovery: COMPLETE, Windows arrival and restart-mid-movement recovery verified
 - DEV-034 sequential operation queue: COMPLETE, Windows multi-leg and restart-mid-route recovery verified
+- DEV-035 advance-stop conditions: COMPLETE, Windows major-point stop and restart persistence verified
 
 ## Implemented tickets awaiting live verification
-- DEV-035 advance-stop conditions: IMPLEMENTED
-  - Sequential advance evaluates a typed stop policy after each arrival.
-  - CAPITAL/MAJOR arrivals stop and clear the remaining operation queue; central_market is now MAJOR in the dev map for verification.
-  - COMBAT and SUPPLY stop reasons/hooks exist, but authoritative combat/supply state arrives in later planned phases and is not fabricated into Army.
-  - First Windows test exposed stale external/existing dev-map point data; hotfix refreshes bundled map resource with backup and updates existing point definitions on import.
-  - Awaiting representative's Windows major-point stop and restart-persistence re-test.
+- DEV-036 minimal army GUI: IMPLEMENTED
+  - `/danta army gui` opens a read-only Korean inventory GUI using authoritative GameState plus current operation queues.
+  - Shows army owner/location/status/base troops/current order/route and remaining sequential route.
+  - Awaiting representative's Windows client GUI verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -78,8 +77,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-035 Windows build and Paper live verification
-2. DEV-036 army GUI
+1. DEV-036 Windows build and Paper client verification
+2. Continue with the next execution-plan ticket after DEV-036 verification.
 
 ## Manual verification baseline
 A checkpoint is healthy if:
