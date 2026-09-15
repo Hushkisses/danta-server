@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-072A Trait/Ability supplement IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-072A Trait/Ability supplement COMPLETE; next DEV-073 army commander assignment/movement
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-072A Trait/Ability supplement IMPLEMENTED; Windows automated ver
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-072A Trait/Ability supplement: IMPLEMENTED — validated trait/ability identities and duplicate-safe GeneralState collections added without invented effect mechanics; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -106,8 +106,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
 
 ## Next execution order
-1. Verify DEV-072A on Windows; if successful mark COMPLETE
-2. DEV-073 army commander assignment/movement
+1. DEV-073 army commander assignment/movement
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan
 
 ## Automated verification baseline
