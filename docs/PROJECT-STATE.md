@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-052 EconomyTick implemented; awaiting Windows runtime verification
+Checkpoint: DEV-053 strategic-point production implemented; awaiting Windows production verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -54,13 +54,13 @@ Checkpoint: DEV-052 EconomyTick implemented; awaiting Windows runtime verificati
 - DEV-045 combat report v0: COMPLETE, live Paper Korean report output verified
 - DEV-050 treasury/personal-wallet separation: COMPLETE, Windows contribution/rejection/restart recovery verified
 - DEV-051 strategic resources: COMPLETE, Windows five-resource display/set/restart recovery verified
+- DEV-052 EconomyTick: COMPLETE, Windows runtime boundary/pause/restart behavior verified
 
 ## Implemented tickets awaiting live verification
-- DEV-052 EconomyTick: IMPLEMENTED
-  - Fixed 30-minute server-runtime cadence; wall-clock downtime does not advance it.
-  - Existing RuntimeClock pause/speed behavior drives tick boundaries.
-  - `/danta economy-tick` exposes Korean diagnostic count/current/next tick values.
-  - Awaiting Windows boundary/pause/restart verification.
+- DEV-053 strategic-point production: IMPLEMENTED
+  - Owned point baseProductionPerHour is settled each 30-minute EconomyTick at half the hourly amount.
+  - Strategic resources go to national stockpile; gold goes to treasury; unowned points produce nothing.
+  - Awaiting Windows exact-delta/restart verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -87,8 +87,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-052 Windows runtime verification
-2. DEV-053 strategic-point production mapping
+1. DEV-053 Windows exact production/restart verification
+2. DEV-054 local stockpile/supply isolation
 
 ## Manual verification baseline
 A checkpoint is healthy if:
