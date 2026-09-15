@@ -83,10 +83,10 @@ if (-not (Test-Path $GradleBat)) {
     throw "Gradle bootstrap failed: $GradleBat not found."
 }
 
-Write-Host '[Danta] Building paper-plugin...'
+Write-Host '[Danta] Running automated tests and building paper-plugin...'
 Push-Location $ProjectRoot
 try {
-    & $GradleBat --console=plain ':paper-plugin:jar'
+    & $GradleBat --console=plain 'test' ':paper-plugin:jar'
     if ($LASTEXITCODE -ne 0) { throw "Gradle build failed with exit code $LASTEXITCODE." }
 } finally {
     Pop-Location
