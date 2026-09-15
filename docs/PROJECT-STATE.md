@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-044 combat-to-occupation implemented; awaiting Windows build/test verification
+Checkpoint: DEV-045 combat report v0 implemented; awaiting Windows build/test verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -50,12 +50,13 @@ Checkpoint: DEV-044 combat-to-occupation implemented; awaiting Windows build/tes
 - DEV-041 CombatResolver v0: COMPLETE, Windows build/test and Paper boot verified
 - Execution-plan DEV-042 loss/retreat minimum model: COMPLETE, Windows simulator values verified
 - DEV-043 NPC basic garrison: COMPLETE, Windows build/test and Paper boot verified
+- DEV-044 combat-to-occupation: COMPLETE, Windows build/test and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- DEV-044 combat-to-occupation: IMPLEMENTED
-  - CombatResolution can transfer a cleared defending point to the attacking nation.
-  - Surviving defenders, draw, or attacker defeat block occupation.
-  - Ownership mutation goes through existing TerritoryService and its ownership-change event path.
+- DEV-045 combat report v0: IMPLEMENTED
+  - Projects CombatResolution into result/initial/loss/remaining values for both sides.
+  - Player-facing formatter is Korean: 승리/패배/무승부, 전투 전/손실/잔존.
+  - No history DB, GUI, broadcast, or Discord scope is invented beyond the execution-plan requirement.
   - Awaiting representative's Windows build/test and normal Paper boot verification.
 
 ## Important implementation decisions
@@ -83,8 +84,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-044 Windows build/test verification
-2. DEV-045 combat report v0
+1. DEV-045 Windows build/test verification
+2. DEV-050 treasury/personal-wallet separation
 
 ## Manual verification baseline
 A checkpoint is healthy if:
