@@ -25,6 +25,7 @@ public final class GeneralState {
     private final Map<String, GeneralTrait> traitsById = new LinkedHashMap<>();
     private final Map<String, GeneralAbility> abilitiesById = new LinkedHashMap<>();
     private GeneralRecoveryState recoveryState;
+    private GeneralCaptivityState captivityState;
 
     public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level) {
         this(generalId, ownerNationId, grade, level, GeneralStats.zero());
@@ -50,6 +51,16 @@ public final class GeneralState {
         return recoveryState == null ? GeneralHealthStatus.HEALTHY : recoveryState.status();
     }
     public synchronized Optional<GeneralRecoveryState> recoveryState() { return Optional.ofNullable(recoveryState); }
+    public synchronized Optional<GeneralCaptivityState> captivityState() { return Optional.ofNullable(captivityState); }
+    public synchronized boolean isCaptive() { return captivityState != null; }
+
+    public synchronized void setCaptivityState(GeneralCaptivityState captivityState) {
+        this.captivityState = Objects.requireNonNull(captivityState, "captivityState");
+    }
+
+    public synchronized void clearCaptivityState() {
+        this.captivityState = null;
+    }
 
     public synchronized void setRecoveryState(GeneralRecoveryState recoveryState) {
         this.recoveryState = Objects.requireNonNull(recoveryState, "recoveryState");
