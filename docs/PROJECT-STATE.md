@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-040 basic troop types complete; DEV-041 is next
+Checkpoint: DEV-041 CombatResolver v0 implemented; awaiting Windows build/test verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -49,7 +49,11 @@ Checkpoint: DEV-040 basic troop types complete; DEV-041 is next
 - DEV-040 basic troop types: COMPLETE, Windows build/test and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-041 CombatResolver v0: IMPLEMENTED
+  - Deterministic core formula multiplies troop count, troop coefficient, commander, research, terrain, supply, morale, and DEV-040 counter modifier.
+  - External systems not yet implemented enter as explicit multipliers; neutral simulator inputs use x1.0 rather than invented state.
+  - combat-simulator consumes the resolver with a basic smoke case.
+  - Awaiting representative's Windows build/test and normal Paper boot verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -76,7 +80,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-041 CombatResolver v0
+1. DEV-041 Windows build/test verification
 2. DEV-042 deterministic combat test scenarios
 
 ## Manual verification baseline
