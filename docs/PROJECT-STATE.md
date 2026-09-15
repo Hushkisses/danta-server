@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-072 COMPLETE but execution-plan alignment correction required before DEV-073; DEV-072A Trait/Ability supplement next
+Checkpoint: DEV-072A Trait/Ability supplement IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-072 COMPLETE but execution-plan alignment correction required be
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-072A Trait/Ability supplement: IMPLEMENTED — validated trait/ability identities and duplicate-safe GeneralState collections added without invented effect mechanics; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -101,12 +101,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 6. Execution-plan alignment correction: DEV-071 is named 통솔/무력/지략/병참, while current GeneralStats followed design v0.3 terminology 통솔/무력/지력/정치. Do not silently rename/remove either interpretation; reconcile against the source documents before final player-facing/stat-effect integration.
-7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation, but does not by itself satisfy the full Trait/Ability ticket; complete as DEV-072A before DEV-073.
+7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A now supplies the missing Trait/Ability domain contract. Final catalogs/effect mechanics remain unresolved.
 8. Execution-plan DEV-073 is 군단 지휘관 배치/이동, not equipment slots.
 9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
 
 ## Next execution order
-1. DEV-072A Trait/Ability supplement and source-alignment documentation
+1. Verify DEV-072A on Windows; if successful mark COMPLETE
 2. DEV-073 army commander assignment/movement
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan
 
