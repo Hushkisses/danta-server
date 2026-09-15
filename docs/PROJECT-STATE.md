@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-042 deterministic combat scenarios implemented; awaiting Windows verification
+Checkpoint: DEV-042 deterministic combat scenarios complete; DEV-043 is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
