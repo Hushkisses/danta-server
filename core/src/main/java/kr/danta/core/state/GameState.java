@@ -5,6 +5,7 @@ import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.combat.GarrisonState;
 import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.economy.StrategicResourceStockpile;
+import kr.danta.core.economy.LocalResourceStockpile;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -27,6 +28,7 @@ public final class GameState {
     private final Map<String, GarrisonState> garrisonsByPointId = new LinkedHashMap<>();
     private final Map<String, PersonalWallet> personalWalletsByPlayerId = new LinkedHashMap<>();
     private final Map<String, StrategicResourceStockpile> strategicResourcesByNationId = new LinkedHashMap<>();
+    private final Map<String, LocalResourceStockpile> localResourcesByPointId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -256,5 +258,23 @@ public final class GameState {
     public synchronized void clearStrategicResourceStockpiles() {
         strategicResourcesByNationId.clear();
     }
+
+    public synchronized LocalResourceStockpile getOrCreateLocalResourceStockpile(String pointId) {
+        if (!strategicPoints.containsKey(pointId)) throw new IllegalArgumentException("strategic point does not exist: " + pointId);
+        return localResourcesByPointId.computeIfAbsent(pointId, LocalResourceStockpile::new);
+    }
+    public synchronized Optional<LocalResourceStockpile> localResourceStockpile(String pointId) {
+        return Optional.ofNullable(localResourcesByPointId.get(pointId));
+    }
+    public synchronized List<LocalResourceStockpile> localResourceStockpiles() {
+        return List.copyOf(new ArrayList<>(localResourcesByPointId.values()));
+    }
+    public synchronized void addLocalResourceStockpile(LocalResourceStockpile stockpile) {
+        Objects.requireNonNull(stockpile, "stockpile");
+        if (!strategicPoints.containsKey(stockpile.pointId()))
+            throw new IllegalArgumentException("strategic point does not exist: " + stockpile.pointId());
+        localResourcesByPointId.put(stockpile.pointId(), stockpile);
+    }
+    public synchronized void clearLocalResourceStockpiles() { localResourcesByPointId.clear(); }
 
 }
