@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-057 overextension/administrative demand v0 COMPLETE; next DEV-060 CombatResolver v1
+Checkpoint: DEV-060 CombatResolver v1 IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -62,7 +62,7 @@ Checkpoint: DEV-057 overextension/administrative demand v0 COMPLETE; next DEV-06
 - DEV-057 overextension/administrative demand v0: COMPLETE, Windows automated/Paper overextension + GOLD revenue verification passed
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-060 CombatResolver v1: IMPLEMENTED — staged six-phase pipeline + regression tests added; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -89,7 +89,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-060 CombatResolver v1
+1. Verify DEV-060 on Windows; if successful mark COMPLETE
+2. DEV-061 counter/frontline/backline/mobile
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
