@@ -165,4 +165,12 @@ public final class GameState {
         return List.copyOf(new ArrayList<>(armyOrdersByArmyId.values()));
     }
 
+    public synchronized Optional<ArmyOrder> removeArmyOrder(String armyId) {
+        return Optional.ofNullable(armyOrdersByArmyId.remove(armyId));
+    }
+
+    public synchronized void clearArmyOrders() {
+        armyOrdersByArmyId.clear();
+    }
+
 }
