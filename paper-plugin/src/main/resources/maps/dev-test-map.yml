@@ -55,8 +55,8 @@ points:
     production:
       wood: 160
   - id: central_market
-    name: "중앙 상업도시"
-    type: COMMERCIAL
+    name: "중앙 대시장"
+    type: MAJOR
     owner: none
     x: 640
     y: 70
