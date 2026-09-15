@@ -5,6 +5,8 @@ import kr.danta.core.army.ExpeditionSupplyLevel;
 import kr.danta.core.army.ArmyOrderStatus;
 import kr.danta.core.army.ArmyOrderType;
 import kr.danta.core.nation.NationStatus;
+import kr.danta.core.general.GeneralGrade;
+import kr.danta.core.general.GeneralHealthStatus;
 import kr.danta.core.economy.StrategicResource;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v11; DEV-056 writes v11. */
+/** Dependency-free snapshot codec. Reads schema v1-v12; DEV-076F writes v12. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -32,7 +34,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -113,13 +115,59 @@ public final class GameSnapshotCodec {
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
-                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]));
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), List.of());
+        }
+        if (schema == 12) {
+            if (p.length != 17) throw new IllegalArgumentException("invalid schema v12 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]));
         }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
 
 
+
+
+    private static String encodeGenerals(List<GeneralSnapshot> generals) {
+        if (generals == null || generals.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (GeneralSnapshot g : generals) {
+            String traits = String.join("+", g.traitIds());
+            String abilities = String.join("+", g.abilityIds());
+            rows.add(String.join(",", enc(g.generalId()), enc(g.ownerNationId()), g.grade().name(),
+                    Integer.toString(g.level()), Integer.toString(g.command()), Integer.toString(g.martial()),
+                    Integer.toString(g.strategy()), Integer.toString(g.logistics()), enc(traits), enc(abilities),
+                    enc(g.commandedArmyId()), enc(g.assignedPointId()), g.healthStatus().name(),
+                    nullableLong(g.injuredAtRuntimeMillis()), nullableLong(g.recoveryReadyAtRuntimeMillis()),
+                    enc(g.captorNationId()), nullableLong(g.capturedAtRuntimeMillis()), nullableLong(g.detentionEndsAtRuntimeMillis())));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<GeneralSnapshot> decodeGenerals(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<GeneralSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 18) throw new IllegalArgumentException("invalid general snapshot row");
+            result.add(new GeneralSnapshot(dec(f[0]), dec(f[1]), GeneralGrade.valueOf(f[2]), Integer.parseInt(f[3]),
+                    Integer.parseInt(f[4]), Integer.parseInt(f[5]), Integer.parseInt(f[6]), Integer.parseInt(f[7]),
+                    splitIds(dec(f[8])), splitIds(dec(f[9])), dec(f[10]), dec(f[11]), GeneralHealthStatus.valueOf(f[12]),
+                    parseNullableLong(f[13]), parseNullableLong(f[14]), dec(f[15]), parseNullableLong(f[16]), parseNullableLong(f[17])));
+        }
+        return List.copyOf(result);
+    }
+
+    private static List<String> splitIds(String value) {
+        return value == null || value.isEmpty() ? List.of() : List.of(value.split("\\+", -1));
+    }
+    private static String nullableLong(Long value) { return value == null ? "-" : value.toString(); }
+    private static Long parseNullableLong(String value) { return value.equals("-") ? null : Long.parseLong(value); }
 
     private static String encodeLocalResources(List<LocalResourceStockpileSnapshot> stockpiles) {
         if (stockpiles == null || stockpiles.isEmpty()) return "-";
