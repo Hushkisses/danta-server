@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-064 supply/isolation/retreat-route COMPLETE; next DEV-065 repeated combat simulation
+Checkpoint: DEV-065 repeated combat simulation IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -67,7 +67,7 @@ Checkpoint: DEV-064 supply/isolation/retreat-route COMPLETE; next DEV-065 repeat
 - DEV-064 supply/isolation/retreat-route: COMPLETE, Windows automated tests/build and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-065 repeated combat simulation: IMPLEMENTED — repeat runner and aggregate win/draw/loss summary added; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -94,7 +94,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-065 repeated combat simulation
+1. Verify DEV-065 on Windows; if successful mark COMPLETE
+2. DEV-066 CSV combat balance report
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
