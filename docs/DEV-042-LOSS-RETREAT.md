@@ -1,6 +1,6 @@
 # Execution-plan DEV-042 — Loss / retreat minimum model
 
-Status: IMPLEMENTED — awaiting Windows build/simulator verification
+Status: COMPLETE — Windows build/simulator verification passed
 
 ## Goal
 Add the execution plan's minimum post-combat casualty and retreat result without pretending the final v0.3 casualty formula is already fixed.
@@ -37,4 +37,5 @@ These are explicitly placeholders and must be revisited during the later full au
 5. Equal infantry 1000 vs 1000 should show draw, losses 100/100, remaining 900/900, retreat false/false.
 6. Start the existing Paper dev server and confirm normal boot plus /danta db status = 정상.
 
-Do not mark execution-plan DEV-042 COMPLETE until representative verification passes.
+## Verification result
+The representative confirmed on 2026-09-15 that the simulator produced the expected loss/remaining/retreat values for all fixed scenarios.
