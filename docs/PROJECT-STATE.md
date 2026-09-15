@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-040 basic troop types implemented; awaiting Windows build verification
+Checkpoint: DEV-040 basic troop types complete; DEV-041 is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -46,12 +46,10 @@ Checkpoint: DEV-040 basic troop types implemented; awaiting Windows build verifi
 - DEV-034 sequential operation queue: COMPLETE, Windows multi-leg and restart-mid-route recovery verified
 - DEV-035 advance-stop conditions: COMPLETE, Windows major-point stop and restart persistence verified
 - DEV-036 minimal army GUI: COMPLETE, Windows client GUI verified
+- DEV-040 basic troop types: COMPLETE, Windows build/test and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- DEV-040 basic troop types: IMPLEMENTED
-  - Core defines infantry/spearmen/archers/cavalry, frontline/ranged/mobile roles, and the v0.3 x1.25 soft-counter cycle.
-  - Base-power coefficients remain neutral x1.0 because v0.3 does not assign distinct basic coefficients.
-  - Awaiting representative's Windows build/test and normal Paper boot verification.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -78,8 +76,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-040 Windows build/test verification
-2. DEV-041 CombatResolver v0
+1. DEV-041 CombatResolver v0
+2. DEV-042 deterministic combat test scenarios
 
 ## Manual verification baseline
 A checkpoint is healthy if:
