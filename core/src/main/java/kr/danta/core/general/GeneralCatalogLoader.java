@@ -46,8 +46,12 @@ public final class GeneralCatalogLoader {
                 integer(stats, "command"), integer(stats, "martial"),
                 integer(stats, "strategy"), integer(stats, "logistics"));
         return new GeneralDefinition(id, displayName, grade, level, generalStats,
-                strings(map.getOrDefault("traits", List.of()), "traits"),
-                strings(map.getOrDefault("abilities", List.of()), "abilities"));
+                strings(optional(map, "traits", List.of()), "traits"),
+                strings(optional(map, "abilities", List.of()), "abilities"));
+    }
+
+    private static Object optional(Map<?, ?> map, String key, Object defaultValue) {
+        return map.containsKey(key) ? map.get(key) : defaultValue;
     }
 
     private static String string(Map<?, ?> map, String key) {
