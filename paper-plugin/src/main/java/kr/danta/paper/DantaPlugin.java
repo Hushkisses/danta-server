@@ -2,6 +2,8 @@ package kr.danta.paper;
 
 import kr.danta.core.facility.FacilityService;
 import kr.danta.core.facility.FacilityConstructionService;
+import kr.danta.paper.facility.FacilityAppearanceService;
+import kr.danta.paper.facility.FacilityAppearanceListener;
 import kr.danta.core.economy.SupplyConnectivityService;
 import kr.danta.core.economy.ArmySupplyService;
 import kr.danta.core.economy.AdministrativeCapacityService;
@@ -106,6 +108,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private ArmyCommanderService armyCommanderService;
     private FacilityService facilityService;
     private FacilityConstructionService facilityConstructionService;
+    private FacilityAppearanceService facilityAppearanceService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -172,8 +175,18 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
         facilityService = new FacilityService(gameState);
         facilityConstructionService = new FacilityConstructionService(gameState, facilityService, runtimeScheduler);
+        facilityAppearanceService = new FacilityAppearanceService(getServer(), gameState, facilityService);
+        getServer().getPluginManager().registerEvents(
+                new FacilityAppearanceListener(facilityAppearanceService, getLogger()), this);
         runtimeScheduler.registerHandler(FacilityConstructionService.TASK_TYPE, task -> {
             facilityConstructionService.complete(UUID.fromString(task.payload().get("constructionId")));
+            String pointId = task.payload().get("pointId");
+            String facilityId = task.payload().get("facilityId");
+            facilityAppearanceService.queue(pointId, facilityId);
+            var visualResult = facilityAppearanceService.sync(pointId, facilityId);
+            if (visualResult != FacilityAppearanceService.SyncResult.SYNCED) {
+                getLogger().info("[DEV-082] facility visual pending: " + pointId + "/" + facilityId + " (" + visualResult + ")");
+            }
             flushFacilityState("facility-construction-complete:" + task.payload().get("pointId")
                     + ":" + task.payload().get("facilityId"));
         });
@@ -236,6 +249,12 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                             getLogger().warning("DEV-017 snapshot recovery failed; local runtime state remains active: " + rootMessage(error));
                         } else if (snapshot.isPresent()) {
                             snapshotService.apply(snapshot.get());
+                            facilityAppearanceService.queueAllInstalled();
+                            for (var point : gameState.strategicPoints()) {
+                                for (var facility : facilityService.facilities(point.pointId())) {
+                                    facilityAppearanceService.sync(point.pointId(), facility.facilityId());
+                                }
+                            }
                             restoreArmyMovements();
                             persistRuntime();
                             getLogger().info("DEV-017 snapshot recovered. Runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
