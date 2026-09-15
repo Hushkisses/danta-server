@@ -3,6 +3,8 @@ package kr.danta.paper;
 import kr.danta.core.DantaCore;
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
+import kr.danta.core.army.ArmyOrder;
+import kr.danta.core.army.ArmyOrderService;
 import kr.danta.core.event.DomainEventBus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
@@ -60,6 +62,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private DomainEventBus eventBus;
     private RuntimeScheduler runtimeScheduler;
     private TerritoryService territoryService;
+    private ArmyOrderService armyOrderService;
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
     private DevMapDefinition devMapDefinition;
@@ -76,6 +79,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         gameState = new GameState();
         eventBus = new DomainEventBus();
         territoryService = new TerritoryService(gameState, eventBus);
+        armyOrderService = new ArmyOrderService(gameState);
         nationGuiController = new NationGuiController(gameState);
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
@@ -588,7 +592,20 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     flushArmyState("army-location:" + army.armyId());
                     sender.sendMessage("§aArmy location updated: §e" + army.locationPointId());
                 }
-                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location>");
+                case "move" -> {
+                    requireArgs(args, 4, "/danta army move <id> <destination-point-id>");
+                    ArmyOrder order = armyOrderService.issueMoveOrder(args[2], args[3]);
+                    sender.sendMessage("§aMove order accepted: §e" + order.orderId());
+                    sendArmyOrder(sender, order);
+                }
+                case "order" -> {
+                    requireArgs(args, 3, "/danta army order <id>");
+                    ArmyState army = requireArmy(args[2]);
+                    var order = gameState.armyOrder(army.armyId());
+                    if (order.isEmpty()) sender.sendMessage("§7No current order for army: §e" + army.armyId());
+                    else sendArmyOrder(sender, order.get());
+                }
+                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order>");
             }
         } catch (RuntimeException ex) {
             sender.sendMessage("§cArmy command failed: " + ex.getMessage());
@@ -605,6 +622,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         sender.sendMessage("§e" + army.armyId() + " §7owner=" + army.ownerNationId()
                 + ", location=" + army.locationPointId() + ", status=" + army.status()
                 + ", baseTroops=" + army.baseTroops());
+    }
+
+    private void sendArmyOrder(CommandSender sender, ArmyOrder order) {
+        sender.sendMessage("§6[Army Order] §e" + order.orderId());
+        sender.sendMessage("§fArmy: §e" + order.armyId() + " §7type=" + order.type() + ", status=" + order.status());
+        sender.sendMessage("§fRoute: §e" + order.route().originPointId() + " §f-> §e"
+                + order.route().destinationPointId() + " §7via=" + order.route().edgeId());
     }
 
     private void flushArmyState(String reason) {

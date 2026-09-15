@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-030 Army domain implemented; awaiting Windows build and live verification
+Checkpoint: DEV-031 ArmyOrder/Route implemented; awaiting Windows build and live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -38,13 +38,13 @@ Checkpoint: DEV-030 Army domain implemented; awaiting Windows build and live ver
 - DEV-025 /지도 minimal GUI: COMPLETE, real client verified
 - DEV-MAP-001 10-point logical test map: COMPLETE
 - DEV-MAP-002 structure/template placement pipeline: COMPLETE, live server verified
+- DEV-030 Army domain: COMPLETE, Windows build and restart recovery verified
 
 ## Implemented tickets awaiting live verification
-- DEV-030 Army domain: IMPLEMENTED
-  - Army owner/location/status/base-troop state added.
-  - Snapshot schema v5 persists and restores armies while reading v1-v4.
-  - `/danta army` DEV administration commands added.
-  - Awaiting representative's Windows Gradle build and Paper restart-recovery test.
+- DEV-031 ArmyOrder/Route: IMPLEMENTED
+  - One-leg adjacent movement orders are validated and stored in memory.
+  - `/danta army move` and `/danta army order` DEV commands added.
+  - Awaiting representative's Windows Gradle build and Paper command test.
 
 ## Important implementation decisions
 - Internal IDs/enums remain English; player-facing GUI text is Korean through UiText.
@@ -52,11 +52,12 @@ Checkpoint: DEV-030 Army domain implemented; awaiting Windows build and live ver
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
 - DB work is asynchronous; GameState remains authoritative in memory during play.
-- Snapshot schema remains backward-compatible through the current territory/edge model.
+- Snapshot schema remains backward-compatible through the current army model.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
 - DEV-030 intentionally stores a single base-troop count; troop-type composition remains DEV-040.
+- DEV-031 pending orders remain memory-only until DEV-033 persists runtime movement state.
 
 ## Current test data (local dev server only)
 Known examples include nation red, nation blue, strategic point farm_a, strategic point capital_red, and edge road_1. Exact local values live in the representative's PostgreSQL snapshot and are not source-controlled.
@@ -66,13 +67,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-030 Windows build and Paper restart-recovery verification
-2. DEV-031 ArmyOrder/Route
-3. DEV-032 movement-time calculation
-4. DEV-033 runtime movement scheduling/restart recovery
-5. DEV-034 sequential operation queue
-6. DEV-035 advance-stop conditions
-7. DEV-036 army GUI
+1. DEV-031 Windows build and Paper command verification
+2. DEV-032 movement-time calculation
+3. DEV-033 runtime movement scheduling/restart recovery
+4. DEV-034 sequential operation queue
+5. DEV-035 advance-stop conditions
+6. DEV-036 army GUI
 
 ## Manual verification baseline
 A checkpoint is healthy if:

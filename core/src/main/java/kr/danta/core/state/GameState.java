@@ -1,6 +1,7 @@
 package kr.danta.core.state;
 
 import kr.danta.core.army.ArmyState;
+import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -19,6 +20,7 @@ public final class GameState {
     private final Map<String, StrategicPoint> strategicPoints = new LinkedHashMap<>();
     private final Map<String, StrategicEdge> strategicEdges = new LinkedHashMap<>();
     private final Map<String, ArmyState> armies = new LinkedHashMap<>();
+    private final Map<String, ArmyOrder> armyOrdersByArmyId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -141,5 +143,26 @@ public final class GameState {
 
     public synchronized void clearArmies() {
         armies.clear();
+        armyOrdersByArmyId.clear();
     }
+
+    public synchronized void addArmyOrder(ArmyOrder order) {
+        Objects.requireNonNull(order, "order");
+        if (!armies.containsKey(order.armyId())) {
+            throw new IllegalArgumentException("army does not exist: " + order.armyId());
+        }
+        if (armyOrdersByArmyId.containsKey(order.armyId())) {
+            throw new IllegalArgumentException("army already has an order: " + order.armyId());
+        }
+        armyOrdersByArmyId.put(order.armyId(), order);
+    }
+
+    public synchronized Optional<ArmyOrder> armyOrder(String armyId) {
+        return Optional.ofNullable(armyOrdersByArmyId.get(armyId));
+    }
+
+    public synchronized List<ArmyOrder> armyOrders() {
+        return List.copyOf(new ArrayList<>(armyOrdersByArmyId.values()));
+    }
+
 }
