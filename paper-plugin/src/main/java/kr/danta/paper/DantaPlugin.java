@@ -1,6 +1,7 @@
 package kr.danta.paper;
 
 import kr.danta.core.economy.SupplyConnectivityService;
+import kr.danta.core.economy.ArmySupplyService;
 import kr.danta.core.economy.StrategicPointProductionService;
 import kr.danta.core.economy.EconomyTickService;
 import kr.danta.core.economy.StrategicResource;
@@ -172,9 +173,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             mapGui.setExecutor(this);
         }
         getLogger().info("Danta Server DEV enabled. Core version: " + DantaCore.VERSION
-                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis())
-                + ", 군단식량=" + supplyConsumed + "/" + supplyRequested
-                + (supplyShortfalls > 0 ? ", 보급부족군단=" + supplyShortfalls : ""));
+                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
     }
 
     @Override public void onDisable() {
@@ -1322,7 +1321,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         }
         flushEconomyState("economy-tick:" + economyTicksProcessed);
         getLogger().info("[EconomyTick] " + due + "회 처리, 누적=" + economyTicksProcessed
-                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
+                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis())
+                + ", 군단식량=" + supplyConsumed + "/" + supplyRequested
+                + (supplyShortfalls > 0 ? ", 보급부족군단=" + supplyShortfalls : ""));
     }
 
     private void runSync(Runnable action) {
