@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-033 runtime movement scheduling/restart recovery complete; DEV-034 is next
+Checkpoint: DEV-034 sequential operation queue implemented; awaiting Windows live verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -45,7 +45,11 @@ Checkpoint: DEV-033 runtime movement scheduling/restart recovery complete; DEV-0
 - DEV-033 runtime movement scheduling/restart recovery: COMPLETE, Windows arrival and restart-mid-movement recovery verified
 
 ## Implemented tickets awaiting live verification
-- None.
+- DEV-034 sequential operation queue: IMPLEMENTED
+  - Explicit A->B->C... adjacent routes validate before departure and automatically schedule the next DEV-033 leg after arrival.
+  - Remaining route is persisted in snapshot schema v7; legacy v1-v6 remain readable.
+  - `/danta army queue` and `queue-show` provide the current development interface in Korean.
+  - Awaiting representative's Windows build, multi-leg completion, and restart-mid-route checks.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -59,7 +63,8 @@ Checkpoint: DEV-033 runtime movement scheduling/restart recovery complete; DEV-0
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
 - DEV-030 intentionally stores a single base-troop count; troop-type composition remains DEV-040.
-- DEV-033 persists active one-leg movement orders and runtime deadlines in snapshot schema v6; legacy v1-v5 snapshots remain readable.
+- DEV-033 persists active one-leg movement orders and runtime deadlines; DEV-034 extends snapshot schema to v7 for remaining sequential destinations. Legacy v1-v6 snapshots remain readable.
+- DEV-034 intentionally uses explicit adjacent waypoints; automatic shortest/safe/stealth pathfinding remains a later expansion of the broader design.
 - DEV-032 route modifiers: ROAD x0.90, MOUNTAIN_PASS x1.20, FOREST_PATH x1.10, CANYON x1.15, SEA_ROUTE x0.90, LANDING_ROUTE x1.25; PLAIN/COASTAL neutral. Future authoritative commander/research/supply modifiers layer onto the calculator instead of being guessed now.
 
 ## Current test data (local dev server only)
@@ -70,7 +75,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-034 sequential operation queue
+1. DEV-034 Windows build and Paper live verification
 2. DEV-035 advance-stop conditions
 3. DEV-036 army GUI
 
