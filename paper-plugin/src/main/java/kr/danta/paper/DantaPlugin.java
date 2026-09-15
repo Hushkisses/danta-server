@@ -1,5 +1,11 @@
 package kr.danta.paper;
 
+import kr.danta.core.combat.CombatLossPolicy;
+import kr.danta.core.combat.CombatReport;
+import kr.danta.core.combat.CombatReportFormatter;
+import kr.danta.core.combat.CombatResolver;
+import kr.danta.core.combat.CombatSideInput;
+import kr.danta.core.combat.TroopType;
 import kr.danta.core.DantaCore;
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
@@ -237,6 +243,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("point")) return handleStrategicPoint(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("edge")) return handleStrategicEdge(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("army")) return handleArmy(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("combat")) return handleCombat(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
@@ -577,6 +584,29 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
             if (error != null) getLogger().warning("DEV-021 strategic point snapshot flush failed: " + rootMessage(error));
         });
+    }
+
+    private boolean handleCombat(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.army")) {
+            sender.sendMessage("§c전투 테스트 권한이 없습니다.");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "";
+        if (!sub.equals("test")) {
+            sender.sendMessage("§e사용법: /danta combat test");
+            return true;
+        }
+
+        CombatResolver resolver = new CombatResolver();
+        var powerResult = resolver.resolve(
+                CombatSideInput.neutral("red", TroopType.INFANTRY, 1000),
+                CombatSideInput.neutral("blue", TroopType.SPEARMEN, 1000));
+        var resolution = new CombatLossPolicy().apply(powerResult);
+        CombatReport report = CombatReport.from(resolution);
+        for (String line : new CombatReportFormatter().formatKorean(report)) {
+            sender.sendMessage(line);
+        }
+        return true;
     }
 
     private boolean handleArmy(CommandSender sender, String[] args) {
