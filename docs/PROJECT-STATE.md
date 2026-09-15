@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076A initial-general YAML schema/loader VERIFIED; DEV-076 roster content approval/integration remains
+Checkpoint: DEV-076B A/S-only special-ability rule IMPLEMENTED; Windows verification pending; initial roster fixed at A×7 + S×3, individual content design next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076A initial-general YAML schema/loader VERIFIED; DEV-076 roster
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-076B A/S-only special-ability rule: IMPLEMENTED — F/D/C/B catalog entries reject traits/special abilities; A/S may carry them; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -101,16 +101,17 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 6. Source alignment corrected on DEV-074 re-check: design v0.3 and execution plan use 통솔/무력/지략/병참; GeneralStats now matches command/martial/strategy/logistics. Earlier intelligence/politics wording was an implementation mistake.
-7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A now supplies the missing Trait/Ability domain contract. Final catalogs/effect mechanics remain unresolved.
+7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A supplies the domain contract. Product rule fixed 2026-09-15: only A/S generals may possess special traits/abilities; F/D/C/B provide only ordinary combat-stat bonuses. Exact A/S ability catalog/effects remain unresolved.
 8. Execution-plan DEV-073 is 군단 지휘관 배치/이동, not equipment slots.
 9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
 10. DEV-073 does not define independent unassigned-general travel time/cost; no teleport/travel queue was invented. Commander/general snapshot persistence must be added together when general persistence becomes authoritative.
 11. DEV-074 injury balance remains unresolved: injury/severe-injury probabilities, exact recovery durations, stat/grade/equipment modifiers, and whether injured generals are unavailable or command with penalties.
 12. DEV-075 final prisoner rules remain unresolved by v0.3: exact detention cap within the provisional 1.5–2 runtime-hour range, capture probability, ransom formula, exchange transaction/UX, and automatic repatriation-vs-escape determination. Captivity persistence + expiry scheduler must be added with authoritative general persistence.
-13. DEV-076 roster content is unresolved: approximately 10 identities/names, grade distribution, starting levels/stats, trait/ability assignments, and initial ownership/acquisition placement. YAML schema/loader exists; do not populate final values without approval.
+13. DEV-076 initial elite roster composition fixed 2026-09-15: exactly 10 generals = A grade 7 + S grade 3. Individual identities/names, starting levels/stats, A/S special-ability assignments, and initial ownership/acquisition placement remain unresolved. F/D/C/B are outside this initial elite roster and have no special abilities.
 
 ## Next execution order
-1. Approve and populate the approximately 10 initial generals; then integrate catalog at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+1. Verify DEV-076B A/S-only rule on Windows.
+2. Design/approve the 10-person elite roster (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
