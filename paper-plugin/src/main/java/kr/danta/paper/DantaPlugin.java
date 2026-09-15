@@ -159,7 +159,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             databaseService = new PostgresDatabaseService(config, getLogger());
             devRepository = new PostgresKeyValueRepository(databaseService);
             snapshotService = new SnapshotService(devRepository, runtimeClock, gameState, getLogger());
-            snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
