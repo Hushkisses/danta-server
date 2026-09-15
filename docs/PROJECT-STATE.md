@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076E semantic ability hooks VERIFIED; DEV-076 acquisition/ownership/persistence design next
+Checkpoint: DEV-076F acquisition boundary + general snapshot schema v12 IMPLEMENTED; Windows verification/restart test pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076E semantic ability hooks VERIFIED; DEV-076 acquisition/owners
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-076F acquisition + persistence foundation: IMPLEMENTED — unique catalog acquisition boundary and snapshot schema v12 for owned general state/assignment/injury/captivity; Windows quick-deploy + Paper restart verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -81,7 +81,7 @@ Checkpoint: DEV-076E semantic ability hooks VERIFIED; DEV-076 acquisition/owners
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
 - DB work is asynchronous; GameState remains authoritative in memory during play.
-- Snapshot schema v10 adds local strategic-resource stockpiles after national stockpiles; legacy v1-v9 snapshots remain readable.
+- Snapshot schema v12 adds owned general state after local strategic-resource stockpiles; legacy v1-v11 snapshots remain readable.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
@@ -98,7 +98,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 1. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 3. General balance values unresolved by design v0.3: stat upper range, F/D/C/B/A/S base-stat distribution, Lv1-10 stat growth, exact command/martial/strategy/logistics effect coefficients, and fixed/random/selectable growth method.
-4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
+4. General persistence foundation is wired in DEV-076F snapshot schema v12, preserving legacy v1-v11 reads. Live acquisition content/commands and restart verification remain before DEV-076 completion.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 6. Source alignment corrected on DEV-074 re-check: design v0.3 and execution plan use 통솔/무력/지략/병참; GeneralStats now matches command/martial/strategy/logistics. Earlier intelligence/politics wording was an implementation mistake.
 7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A supplies the domain contract. Product rule fixed 2026-09-15: only A/S generals may possess special traits/abilities; F/D/C/B provide only ordinary combat-stat bonuses. Exact A/S ability catalog/effects remain unresolved.
@@ -112,8 +112,10 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Decide/implement authoritative initial acquisition/bootstrap ownership and general snapshot persistence, then COMPLETE DEV-076.
-3. Add configurable ability coefficients/effect consumers when balance values are approved. (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+1. Verify DEV-076F automated tests/build on Windows.
+2. Add a minimal development acquisition path only if needed for live restart verification; verify owned general + assignment/injury/captivity restart recovery.
+3. Keep actual recruitment/raid/event acquisition routes unresolved until their systems exist; do not invent prices/spawn schedules.
+4. Add configurable ability coefficients/effect consumers when balance values are approved. (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
