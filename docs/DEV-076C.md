@@ -1,6 +1,6 @@
 # DEV-076C — Strategic-point general assignment foundation
 
-Status: IMPLEMENTED — Windows automated verification pending
+Status: VERIFIED — Windows automated tests/build and Paper boot verified
 
 ## Product decisions fixed 2026-09-15
 - General special abilities are not limited to direct combat effects; A/S abilities may affect the strategic point where the general is assigned.
@@ -26,3 +26,6 @@ Status: IMPLEMENTED — Windows automated verification pending
 
 ## Important
 This ticket establishes assignment state only. It does not yet apply production/tax/administrative modifiers. Those effects belong to the approved A/S ability definitions and should hook existing economy/administrative services rather than duplicate them.
+
+## Verification result
+The representative confirmed Windows quick-deploy and normal Paper startup on 2026-09-15.
