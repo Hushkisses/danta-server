@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076B A/S-only special-ability rule IMPLEMENTED; Windows verification pending; initial roster fixed at A×7 + S×3, individual content design next
+Checkpoint: DEV-076B A/S-only special-ability rule VERIFIED; initial roster fixed at A×7 + S×3; individual content design/approval next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076B A/S-only special-ability rule IMPLEMENTED; Windows verifica
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-076B A/S-only special-ability rule: IMPLEMENTED — F/D/C/B catalog entries reject traits/special abilities; A/S may carry them; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -110,8 +110,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 13. DEV-076 initial elite roster composition fixed 2026-09-15: exactly 10 generals = A grade 7 + S grade 3. Individual identities/names, starting levels/stats, A/S special-ability assignments, and initial ownership/acquisition placement remain unresolved. F/D/C/B are outside this initial elite roster and have no special abilities.
 
 ## Next execution order
-1. Verify DEV-076B A/S-only rule on Windows.
-2. Design/approve the 10-person elite roster (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+1. Design/approve the 10-person elite roster (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
