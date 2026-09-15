@@ -87,6 +87,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private RuntimeScheduler runtimeScheduler;
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
+    private ArmySupplyService armySupplyService;
     private long economyTicksProcessed;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
@@ -136,6 +137,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         runtimeClock.start();
         economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
         strategicPointProductionService = new StrategicPointProductionService(gameState);
+        armySupplyService = new ArmySupplyService(gameState);
 
         runtimeScheduler = new RuntimeScheduler(runtimeClock);
         runtimeScheduler.registerHandler("dev.echo", task ->
@@ -170,7 +172,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             mapGui.setExecutor(this);
         }
         getLogger().info("Danta Server DEV enabled. Core version: " + DantaCore.VERSION
-                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
+                + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis())
+                + ", 군단식량=" + supplyConsumed + "/" + supplyRequested
+                + (supplyShortfalls > 0 ? ", 보급부족군단=" + supplyShortfalls : ""));
     }
 
     @Override public void onDisable() {
@@ -1307,7 +1311,15 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         int due = economyTickService.claimDueTicks(runtimeClock.elapsedMillis());
         if (due <= 0) return;
         economyTicksProcessed += due;
-        for (int i = 0; i < due; i++) strategicPointProductionService.produceOneTick();
+        long supplyRequested = 0L, supplyConsumed = 0L;
+        int supplyShortfalls = 0;
+        for (int i = 0; i < due; i++) {
+            strategicPointProductionService.produceOneTick();
+            ArmySupplyService.TickResult supply = armySupplyService.consumeOneTick();
+            supplyRequested = Math.addExact(supplyRequested, supply.requestedFood());
+            supplyConsumed = Math.addExact(supplyConsumed, supply.consumedFood());
+            supplyShortfalls += supply.shortfallArmies();
+        }
         flushEconomyState("economy-tick:" + economyTicksProcessed);
         getLogger().info("[EconomyTick] " + due + "회 처리, 누적=" + economyTicksProcessed
                 + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
