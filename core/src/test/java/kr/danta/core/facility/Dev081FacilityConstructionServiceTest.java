@@ -26,7 +26,10 @@ class Dev081FacilityConstructionServiceTest {
         scheduler.executeDueTasks();
         assertTrue(facilities.facilities("p1").isEmpty());
 
-        clock.setElapsedMillis(Duration.ofSeconds(10).toMillis());
+        // scheduleAfter used the already-running clock, so preserve its exact captured deadline
+        // instead of assuming it was exactly 10,000 ms (wall-clock startup adds a tiny offset).
+        long due = construction.pending().getFirst().dueRuntimeMillis();
+        clock.setElapsedMillis(due);
         assertTrue(scheduler.executeDueTasks().getFirst().success());
         assertEquals(FacilityTier.I, facilities.facility("p1", "warehouse").orElseThrow().tier());
         assertTrue(construction.pending().isEmpty());
