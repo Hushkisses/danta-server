@@ -31,7 +31,7 @@ class Dev070GeneralStateTest {
 
     @Test void serviceRequiresExistingNationAndPreventsDuplicateId() {
         GameState state = new GameState();
-        state.addNation(new NationState("red", "Red", "capital_red"));
+        state.addNation(new NationState("red", "Red"));
         GeneralService service = new GeneralService(state);
 
         GeneralState general = service.create("general_1", "red", GeneralGrade.B, 3);
