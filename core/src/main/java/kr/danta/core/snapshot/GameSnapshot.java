@@ -20,9 +20,11 @@ public record GameSnapshot(
         List<PersonalWalletSnapshot> personalWallets,
         List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
         List<LocalResourceStockpileSnapshot> localResourceStockpiles,
-        List<GeneralSnapshot> generals
+        List<GeneralSnapshot> generals,
+        List<FacilitySnapshot> facilities,
+        List<FacilityConstructionSnapshot> facilityConstructions
 ) {
-    public static final int CURRENT_SCHEMA = 12;
+    public static final int CURRENT_SCHEMA = 13;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -43,6 +45,8 @@ public record GameSnapshot(
         strategicResourceStockpiles = strategicResourceStockpiles == null ? List.of() : List.copyOf(strategicResourceStockpiles);
         localResourceStockpiles = localResourceStockpiles == null ? List.of() : List.copyOf(localResourceStockpiles);
         generals = generals == null ? List.of() : List.copyOf(generals);
+        facilities = facilities == null ? List.of() : List.copyOf(facilities);
+        facilityConstructions = facilityConstructions == null ? List.of() : List.copyOf(facilityConstructions);
     }
 
     /** Backward source-compatible DEV-030 constructor: armies existed before orders/queues. */
