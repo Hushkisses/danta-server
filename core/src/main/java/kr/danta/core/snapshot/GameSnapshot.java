@@ -83,7 +83,7 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
                 armyOperationQueues, personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals,
-                List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of());
     }
 
     /** Source-compatible v13-shape constructor. */
