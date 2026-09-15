@@ -2,6 +2,7 @@ package kr.danta.paper;
 
 import kr.danta.core.economy.SupplyConnectivityService;
 import kr.danta.core.economy.ArmySupplyService;
+import kr.danta.core.economy.AdministrativeCapacityService;
 import kr.danta.core.economy.StrategicPointProductionService;
 import kr.danta.core.economy.EconomyTickService;
 import kr.danta.core.economy.StrategicResource;
@@ -737,6 +738,18 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     sender.sendMessage("§f개인지갑: §e" + wallet.balance() + "G");
                     sender.sendMessage("§f국고(" + nation.displayName() + "): §e" + nation.treasury() + "G");
                 }
+                case "admin" -> {
+                    requireArgs(args, 3, "/danta economy admin <국가-id>");
+                    NationState nation = gameState.nation(args[2])
+                            .orElseThrow(() -> new IllegalArgumentException("국가를 찾을 수 없습니다: " + args[2]));
+                    var status = new AdministrativeCapacityService(gameState).status(nation.nationId());
+                    sender.sendMessage("§6[행정수용력] §f" + nation.displayName());
+                    sender.sendMessage("§f보유 거점: §e" + status.ownedPoints());
+                    sender.sendMessage("§f행정수요: §e" + String.format(Locale.ROOT, "%.2f", status.demand())
+                            + " §7/ 수용력 " + String.format(Locale.ROOT, "%.2f", status.capacity()));
+                    sender.sendMessage("§f과확장: " + (status.overextended() ? "§c예" : "§a아니요"));
+                    sender.sendMessage("§f세입 효율: §e" + Math.round(status.revenueMultiplier() * 100.0) + "%");
+                }
                 case "contribute" -> {
                     requireArgs(args, 5, "/danta economy contribute <플레이어-id> <국가-id> <금액>");
                     long amount = Long.parseLong(args[4]);
@@ -750,7 +763,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     }
                 }
                 case "withdraw" -> sender.sendMessage("§c국고에서 개인지갑으로 직접 인출할 수 없습니다.");
-                default -> sender.sendMessage("§e사용법: /danta economy <wallet-set|show|contribute|withdraw>");
+                default -> sender.sendMessage("§e사용법: /danta economy <wallet-set|show|admin|contribute|withdraw>");
             }
         } catch (NumberFormatException ex) {
             sender.sendMessage("§c금액은 정수로 입력해 주세요.");
