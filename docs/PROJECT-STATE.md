@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-054 local stockpile/supply isolation implemented; awaiting Windows live verification
+Checkpoint: DEV-054 local stockpile/supply isolation COMPLETE; next DEV-055 supply consumption
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -56,13 +56,10 @@ Checkpoint: DEV-054 local stockpile/supply isolation implemented; awaiting Windo
 - DEV-051 strategic resources: COMPLETE, Windows five-resource display/set/restart recovery verified
 - DEV-052 EconomyTick: COMPLETE, Windows runtime boundary/pause/restart behavior verified
 - DEV-053 strategic-point production: COMPLETE, Windows exact production/restart persistence verified
+- DEV-054 local stockpile/supply isolation: COMPLETE, Windows isolation/reconnection/restart persistence verified
 
 ## Implemented tickets awaiting live verification
-- DEV-054 local stockpile/supply isolation: IMPLEMENTED
-  - Isolated owned-point production is retained locally instead of entering national available stock or disappearing.
-  - Own-territory path to capital determines connectivity; reconnecting makes retained local stock available again.
-  - Snapshot schema v10 persists local stockpiles.
-  - Awaiting Windows isolation/reconnection/restart verification.
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -89,8 +86,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-054 Windows isolation/reconnection/restart verification
-2. DEV-055 supply consumption
+1. DEV-055 supply consumption
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
