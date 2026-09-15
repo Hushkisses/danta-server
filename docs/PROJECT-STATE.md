@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-036 minimal army GUI implemented; awaiting Windows client verification
+Checkpoint: DEV-036 minimal army GUI complete; DEV-040 is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -45,12 +45,10 @@ Checkpoint: DEV-036 minimal army GUI implemented; awaiting Windows client verifi
 - DEV-033 runtime movement scheduling/restart recovery: COMPLETE, Windows arrival and restart-mid-movement recovery verified
 - DEV-034 sequential operation queue: COMPLETE, Windows multi-leg and restart-mid-route recovery verified
 - DEV-035 advance-stop conditions: COMPLETE, Windows major-point stop and restart persistence verified
+- DEV-036 minimal army GUI: COMPLETE, Windows client GUI verified
 
 ## Implemented tickets awaiting live verification
-- DEV-036 minimal army GUI: IMPLEMENTED
-  - `/danta army gui` opens a read-only Korean inventory GUI using authoritative GameState plus current operation queues.
-  - Shows army owner/location/status/base troops/current order/route and remaining sequential route.
-  - Awaiting representative's Windows client GUI verification.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -77,8 +75,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-036 Windows build and Paper client verification
-2. Continue with the next execution-plan ticket after DEV-036 verification.
+1. DEV-040 basic troop types: infantry/spearmen/archers/cavalry data
+2. DEV-041 CombatResolver v0
 
 ## Manual verification baseline
 A checkpoint is healthy if:
