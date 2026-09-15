@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v9; DEV-051 writes v9. */
+/** Dependency-free snapshot codec. Reads schema v1-v10; DEV-054 writes v10. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -31,7 +31,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -98,17 +98,58 @@ public final class GameSnapshotCodec {
         }
         if (schema == 9) {
             if (p.length != 15) throw new IllegalArgumentException("invalid schema v9 field count");
-            return new GameSnapshot(schema,
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]));
         }
+        if (schema == 10) {
+            if (p.length != 16) throw new IllegalArgumentException("invalid schema v10 field count");
+            return new GameSnapshot(schema,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
 
+
+
+    private static String encodeLocalResources(List<LocalResourceStockpileSnapshot> stockpiles) {
+        if (stockpiles == null || stockpiles.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (LocalResourceStockpileSnapshot stockpile : stockpiles) {
+            String values = java.util.Arrays.stream(StrategicResource.values())
+                    .map(r -> r.name() + ":" + stockpile.amounts().getOrDefault(r, 0L))
+                    .reduce((a, b) -> a + "+" + b).orElse("");
+            rows.add(enc(stockpile.pointId()) + "," + enc(values));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<LocalResourceStockpileSnapshot> decodeLocalResources(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<LocalResourceStockpileSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 2) throw new IllegalArgumentException("invalid local resource row");
+            Map<StrategicResource, Long> values = new java.util.EnumMap<>(StrategicResource.class);
+            String decoded = dec(f[1]);
+            if (decoded != null && !decoded.isEmpty()) {
+                for (String pair : decoded.split("\\+", -1)) {
+                    int colon = pair.lastIndexOf(':');
+                    values.put(StrategicResource.valueOf(pair.substring(0, colon)), Long.parseLong(pair.substring(colon + 1)));
+                }
+            }
+            result.add(new LocalResourceStockpileSnapshot(dec(f[0]), values));
+        }
+        return List.copyOf(result);
+    }
 
     private static String encodeStrategicResources(List<StrategicResourceStockpileSnapshot> stockpiles) {
         if (stockpiles == null || stockpiles.isEmpty()) return "-";
