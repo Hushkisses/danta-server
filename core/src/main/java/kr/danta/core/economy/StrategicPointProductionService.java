@@ -11,10 +11,12 @@ import java.util.Objects;
 public final class StrategicPointProductionService {
     private final GameState gameState;
     private final SupplyConnectivityService supplyConnectivity;
+    private final AdministrativeCapacityService administrativeCapacity;
 
     public StrategicPointProductionService(GameState gameState) {
         this.gameState = Objects.requireNonNull(gameState, "gameState");
         this.supplyConnectivity = new SupplyConnectivityService(gameState);
+        this.administrativeCapacity = new AdministrativeCapacityService(gameState);
     }
 
     public ProductionResult produceOneTick() {
@@ -28,8 +30,10 @@ public final class StrategicPointProductionService {
                 if (perTick <= 0L) continue;
                 String key = entry.getKey().toLowerCase();
                 if (key.equals("gold") || key.equals("g")) {
-                    gameState.nation(nationId).ifPresent(n -> n.deposit(perTick));
-                    gold.merge(nationId, perTick, Math::addExact);
+                    long adjusted = (long) Math.floor(perTick * administrativeCapacity.status(nationId).revenueMultiplier());
+                    if (adjusted <= 0L) continue;
+                    gameState.nation(nationId).ifPresent(n -> n.deposit(adjusted));
+                    gold.merge(nationId, adjusted, Math::addExact);
                     continue;
                 }
                 StrategicResource resource = parseResource(key);
