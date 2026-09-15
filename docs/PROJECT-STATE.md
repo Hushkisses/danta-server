@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076A initial-general YAML schema/loader IMPLEMENTED; Windows verification pending; DEV-076 roster content remains unresolved
+Checkpoint: DEV-076A initial-general YAML schema/loader VERIFIED; DEV-076 roster content approval/integration remains
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-076A initial-general YAML schema/loader IMPLEMENTED; Windows ver
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-076A initial-general YAML schema/loader: IMPLEMENTED — strict data-driven catalog and tests added; shipped roster intentionally empty pending content approval; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -110,8 +110,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 13. DEV-076 roster content is unresolved: approximately 10 identities/names, grade distribution, starting levels/stats, trait/ability assignments, and initial ownership/acquisition placement. YAML schema/loader exists; do not populate final values without approval.
 
 ## Next execution order
-1. Verify DEV-076A YAML schema/loader on Windows.
-2. Approve and populate the approximately 10 initial generals; then integrate catalog at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
+1. Approve and populate the approximately 10 initial generals; then integrate catalog at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
 3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
 
 ## Automated verification baseline
