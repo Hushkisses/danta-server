@@ -1,5 +1,7 @@
 package kr.danta.paper;
 
+import kr.danta.core.facility.FacilityService;
+import kr.danta.core.facility.FacilityConstructionService;
 import kr.danta.core.economy.SupplyConnectivityService;
 import kr.danta.core.economy.ArmySupplyService;
 import kr.danta.core.economy.AdministrativeCapacityService;
@@ -102,6 +104,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private GeneralAcquisitionService generalAcquisitionService;
     private PointGeneralAssignmentService pointGeneralAssignmentService;
     private ArmyCommanderService armyCommanderService;
+    private FacilityService facilityService;
+    private FacilityConstructionService facilityConstructionService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -166,6 +170,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                         + " [id=" + task.id() + "]"));
         runtimeScheduler.registerHandler("army.move.arrive", task ->
                 completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
+        facilityService = new FacilityService(gameState);
+        facilityConstructionService = new FacilityConstructionService(gameState, facilityService, runtimeScheduler);
+        runtimeScheduler.registerHandler(FacilityConstructionService.TASK_TYPE, task -> {
+            facilityConstructionService.complete(UUID.fromString(task.payload().get("constructionId")));
+            flushFacilityState("facility-construction-complete:" + task.payload().get("pointId")
+                    + ":" + task.payload().get("facilityId"));
+        });
         runtimeSchedulerPump = getServer().getScheduler().runTaskTimer(
                 this, this::pumpRuntimeScheduler, 1L, 1L);
 
@@ -213,6 +224,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             databaseService = new PostgresDatabaseService(config, getLogger());
             devRepository = new PostgresKeyValueRepository(databaseService);
             snapshotService = new SnapshotService(devRepository, runtimeClock, gameState, getLogger());
+            snapshotService.bindFacilities(facilityService, facilityConstructionService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
@@ -1514,4 +1526,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         long s = Math.max(0L, millis / 1000L);
         return String.format("%02d:%02d:%02d", s / 3600L, (s % 3600L) / 60L, s % 60L);
     }
+    private void flushFacilityState(String reason) {
+        if (snapshotService == null || databaseService == null
+                || !databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason);
+    }
+
 }
