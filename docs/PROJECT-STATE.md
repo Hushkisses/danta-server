@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-055 army food/supply consumption baseline IMPLEMENTED; awaiting Windows verification
+Checkpoint: DEV-055 army food/supply consumption baseline COMPLETE; next DEV-056 expedition supply selection
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -57,12 +57,10 @@ Checkpoint: DEV-055 army food/supply consumption baseline IMPLEMENTED; awaiting 
 - DEV-052 EconomyTick: COMPLETE, Windows runtime boundary/pause/restart behavior verified
 - DEV-053 strategic-point production: COMPLETE, Windows exact production/restart persistence verified
 - DEV-054 local stockpile/supply isolation: COMPLETE, Windows isolation/reconnection/restart persistence verified
+- DEV-055 army food/supply consumption baseline: COMPLETE, Windows automated + stationed/moving EconomyTick verification passed
 
 ## Implemented tickets awaiting live verification
-- DEV-055 army food/supply consumption baseline: IMPLEMENTED
-  - 30-minute EconomyTick consumption wired after production.
-  - Provisional per-1000 rates: stationed 1, moving 20, battle 40 FOOD/tick; exact formula remains a later balance target per v0.3.
-  - Shortage cannot make FOOD negative and is reported; DEV-056 will add selectable carried supply.
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -89,8 +87,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-055 Windows automated/Paper verification
-2. DEV-056 expedition supply selection
+1. DEV-056 expedition supply selection
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
