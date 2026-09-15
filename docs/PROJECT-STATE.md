@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-070 General F-S + Lv1-10 COMPLETE; next DEV-071 General stats
+Checkpoint: DEV-071 General stats IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -69,7 +69,7 @@ Checkpoint: DEV-070 General F-S + Lv1-10 COMPLETE; next DEV-071 General stats
 - DEV-066 CSV combat balance report: COMPLETE, Windows automated tests/build and Paper boot verified after quote-escaping compile fix
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-071 General stats: IMPLEMENTED — command/martial/intelligence/politics value object integrated into GeneralState without unfixed growth/effect coefficients; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -94,9 +94,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 ## Open items
 1. Player-to-nation membership is not yet authoritative; /국가 currently supports development selection/direct opening.
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
+3. General balance values unresolved by design v0.3: stat upper range, F-S base-stat distribution, Lv1-10 stat growth, exact command/martial/intelligence/politics effect coefficients, and fixed/random/selectable growth method.
+4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 
 ## Next execution order
-1. DEV-071 General stats
+1. Verify DEV-071 on Windows; if successful mark COMPLETE
+2. DEV-072 troop synergy
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
