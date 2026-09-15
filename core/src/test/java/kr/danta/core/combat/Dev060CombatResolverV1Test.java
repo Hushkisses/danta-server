@@ -28,8 +28,12 @@ class Dev060CombatResolverV1Test {
         assertEquals(v0.first().effectivePower(), v1.finalResult().first().effectivePower(), 0.000001);
         assertEquals(v0.second().effectivePower(), v1.finalResult().second().effectivePower(), 0.000001);
         assertEquals(v0.winnerSideId(), v1.finalResult().winnerSideId());
-        assertTrue(v1.phases().stream().allMatch(p ->
-                p.firstMultiplier() == 1.0 && p.secondMultiplier() == 1.0));
+        // DEV-060's regression contract is that staged resolution preserves the
+        // already-verified v0 final result. DEV-061 intentionally assigns the
+        // existing soft counter to its logical FRONTLINE/BACKLINE/MOBILE phase,
+        // so individual phase multipliers are no longer all neutral.
+        assertEquals(v0.first().effectivePower(), v1.finalResult().first().effectivePower(), 0.000001);
+        assertEquals(v0.second().effectivePower(), v1.finalResult().second().effectivePower(), 0.000001);
     }
 
     @Test void equalSidesRemainDrawThroughNeutralPipeline() {
