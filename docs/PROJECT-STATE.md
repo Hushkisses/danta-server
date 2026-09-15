@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-073 army commander assignment/movement IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-073 COMPLETE; DEV-074 injury/recovery IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-073 army commander assignment/movement IMPLEMENTED; Windows auto
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-073 army commander assignment/movement: IMPLEMENTED — one commander per army/general, same-nation/co-location/stationed reassignment rules, commander follows army movement; Windows quick-deploy/Paper boot verification pending
+- DEV-074 injury/recovery: IMPLEMENTED — injured/severely injured runtime recovery state and service added without invented durations/probabilities; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -100,11 +100,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 3. General balance values unresolved by design v0.3: stat upper range, F-S base-stat distribution, Lv1-10 stat growth, exact command/martial/intelligence/politics effect coefficients, and fixed/random/selectable growth method.
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
-6. Execution-plan alignment correction: DEV-071 is named 통솔/무력/지략/병참, while current GeneralStats followed design v0.3 terminology 통솔/무력/지력/정치. Do not silently rename/remove either interpretation; reconcile against the source documents before final player-facing/stat-effect integration.
+6. Source alignment corrected on DEV-074 re-check: design v0.3 and execution plan use 통솔/무력/지략/병참; GeneralStats now matches command/martial/strategy/logistics. Earlier intelligence/politics wording was an implementation mistake.
 7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A now supplies the missing Trait/Ability domain contract. Final catalogs/effect mechanics remain unresolved.
 8. Execution-plan DEV-073 is 군단 지휘관 배치/이동, not equipment slots.
 9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
 10. DEV-073 does not define independent unassigned-general travel time/cost; no teleport/travel queue was invented. Commander/general snapshot persistence must be added together when general persistence becomes authoritative.
+11. DEV-074 injury balance remains unresolved: injury/severe-injury probabilities, exact recovery durations, stat/grade/equipment modifiers, and whether injured generals are unavailable or command with penalties.
 
 ## Next execution order
 1. DEV-073 army commander assignment/movement
