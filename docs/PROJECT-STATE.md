@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-063 terrain/battlefield capacity IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-063 terrain/battlefield capacity COMPLETE; next DEV-064 supply/isolation/retreat-route
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -63,9 +63,10 @@ Checkpoint: DEV-063 terrain/battlefield capacity IMPLEMENTED; Windows automated 
 - DEV-060 CombatResolver v1: COMPLETE, Windows automated tests/build and Paper boot verified
 - DEV-061 counter/frontline/backline/mobile: COMPLETE, Windows automated tests/build and Paper boot verified
 - DEV-062 morale/retreat/pursuit: COMPLETE, Windows automated tests/build and Paper boot verified
+- DEV-063 terrain/battlefield capacity: COMPLETE, Windows automated tests/build and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- DEV-063 terrain/battlefield capacity: IMPLEMENTED — explicit terrain context and committed/reserve capacity model added; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -92,8 +93,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. Verify DEV-063 on Windows; if successful mark COMPLETE
-2. DEV-064 supply/isolation/retreat-route
+1. DEV-064 supply/isolation/retreat-route
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
