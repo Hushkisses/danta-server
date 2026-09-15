@@ -21,6 +21,7 @@ public final class ResearchService {
         this.scheduler = Objects.requireNonNull(scheduler);
         this.definitions = Map.copyOf(Objects.requireNonNull(definitions));
     }
+    public synchronized List<ResearchState> states() { return List.copyOf(states.values()); }
     public synchronized ResearchState state(String nationId) { return states.computeIfAbsent(nationId, ResearchState::new); }
     public synchronized ResearchQueueEntry reserve(String nationId, String researchId) {
         ResearchDefinition definition = definition(researchId); ResearchState state=state(nationId);
