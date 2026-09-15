@@ -1,6 +1,8 @@
 package kr.danta.core.snapshot;
 
 import kr.danta.core.army.ArmyStatus;
+import kr.danta.core.army.ArmyOrderStatus;
+import kr.danta.core.army.ArmyOrderType;
 import kr.danta.core.nation.NationStatus;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v5; DEV-030 writes v5. */
+/** Dependency-free snapshot codec. Reads schema v1-v6; DEV-033 writes v6. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -27,7 +29,7 @@ public final class GameSnapshotCodec {
                 Double.toString(s.runtimeSpeedMultiplier()),
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
-                encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()));
+                encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -45,28 +47,36 @@ public final class GameSnapshotCodec {
             if (p.length != 8) throw new IllegalArgumentException("invalid schema v2 field count");
             return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
-                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]), List.of(), List.of(), List.of());
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]), List.of(), List.of(), List.of(), List.of());
         }
         if (schema == 3) {
             if (p.length != 9) throw new IllegalArgumentException("invalid schema v3 field count");
             return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]),
-                    decodeNations(p[7]), decodeStrategicPoints(p[8]), List.of(), List.of());
+                    decodeNations(p[7]), decodeStrategicPoints(p[8]), List.of(), List.of(), List.of());
         }
         if (schema == 4) {
             if (p.length != 10) throw new IllegalArgumentException("invalid schema v4 field count");
             return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
-                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), List.of());
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), List.of(), List.of());
         }
         if (schema == 5) {
             if (p.length != 11) throw new IllegalArgumentException("invalid schema v5 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]), List.of());
+        }
+        if (schema == 6) {
+            if (p.length != 12) throw new IllegalArgumentException("invalid schema v6 field count");
             return new GameSnapshot(schema,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
-                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]));
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]));
         }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
@@ -154,6 +164,29 @@ public final class GameSnapshotCodec {
             if (f.length != 5) throw new IllegalArgumentException("invalid army snapshot row");
             result.add(new ArmySnapshot(dec(f[0]), dec(f[1]), dec(f[2]),
                     ArmyStatus.valueOf(f[3]), Long.parseLong(f[4])));
+        }
+        return List.copyOf(result);
+    }
+
+    private static String encodeArmyOrders(List<ArmyOrderSnapshot> orders) {
+        if (orders == null || orders.isEmpty()) return "-";
+        List<String> rows = new ArrayList<>();
+        for (ArmyOrderSnapshot order : orders) {
+            rows.add(String.join(",", enc(order.orderId()), enc(order.armyId()), order.type().name(),
+                    enc(order.originPointId()), enc(order.destinationPointId()), enc(order.edgeId()),
+                    order.status().name(), Long.toString(order.dueRuntimeMillis())));
+        }
+        return String.join(";", rows);
+    }
+
+    private static List<ArmyOrderSnapshot> decodeArmyOrders(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<ArmyOrderSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 8) throw new IllegalArgumentException("invalid army order snapshot row");
+            result.add(new ArmyOrderSnapshot(dec(f[0]), dec(f[1]), ArmyOrderType.valueOf(f[2]),
+                    dec(f[3]), dec(f[4]), dec(f[5]), ArmyOrderStatus.valueOf(f[6]), Long.parseLong(f[7])));
         }
         return List.copyOf(result);
     }
