@@ -79,6 +79,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private PostgresDatabaseService databaseService;
     private AsyncKeyValueRepository devRepository;
     private SnapshotService snapshotService;
+    private final java.util.Map<String, ArmyOrderSnapshot> pendingMovementSnapshots = new java.util.LinkedHashMap<>();
     private BukkitTask snapshotTask;
 
     @Override public void onEnable() {
@@ -158,6 +159,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             databaseService = new PostgresDatabaseService(config, getLogger());
             devRepository = new PostgresKeyValueRepository(databaseService);
             snapshotService = new SnapshotService(devRepository, runtimeClock, gameState, getLogger());
+            snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
@@ -954,25 +956,23 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private void updateActiveMovement(ArmyOrder order, long dueRuntimeMillis) {
-        if (snapshotService == null) return;
-        List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
-        updated.removeIf(existing -> existing.armyId().equals(order.armyId()));
-        updated.add(new ArmyOrderSnapshot(order.orderId(), order.armyId(), order.type(),
+        ArmyOrderSnapshot movement = new ArmyOrderSnapshot(order.orderId(), order.armyId(), order.type(),
                 order.route().originPointId(), order.route().destinationPointId(), order.route().edgeId(),
-                order.status(), dueRuntimeMillis));
-        snapshotService.setActiveArmyMovements(updated);
+                order.status(), dueRuntimeMillis);
+        pendingMovementSnapshots.put(order.armyId(), movement);
+        if (snapshotService != null) snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
     }
 
     private void removeActiveMovement(String armyId) {
-        if (snapshotService == null) return;
-        List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
-        updated.removeIf(existing -> existing.armyId().equals(armyId));
-        snapshotService.setActiveArmyMovements(updated);
+        pendingMovementSnapshots.remove(armyId);
+        if (snapshotService != null) snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
     }
 
     private void restoreArmyMovements() {
         if (snapshotService == null || runtimeScheduler == null) return;
+        pendingMovementSnapshots.clear();
         for (ArmyOrderSnapshot movement : snapshotService.restoredArmyOrders()) {
+            pendingMovementSnapshots.put(movement.armyId(), movement);
             RuntimeScheduledTask task = new RuntimeScheduledTask(
                     UUID.randomUUID(), movement.dueRuntimeMillis(), "army.move.arrive",
                     Map.of("armyId", movement.armyId(), "orderId", movement.orderId()));
