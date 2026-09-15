@@ -17,6 +17,7 @@ import kr.danta.core.runtime.RuntimeClockState;
 import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
+import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.PointPosition;
@@ -52,6 +53,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -107,6 +109,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 getLogger().info("[RuntimeScheduler] dev.echo completed: "
                         + task.payload().getOrDefault("message", "(no message)")
                         + " [id=" + task.id() + "]"));
+        runtimeScheduler.registerHandler("army.move.arrive", task ->
+                completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
         runtimeSchedulerPump = getServer().getScheduler().runTaskTimer(
                 this, this::pumpRuntimeScheduler, 1L, 1L);
 
@@ -165,6 +169,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                             getLogger().warning("DEV-017 snapshot recovery failed; local runtime state remains active: " + rootMessage(error));
                         } else if (snapshot.isPresent()) {
                             snapshotService.apply(snapshot.get());
+                            restoreArmyMovements();
                             persistRuntime();
                             getLogger().info("DEV-017 snapshot recovered. Runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
                         } else {
@@ -610,8 +615,16 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     requireArgs(args, 4, "/danta army move <군단-id> <목적지-거점-id>");
                     ArmyOrder order = armyOrderService.issueMoveOrder(args[2], args[3]);
                     ArmyMovementTime movementTime = armyMovementTimeService.calculateForArmy(order.armyId());
-                    sender.sendMessage("§a이동 명령을 접수했습니다: §e" + order.orderId());
+                    RuntimeScheduledTask task = runtimeScheduler.scheduleAfter(
+                            movementTime.effectiveDuration(), "army.move.arrive",
+                            Map.of("armyId", order.armyId(), "orderId", order.orderId()));
+                    ArmyState movingArmy = requireArmy(order.armyId());
+                    movingArmy.setStatus(ArmyStatus.MOVING);
+                    updateActiveMovement(order, task.dueRuntimeMillis());
+                    flushArmyState("army-move-start:" + movingArmy.armyId());
+                    sender.sendMessage("§a이동을 시작했습니다: §e" + order.orderId());
                     sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
+                    sender.sendMessage("§f도착 예정 서버시간: §e" + formatRuntime(task.dueRuntimeMillis()));
                     sendArmyOrder(sender, order);
                 }
                 case "order" -> {
@@ -938,6 +951,51 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             sendCommandError(sender, "서버 시간", ex);
         }
         return true;
+    }
+
+    private void updateActiveMovement(ArmyOrder order, long dueRuntimeMillis) {
+        if (snapshotService == null) return;
+        List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
+        updated.removeIf(existing -> existing.armyId().equals(order.armyId()));
+        updated.add(new ArmyOrderSnapshot(order.orderId(), order.armyId(), order.type(),
+                order.route().originPointId(), order.route().destinationPointId(), order.route().edgeId(),
+                order.status(), dueRuntimeMillis));
+        snapshotService.setActiveArmyMovements(updated);
+    }
+
+    private void removeActiveMovement(String armyId) {
+        if (snapshotService == null) return;
+        List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
+        updated.removeIf(existing -> existing.armyId().equals(armyId));
+        snapshotService.setActiveArmyMovements(updated);
+    }
+
+    private void restoreArmyMovements() {
+        if (snapshotService == null || runtimeScheduler == null) return;
+        for (ArmyOrderSnapshot movement : snapshotService.restoredArmyOrders()) {
+            RuntimeScheduledTask task = new RuntimeScheduledTask(
+                    UUID.randomUUID(), movement.dueRuntimeMillis(), "army.move.arrive",
+                    Map.of("armyId", movement.armyId(), "orderId", movement.orderId()));
+            runtimeScheduler.restore(task);
+        }
+        // Execute already-due arrivals immediately against restored server runtime.
+        pumpRuntimeScheduler();
+    }
+
+    private void completeArmyMovement(String armyId, String orderId) {
+        if (armyId == null || orderId == null) throw new IllegalArgumentException("movement task payload is incomplete");
+        ArmyState army = requireArmy(armyId);
+        ArmyOrder order = gameState.armyOrder(armyId)
+                .orElseThrow(() -> new IllegalStateException("movement order missing for army: " + armyId));
+        if (!order.orderId().equals(orderId)) {
+            throw new IllegalStateException("movement order id mismatch for army: " + armyId);
+        }
+        army.setLocationPointId(order.route().destinationPointId());
+        army.setStatus(ArmyStatus.STATIONED);
+        gameState.removeArmyOrder(armyId);
+        removeActiveMovement(armyId);
+        flushArmyState("army-move-arrive:" + armyId);
+        getLogger().info("[ArmyMovement] arrived: army=" + armyId + ", point=" + army.locationPointId());
     }
 
     private void pumpRuntimeScheduler() {
