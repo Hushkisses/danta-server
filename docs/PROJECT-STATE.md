@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-051 strategic resources implemented; awaiting Windows live/restart verification
+Checkpoint: DEV-052 EconomyTick implemented; awaiting Windows runtime verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -53,13 +53,14 @@ Checkpoint: DEV-051 strategic resources implemented; awaiting Windows live/resta
 - DEV-044 combat-to-occupation: COMPLETE, Windows build/test and Paper boot verified
 - DEV-045 combat report v0: COMPLETE, live Paper Korean report output verified
 - DEV-050 treasury/personal-wallet separation: COMPLETE, Windows contribution/rejection/restart recovery verified
+- DEV-051 strategic resources: COMPLETE, Windows five-resource display/set/restart recovery verified
 
 ## Implemented tickets awaiting live verification
-- DEV-051 strategic resources: IMPLEMENTED
-  - Five national logical resources: FOOD/WOOD/IRON/RARE_MINERAL/MANA_STONE.
-  - Korean player-facing names: 식량/목재/철/희귀광물/마력석.
-  - GameState owns national stockpiles; snapshot schema v9 persists them while v1-v8 remain readable.
-  - Awaiting Windows five-resource display/set/restart-recovery verification.
+- DEV-052 EconomyTick: IMPLEMENTED
+  - Fixed 30-minute server-runtime cadence; wall-clock downtime does not advance it.
+  - Existing RuntimeClock pause/speed behavior drives tick boundaries.
+  - `/danta economy-tick` exposes Korean diagnostic count/current/next tick values.
+  - Awaiting Windows boundary/pause/restart verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -86,8 +87,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-051 Windows live/restart verification
-2. DEV-052 EconomyTick
+1. DEV-052 Windows runtime verification
+2. DEV-053 strategic-point production mapping
 
 ## Manual verification baseline
 A checkpoint is healthy if:
