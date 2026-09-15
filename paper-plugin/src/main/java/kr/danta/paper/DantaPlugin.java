@@ -1,5 +1,7 @@
 package kr.danta.paper;
 
+import kr.danta.core.economy.StrategicResource;
+import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.economy.EconomyTransferService;
 import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.combat.CombatLossPolicy;
@@ -247,6 +249,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("army")) return handleArmy(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("combat")) return handleCombat(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("economy")) return handleEconomy(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("resource")) return handleResource(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
@@ -587,6 +590,58 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
             if (error != null) getLogger().warning("DEV-021 strategic point snapshot flush failed: " + rootMessage(error));
         });
+    }
+
+    private boolean handleResource(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.nation")) {
+            sender.sendMessage("§c전략자원 관리 권한이 없습니다.");
+            return true;
+        }
+        if (args.length < 3) {
+            sender.sendMessage("§e사용법: /danta resource <show|set> <국가-id> [자원] [수량]");
+            return true;
+        }
+        try {
+            StrategicResourceStockpile stock = gameState.getOrCreateStrategicResourceStockpile(args[2]);
+            String sub = args[1].toLowerCase(Locale.ROOT);
+            if (sub.equals("show")) {
+                sender.sendMessage("§6[전략자원] §f" + args[2]);
+                sender.sendMessage("§f식량: §e" + stock.amount(StrategicResource.FOOD));
+                sender.sendMessage("§f목재: §e" + stock.amount(StrategicResource.WOOD));
+                sender.sendMessage("§f철: §e" + stock.amount(StrategicResource.IRON));
+                sender.sendMessage("§f희귀광물: §e" + stock.amount(StrategicResource.RARE_MINERAL));
+                sender.sendMessage("§f마력석: §e" + stock.amount(StrategicResource.MANA_STONE));
+                return true;
+            }
+            if (sub.equals("set")) {
+                requireArgs(args, 5, "/danta resource set <국가-id> <food|wood|iron|rare_mineral|mana_stone> <수량>");
+                StrategicResource resource = StrategicResource.valueOf(args[3].toUpperCase(Locale.ROOT));
+                long amount = Long.parseLong(args[4]);
+                stock.set(resource, amount);
+                flushEconomyState("resource-set:" + args[2] + ":" + resource.name());
+                sender.sendMessage("§a전략자원을 설정했습니다: §f" + resourceKorean(resource) + " §e" + amount);
+                return true;
+            }
+            sender.sendMessage("§e사용법: /danta resource <show|set> <국가-id> [자원] [수량]");
+        } catch (NumberFormatException ex) {
+            sender.sendMessage("§c수량은 정수로 입력해 주세요.");
+        } catch (IllegalArgumentException ex) {
+            sender.sendMessage("§c전략자원 작업을 처리할 수 없습니다: " + ex.getMessage());
+        } catch (RuntimeException ex) {
+            getLogger().warning("[StrategicResource] command failed: " + rootMessage(ex));
+            sender.sendMessage("§c전략자원 작업 중 오류가 발생했습니다. 서버 콘솔을 확인해 주세요.");
+        }
+        return true;
+    }
+
+    private static String resourceKorean(StrategicResource resource) {
+        return switch (resource) {
+            case FOOD -> "식량";
+            case WOOD -> "목재";
+            case IRON -> "철";
+            case RARE_MINERAL -> "희귀광물";
+            case MANA_STONE -> "마력석";
+        };
     }
 
     private void flushEconomyState(String reason) {
