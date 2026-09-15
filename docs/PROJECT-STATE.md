@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-045 combat report v0 implemented; awaiting Windows build/test verification
+Checkpoint: DEV-050 treasury/personal-wallet separation implemented; awaiting Windows live/restart verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -51,14 +51,15 @@ Checkpoint: DEV-045 combat report v0 implemented; awaiting Windows build/test ve
 - Execution-plan DEV-042 loss/retreat minimum model: COMPLETE, Windows simulator values verified
 - DEV-043 NPC basic garrison: COMPLETE, Windows build/test and Paper boot verified
 - DEV-044 combat-to-occupation: COMPLETE, Windows build/test and Paper boot verified
+- DEV-045 combat report v0: COMPLETE, live Paper Korean report output verified
 
 ## Implemented tickets awaiting live verification
-- DEV-045 combat report v0: IMPLEMENTED
-  - Projects CombatResolution into result/initial/loss/remaining values for both sides.
-  - Player-facing formatter is Korean: 승리/패배/무승부, 전투 전/손실/잔존.
-  - Admin-only `/danta combat test` now exercises the real resolver + loss policy + Korean report formatter on Paper for live verification.
-  - No history DB, GUI, broadcast, or Discord scope is invented beyond the execution-plan requirement.
-  - Build/Paper baseline passed; awaiting representative's live `/danta combat test` output verification.
+- DEV-050 treasury/personal-wallet separation: IMPLEMENTED
+  - NationState treasury remains national money; PersonalWallet is separate per player ID in GameState.
+  - Personal -> treasury contribution is allowed; treasury -> personal direct withdrawal is explicitly prohibited.
+  - Snapshot schema v8 persists personal wallets while v1-v7 remain readable with empty wallets.
+  - Economy mutations trigger async important snapshot flush.
+  - Awaiting Windows contribution/rejection/restart-recovery verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -67,7 +68,7 @@ Checkpoint: DEV-045 combat report v0 implemented; awaiting Windows build/test ve
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
 - DB work is asynchronous; GameState remains authoritative in memory during play.
-- Snapshot schema remains backward-compatible through the current army model.
+- Snapshot schema v8 adds personal wallets for DEV-050; legacy v1-v7 snapshots remain readable.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
@@ -85,8 +86,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-045 Windows build/test verification
-2. DEV-050 treasury/personal-wallet separation
+1. DEV-050 Windows live/restart verification
+2. DEV-051 strategic resources
 
 ## Manual verification baseline
 A checkpoint is healthy if:
