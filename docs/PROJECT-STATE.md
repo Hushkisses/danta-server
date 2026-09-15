@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-072 troop synergy COMPLETE; next DEV-073 general equipment slots
+Checkpoint: DEV-072 COMPLETE but execution-plan alignment correction required before DEV-073; DEV-072A Trait/Ability supplement next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -67,6 +67,9 @@ Checkpoint: DEV-072 troop synergy COMPLETE; next DEV-073 general equipment slots
 - DEV-064 supply/isolation/retreat-route: COMPLETE, Windows automated tests/build and Paper boot verified
 - DEV-065 repeated combat simulation: COMPLETE, Windows automated tests/build and Paper boot verified
 - DEV-066 CSV combat balance report: COMPLETE, Windows automated tests/build and Paper boot verified after quote-escaping compile fix
+- DEV-070 General F-S + Lv1-10: COMPLETE, Windows automated tests/build and Paper boot verified
+- DEV-071 General stats baseline: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution plan names the four axes 통솔/무력/지략/병참 while current implementation followed design v0.3 wording 통솔/무력/지력/정치. Reconciliation remains open.
+- DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
 - None
@@ -97,9 +100,15 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 3. General balance values unresolved by design v0.3: stat upper range, F-S base-stat distribution, Lv1-10 stat growth, exact command/martial/intelligence/politics effect coefficients, and fixed/random/selectable growth method.
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
+6. Execution-plan alignment correction: DEV-071 is named 통솔/무력/지략/병참, while current GeneralStats followed design v0.3 terminology 통솔/무력/지력/정치. Do not silently rename/remove either interpretation; reconcile against the source documents before final player-facing/stat-effect integration.
+7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation, but does not by itself satisfy the full Trait/Ability ticket; complete as DEV-072A before DEV-073.
+8. Execution-plan DEV-073 is 군단 지휘관 배치/이동, not equipment slots.
+9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
 
 ## Next execution order
-1. DEV-073 general equipment slots
+1. DEV-072A Trait/Ability supplement and source-alignment documentation
+2. DEV-073 army commander assignment/movement
+3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
