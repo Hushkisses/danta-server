@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-071 General stats COMPLETE; next DEV-072 troop synergy
+Checkpoint: DEV-072 troop synergy IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -69,7 +69,7 @@ Checkpoint: DEV-071 General stats COMPLETE; next DEV-072 troop synergy
 - DEV-066 CSV combat balance report: COMPLETE, Windows automated tests/build and Paper boot verified after quote-escaping compile fix
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-072 troop synergy: IMPLEMENTED — optional whole-army or troop-specific GeneralTroopSynergy contract added without unfixed bonus coefficients; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -96,9 +96,11 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 3. General balance values unresolved by design v0.3: stat upper range, F-S base-stat distribution, Lv1-10 stat growth, exact command/martial/intelligence/politics effect coefficients, and fixed/random/selectable growth method.
 4. General persistence is not yet wired into snapshot state; add it when generals first become persistent player-owned season state, preserving legacy snapshot compatibility.
+5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 
 ## Next execution order
-1. DEV-072 troop synergy
+1. Verify DEV-072 on Windows; if successful mark COMPLETE
+2. DEV-073 general equipment slots
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
