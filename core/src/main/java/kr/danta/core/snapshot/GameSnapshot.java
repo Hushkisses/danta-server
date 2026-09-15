@@ -15,9 +15,10 @@ public record GameSnapshot(
         List<StrategicPointSnapshot> strategicPoints,
         List<StrategicEdgeSnapshot> strategicEdges,
         List<ArmySnapshot> armies,
-        List<ArmyOrderSnapshot> armyOrders
+        List<ArmyOrderSnapshot> armyOrders,
+        List<ArmyOperationQueueSnapshot> armyOperationQueues
 ) {
-    public static final int CURRENT_SCHEMA = 6;
+    public static final int CURRENT_SCHEMA = 7;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -33,5 +34,6 @@ public record GameSnapshot(
         strategicEdges = strategicEdges == null ? List.of() : List.copyOf(strategicEdges);
         armies = armies == null ? List.of() : List.copyOf(armies);
         armyOrders = armyOrders == null ? List.of() : List.copyOf(armyOrders);
+        armyOperationQueues = armyOperationQueues == null ? List.of() : List.copyOf(armyOperationQueues);
     }
 }
