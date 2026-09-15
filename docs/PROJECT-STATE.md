@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-050 treasury/personal-wallet separation implemented; awaiting Windows live/restart verification
+Checkpoint: DEV-051 strategic resources implemented; awaiting Windows live/restart verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -52,14 +52,14 @@ Checkpoint: DEV-050 treasury/personal-wallet separation implemented; awaiting Wi
 - DEV-043 NPC basic garrison: COMPLETE, Windows build/test and Paper boot verified
 - DEV-044 combat-to-occupation: COMPLETE, Windows build/test and Paper boot verified
 - DEV-045 combat report v0: COMPLETE, live Paper Korean report output verified
+- DEV-050 treasury/personal-wallet separation: COMPLETE, Windows contribution/rejection/restart recovery verified
 
 ## Implemented tickets awaiting live verification
-- DEV-050 treasury/personal-wallet separation: IMPLEMENTED
-  - NationState treasury remains national money; PersonalWallet is separate per player ID in GameState.
-  - Personal -> treasury contribution is allowed; treasury -> personal direct withdrawal is explicitly prohibited.
-  - Snapshot schema v8 persists personal wallets while v1-v7 remain readable with empty wallets.
-  - Economy mutations trigger async important snapshot flush.
-  - Awaiting Windows contribution/rejection/restart-recovery verification.
+- DEV-051 strategic resources: IMPLEMENTED
+  - Five national logical resources: FOOD/WOOD/IRON/RARE_MINERAL/MANA_STONE.
+  - Korean player-facing names: 식량/목재/철/희귀광물/마력석.
+  - GameState owns national stockpiles; snapshot schema v9 persists them while v1-v8 remain readable.
+  - Awaiting Windows five-resource display/set/restart-recovery verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -68,7 +68,7 @@ Checkpoint: DEV-050 treasury/personal-wallet separation implemented; awaiting Wi
 - Important ownership changes trigger immediate snapshot flush.
 - Runtime is server-running-time based; server downtime does not advance it.
 - DB work is asynchronous; GameState remains authoritative in memory during play.
-- Snapshot schema v8 adds personal wallets for DEV-050; legacy v1-v7 snapshots remain readable.
+- Snapshot schema v9 adds national strategic-resource stockpiles after DEV-050 personal wallets; legacy v1-v8 snapshots remain readable.
 - Downloaded server.jar/world/EULA/runtime plugin state are local assets and are not replaced by normal source updates.
 - Git excludes DB credentials and generated runtime state; .gitattributes defines line-ending policy.
 - DEV-MAP-001 logical map data lives in `paper-plugin/src/main/resources/maps/dev-test-map.yml`.
@@ -86,8 +86,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-050 Windows live/restart verification
-2. DEV-051 strategic resources
+1. DEV-051 Windows live/restart verification
+2. DEV-052 EconomyTick
 
 ## Manual verification baseline
 A checkpoint is healthy if:
