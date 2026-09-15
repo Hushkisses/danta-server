@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-073 COMPLETE; DEV-074 injury/recovery IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-074 injury/recovery COMPLETE; next DEV-075 prisoner/ransom/exchange/detention cap
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-073 COMPLETE; DEV-074 injury/recovery IMPLEMENTED; Windows autom
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- DEV-074 injury/recovery: IMPLEMENTED — injured/severely injured runtime recovery state and service added without invented durations/probabilities; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
