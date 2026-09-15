@@ -14,6 +14,13 @@ public final class ResearchState {
     private int researchSlots = 1;
 
     public ResearchState(String nationId) { this.nationId = requireId(nationId); }
+    public static ResearchState restored(String nationId, int slots, Set<String> completed, List<ResearchQueueEntry> queue) {
+        ResearchState state = new ResearchState(nationId);
+        state.setResearchSlots(slots);
+        if (completed != null) state.completed.addAll(completed.stream().map(String::toLowerCase).toList());
+        if (queue != null) state.queue.addAll(queue);
+        return state;
+    }
     public String nationId() { return nationId; }
     public synchronized Set<String> completed() { return Set.copyOf(completed); }
     public synchronized List<ResearchQueueEntry> queue() { return List.copyOf(queue); }
