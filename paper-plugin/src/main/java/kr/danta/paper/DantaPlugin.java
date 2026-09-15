@@ -614,7 +614,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     if (amount > current) wallet.deposit(amount - current);
                     else if (amount < current && !wallet.tryWithdraw(current - amount))
                         throw new IllegalStateException("개인지갑 금액 변경에 실패했습니다.");
-                    flushStrategicPointState("economy-wallet-set:" + args[2]);
+                    flushEconomyState("wallet-set:" + args[2]);
                     sender.sendMessage("§a개인지갑을 설정했습니다: §e" + args[2] + " §7잔액=" + wallet.balance() + "G");
                 }
                 case "show" -> {
@@ -633,7 +633,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     if (!result.transferred()) {
                         sender.sendMessage("§c개인지갑 잔액이 부족해 출자할 수 없습니다.");
                     } else {
-                        flushStrategicPointState("economy-contribute:" + args[2] + ":" + args[3]);
+                        flushEconomyState("contribute:" + args[2] + ":" + args[3]);
                         sender.sendMessage("§a국고에 출자했습니다: §e" + amount + "G §7개인지갑="
                                 + result.personalBalance() + "G, 국고=" + result.treasuryBalance() + "G");
                     }
