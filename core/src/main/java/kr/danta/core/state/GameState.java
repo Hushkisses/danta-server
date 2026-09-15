@@ -3,6 +3,7 @@ package kr.danta.core.state;
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.combat.GarrisonState;
+import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -23,6 +24,7 @@ public final class GameState {
     private final Map<String, ArmyState> armies = new LinkedHashMap<>();
     private final Map<String, ArmyOrder> armyOrdersByArmyId = new LinkedHashMap<>();
     private final Map<String, GarrisonState> garrisonsByPointId = new LinkedHashMap<>();
+    private final Map<String, PersonalWallet> personalWalletsByPlayerId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -204,6 +206,29 @@ public final class GameState {
 
     public synchronized void clearGarrisons() {
         garrisonsByPointId.clear();
+    }
+
+    public synchronized void addPersonalWallet(PersonalWallet wallet) {
+        Objects.requireNonNull(wallet, "wallet");
+        if (personalWalletsByPlayerId.containsKey(wallet.playerId()))
+            throw new IllegalArgumentException("personal wallet already exists: " + wallet.playerId());
+        personalWalletsByPlayerId.put(wallet.playerId(), wallet);
+    }
+
+    public synchronized PersonalWallet getOrCreatePersonalWallet(String playerId) {
+        return personalWalletsByPlayerId.computeIfAbsent(playerId, id -> new PersonalWallet(id, 0L));
+    }
+
+    public synchronized Optional<PersonalWallet> personalWallet(String playerId) {
+        return Optional.ofNullable(personalWalletsByPlayerId.get(playerId));
+    }
+
+    public synchronized List<PersonalWallet> personalWallets() {
+        return List.copyOf(new ArrayList<>(personalWalletsByPlayerId.values()));
+    }
+
+    public synchronized void clearPersonalWallets() {
+        personalWalletsByPlayerId.clear();
     }
 
 }
