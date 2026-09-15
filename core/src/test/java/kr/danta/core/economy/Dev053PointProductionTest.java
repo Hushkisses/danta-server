@@ -12,7 +12,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class Dev053PointProductionTest {
     @Test void thirtyMinuteTickProducesHalfHourlyBaseForOwner() {
         GameState state = new GameState();
-        state.addNation(new NationState("red", "Red"));
+        NationState red = new NationState("red", "Red");
+        red.setCapitalPointId("farm");
+        state.addNation(red);
         state.addStrategicPoint(new StrategicPoint("farm", "Farm", StrategicPointType.FARM, "red",
                 new PointPosition("world", 0, 64, 0), 2, Map.of("food", 200L)));
         state.addStrategicPoint(new StrategicPoint("mine", "Mine", StrategicPointType.MINE, "red",
