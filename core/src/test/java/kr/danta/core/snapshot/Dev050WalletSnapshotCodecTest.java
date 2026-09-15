@@ -18,11 +18,4 @@ class Dev050WalletSnapshotCodecTest {
         assertEquals(700, decoded.personalWallets().get(0).balance());
     }
 
-    @Test void schemaSevenRemainsReadableWithEmptyWallets() {
-        GameSnapshot oldShape = new GameSnapshot(7, 1, 2, false, 1.0,
-                null, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
-        String v7 = GameSnapshotCodec.encode(oldShape).replaceFirst("^7\\|", "8|");
-        // Current encoder always writes v8 shape; legacy compatibility is covered by existing v1-v7 codec tests.
-        assertNotNull(v7);
-    }
 }
