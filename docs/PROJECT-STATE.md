@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-072A Trait/Ability supplement COMPLETE; next DEV-073 army commander assignment/movement
+Checkpoint: DEV-073 army commander assignment/movement IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,7 +72,7 @@ Checkpoint: DEV-072A Trait/Ability supplement COMPLETE; next DEV-073 army comman
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 
 ## Implemented tickets awaiting live verification
-- None
+- DEV-073 army commander assignment/movement: IMPLEMENTED — one commander per army/general, same-nation/co-location/stationed reassignment rules, commander follows army movement; Windows quick-deploy/Paper boot verification pending
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -104,6 +104,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 7. Execution-plan DEV-072 requires Trait/Ability. Existing DEV-072 troop synergy is retained as a reusable affinity foundation; DEV-072A now supplies the missing Trait/Ability domain contract. Final catalogs/effect mechanics remain unresolved.
 8. Execution-plan DEV-073 is 군단 지휘관 배치/이동, not equipment slots.
 9. Design v0.3 defines general equipment slots (weapon/armor/treasure); this remains a required later feature, but the current execution plan does not assign it DEV-073. Do not lose or misnumber it.
+10. DEV-073 does not define independent unassigned-general travel time/cost; no teleport/travel queue was invented. Commander/general snapshot persistence must be added together when general persistence becomes authoritative.
 
 ## Next execution order
 1. DEV-073 army commander assignment/movement
