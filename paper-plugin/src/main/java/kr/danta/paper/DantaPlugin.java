@@ -9,6 +9,8 @@ import kr.danta.core.army.ArmyMovementTime;
 import kr.danta.core.army.ArmyMovementTimeService;
 import kr.danta.core.army.ArmyOperationQueue;
 import kr.danta.core.army.ArmyOperationQueueService;
+import kr.danta.core.army.ArmyAdvanceDecision;
+import kr.danta.core.army.ArmyAdvanceStopPolicy;
 import kr.danta.core.event.DomainEventBus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
@@ -73,6 +75,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private ArmyOrderService armyOrderService;
     private ArmyMovementTimeService armyMovementTimeService;
     private ArmyOperationQueueService armyOperationQueueService;
+    private ArmyAdvanceStopPolicy armyAdvanceStopPolicy;
     private final java.util.Map<String, ArmyOperationQueue> armyOperationQueues = new java.util.LinkedHashMap<>();
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
@@ -94,6 +97,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         armyOrderService = new ArmyOrderService(gameState);
         armyMovementTimeService = new ArmyMovementTimeService(gameState);
         armyOperationQueueService = new ArmyOperationQueueService(gameState);
+        armyAdvanceStopPolicy = new ArmyAdvanceStopPolicy(gameState);
         nationGuiController = new NationGuiController(gameState);
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
@@ -1035,9 +1039,17 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (queue != null) {
             if (queue.hasFollowingLeg()) {
                 ArmyOperationQueue remaining = queue.afterArrival();
-                armyOperationQueues.put(armyId, remaining);
-                syncOperationQueuesToSnapshot();
-                startQueuedLeg(armyId);
+                ArmyAdvanceDecision decision = armyAdvanceStopPolicy.evaluateAfterArrival(armyId);
+                if (decision.shouldStop()) {
+                    armyOperationQueues.remove(armyId);
+                    syncOperationQueuesToSnapshot();
+                    getLogger().info("[ArmyAdvance] operation stopped: army=" + armyId
+                            + ", reason=" + decision.reason() + ", point=" + army.locationPointId());
+                } else {
+                    armyOperationQueues.put(armyId, remaining);
+                    syncOperationQueuesToSnapshot();
+                    startQueuedLeg(armyId);
+                }
             } else {
                 armyOperationQueues.remove(armyId);
                 syncOperationQueuesToSnapshot();
