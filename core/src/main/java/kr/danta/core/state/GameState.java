@@ -6,6 +6,7 @@ import kr.danta.core.combat.GarrisonState;
 import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.economy.LocalResourceStockpile;
+import kr.danta.core.general.GeneralState;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -29,6 +30,7 @@ public final class GameState {
     private final Map<String, PersonalWallet> personalWalletsByPlayerId = new LinkedHashMap<>();
     private final Map<String, StrategicResourceStockpile> strategicResourcesByNationId = new LinkedHashMap<>();
     private final Map<String, LocalResourceStockpile> localResourcesByPointId = new LinkedHashMap<>();
+    private final Map<String, GeneralState> generalsById = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -276,5 +278,31 @@ public final class GameState {
         localResourcesByPointId.put(stockpile.pointId(), stockpile);
     }
     public synchronized void clearLocalResourceStockpiles() { localResourcesByPointId.clear(); }
+
+
+    public synchronized void addGeneral(GeneralState general) {
+        Objects.requireNonNull(general, "general");
+        if (!nations.containsKey(general.ownerNationId()))
+            throw new IllegalArgumentException("general owner nation does not exist: " + general.ownerNationId());
+        if (generalsById.containsKey(general.generalId()))
+            throw new IllegalArgumentException("general already exists: " + general.generalId());
+        generalsById.put(general.generalId(), general);
+    }
+
+    public synchronized Optional<GeneralState> general(String generalId) {
+        return Optional.ofNullable(generalsById.get(generalId));
+    }
+
+    public synchronized List<GeneralState> generals() {
+        return List.copyOf(new ArrayList<>(generalsById.values()));
+    }
+
+    public synchronized boolean hasGeneral(String generalId) {
+        return generalsById.containsKey(generalId);
+    }
+
+    public synchronized void clearGenerals() {
+        generalsById.clear();
+    }
 
 }
