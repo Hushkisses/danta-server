@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-042 deterministic combat scenarios complete; DEV-043 is next
+Checkpoint: DEV-042 deterministic combat scenarios complete; execution-plan DEV-042 loss/retreat minimum model is next
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -50,10 +50,7 @@ Checkpoint: DEV-042 deterministic combat scenarios complete; DEV-043 is next
 - DEV-041 CombatResolver v0: COMPLETE, Windows build/test and Paper boot verified
 
 ## Implemented tickets awaiting live verification
-- DEV-042 deterministic combat scenarios: IMPLEMENTED
-  - Six fixed scenarios cover neutral draw, all four +25% soft-counter directions, and a numerical-overmatch case that beats the soft counter.
-  - JUnit regression runs the real CombatResolver; combat-simulator prints the same suite.
-  - Awaiting representative's Windows build/test and simulator verification.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -80,8 +77,8 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-042 Windows build/test verification
-2. DEV-043 loss formula
+1. Execution-plan DEV-042 loss/retreat minimum model (prior internal labels had drifted by one ticket)
+2. Execution-plan DEV-043 NPC basic garrison
 
 ## Manual verification baseline
 A checkpoint is healthy if:
