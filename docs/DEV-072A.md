@@ -1,6 +1,6 @@
 # DEV-072A — Trait / Ability supplement
 
-Status: IMPLEMENTED — Windows automated verification pending
+Status: COMPLETE — Windows automated tests/build and Paper boot verified
 
 ## Why this supplement exists
 Execution plan v1.0 assigns DEV-072 to Trait/Ability. The previously completed DEV-072 implemented troop synergy, which is useful general-affinity infrastructure but does not by itself satisfy the execution-plan scope. DEV-072A closes that gap without deleting the verified synergy work.
@@ -41,3 +41,6 @@ Tests cover empty defaults, add/remove, duplicate IDs, immutable ordered snapsho
 5. Start `dev-server\start-dev.bat` and confirm normal Paper/Danta/PostgreSQL boot.
 
 DEV-072A is core-only and introduces no player-facing command. Keep IMPLEMENTED until Windows verification succeeds.
+
+## Verification result
+The representative confirmed Windows quick-deploy and normal Paper startup on 2026-09-15.
