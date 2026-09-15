@@ -56,8 +56,9 @@ Checkpoint: DEV-045 combat report v0 implemented; awaiting Windows build/test ve
 - DEV-045 combat report v0: IMPLEMENTED
   - Projects CombatResolution into result/initial/loss/remaining values for both sides.
   - Player-facing formatter is Korean: 승리/패배/무승부, 전투 전/손실/잔존.
+  - Admin-only `/danta combat test` now exercises the real resolver + loss policy + Korean report formatter on Paper for live verification.
   - No history DB, GUI, broadcast, or Discord scope is invented beyond the execution-plan requirement.
-  - Awaiting representative's Windows build/test and normal Paper boot verification.
+  - Build/Paper baseline passed; awaiting representative's live `/danta combat test` output verification.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
