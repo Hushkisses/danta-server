@@ -295,6 +295,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("economy-tick")) return handleEconomyTick(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("devmap")) return handleDevMap(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("general")) return handleGeneral(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("facility")) return handleFacility(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
         sender.sendMessage("§f플러그인 버전: §e" + getPluginMeta().getVersion());
@@ -1526,6 +1527,64 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         long s = Math.max(0L, millis / 1000L);
         return String.format("%02d:%02d:%02d", s / 3600L, (s % 3600L) / 60L, s % 60L);
     }
+
+    private boolean handleFacility(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.point")) {
+            sender.sendMessage("§c시설 관리 권한이 없습니다.");
+            return true;
+        }
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
+        try {
+            switch (sub) {
+                case "build" -> {
+                    requireArgs(args, 5, "/danta facility build <거점-id> <시설-id> <건설-초>");
+                    long seconds = Long.parseLong(args[4]);
+                    if (seconds < 0L || seconds > 86_400L) throw new IllegalArgumentException("construction seconds must be 0..86400");
+                    var pending = facilityConstructionService.scheduleBuild(args[2], args[3], Duration.ofSeconds(seconds));
+                    flushFacilityState("facility-construction-schedule:" + pending.constructionId());
+                    sender.sendMessage("§a개발 검증용 시설 건설을 예약했습니다: §e" + args[3]
+                            + " §7거점=" + args[2] + ", 목표=I, 남은 서버시간≈" + seconds + "초");
+                    sender.sendMessage("§7건설 ID: " + pending.constructionId());
+                }
+                case "upgrade" -> {
+                    requireArgs(args, 5, "/danta facility upgrade <거점-id> <시설-id> <건설-초>");
+                    long seconds = Long.parseLong(args[4]);
+                    if (seconds < 0L || seconds > 86_400L) throw new IllegalArgumentException("construction seconds must be 0..86400");
+                    var pending = facilityConstructionService.scheduleUpgrade(args[2], args[3], Duration.ofSeconds(seconds));
+                    flushFacilityState("facility-construction-upgrade:" + pending.constructionId());
+                    sender.sendMessage("§a개발 검증용 시설 업그레이드를 예약했습니다: §e" + args[3]
+                            + " §7거점=" + args[2] + ", 목표=" + pending.targetTier() + ", 남은 서버시간≈" + seconds + "초");
+                    sender.sendMessage("§7건설 ID: " + pending.constructionId());
+                }
+                case "list" -> {
+                    sender.sendMessage("§6[시설 건설 대기 목록] §7총 " + facilityConstructionService.pending().size() + "개");
+                    for (var pending : facilityConstructionService.pending()) {
+                        long remaining = Math.max(0L, pending.dueRuntimeMillis() - runtimeClock.elapsedMillis());
+                        sender.sendMessage("§e" + pending.facilityId() + " §7거점=" + pending.pointId()
+                                + ", 목표=" + pending.targetTier() + ", 남은 서버시간≈" + (remaining / 1000L) + "초"
+                                + ", ID=" + pending.constructionId());
+                    }
+                }
+                case "show" -> {
+                    requireArgs(args, 3, "/danta facility show <거점-id>");
+                    requireStrategicPoint(args[2]);
+                    var built = facilityService.facilities(args[2]);
+                    sender.sendMessage("§6[거점 시설] §e" + args[2] + " §7완성=" + built.size() + "개");
+                    for (var facility : built) sender.sendMessage("§f- §e" + facility.facilityId() + " §7등급=" + facility.tier());
+                    for (var pending : facilityConstructionService.pending().stream().filter(x -> x.pointId().equals(args[2])).toList()) {
+                        long remaining = Math.max(0L, pending.dueRuntimeMillis() - runtimeClock.elapsedMillis());
+                        sender.sendMessage("§f- §e" + pending.facilityId() + " §6[건설 중] §7목표=" + pending.targetTier()
+                                + ", 남은 서버시간≈" + (remaining / 1000L) + "초");
+                    }
+                }
+                default -> sender.sendMessage("§e/danta facility <build|upgrade|list|show>");
+            }
+        } catch (RuntimeException ex) {
+            sendCommandError(sender, "시설", ex);
+        }
+        return true;
+    }
+
     private void flushFacilityState(String reason) {
         if (snapshotService == null || databaseService == null
                 || !databaseService.health().status().name().equals("READY")) return;
