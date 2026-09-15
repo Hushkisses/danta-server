@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-081 automated verification COMPLETE; live Paper/restart verification pending
+Checkpoint: DEV-081 COMPLETE; next: DEV-082 facility world appearance sync
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -72,10 +72,10 @@ Checkpoint: DEV-081 automated verification COMPLETE; live Paper/restart verifica
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
 - DEV-076 initial elite general data/acquisition-persistence foundation: COMPLETE, A×7/S×3 catalog + Paper restart recovery + duplicate-acquisition Korean rejection verified.
 - DEV-080 Facility I~III / slots: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified.
-- DEV-081 construction Runtime Scheduler: IMPLEMENTED, Windows quick-deploy automated tests/build verified; live Paper construction/restart recovery verification pending.
+- DEV-081 construction Runtime Scheduler: COMPLETE, Windows automated tests/build and live Paper construction/restart recovery verified.
 
 ## Implemented tickets awaiting live verification
-- DEV-081 construction Runtime Scheduler: automated tests/build passed on Windows; Paper boot, runtime construction completion, and restart-mid-construction recovery remain to verify.
+- None.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -115,8 +115,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Complete DEV-081 live Paper construction/restart recovery verification.
-2. After DEV-081 is COMPLETE, proceed to DEV-082 world appearance sync.
+1. Proceed to DEV-082 facility world appearance sync.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
