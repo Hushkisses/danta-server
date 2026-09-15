@@ -43,6 +43,7 @@ import kr.danta.paper.persistence.PostgresKeyValueRepository;
 import kr.danta.paper.persistence.SnapshotService;
 import kr.danta.paper.runtime.PropertiesRuntimeClockRepository;
 import kr.danta.paper.ui.NationGuiController;
+import kr.danta.paper.ui.ArmyGuiController;
 import kr.danta.paper.ui.MapGuiController;
 import kr.danta.paper.ui.UiText;
 import org.bukkit.command.Command;
@@ -79,6 +80,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private final java.util.Map<String, ArmyOperationQueue> armyOperationQueues = new java.util.LinkedHashMap<>();
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
+    private ArmyGuiController armyGuiController;
     private DevMapDefinition devMapDefinition;
     private DevMapService devMapService;
     private MapStructurePlacer mapStructurePlacer;
@@ -102,6 +104,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
         getServer().getPluginManager().registerEvents(mapGuiController, this);
+        armyGuiController = new ArmyGuiController(gameState, armyOperationQueues);
+        getServer().getPluginManager().registerEvents(armyGuiController, this);
         initializeDevMap();
         eventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> {
             getLogger().info("[Territory] " + event.pointId() + ": "
@@ -596,6 +600,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     sender.sendMessage("§6[단타 군단 목록] §7총 " + gameState.armies().size() + "개");
                     for (ArmyState army : gameState.armies()) sendArmy(sender, army);
                 }
+                case "gui" -> {
+                    if (!(sender instanceof Player player)) {
+                        sender.sendMessage("§c군단 GUI는 게임 안에서만 열 수 있습니다.");
+                    } else {
+                        armyGuiController.open(player);
+                    }
+                }
                 case "show" -> {
                     requireArgs(args, 3, "/danta army show <군단-id>");
                     sendArmy(sender, requireArmy(args[2]));
@@ -671,7 +682,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     sender.sendMessage("§f경로 수정치: §ex" + String.format(Locale.ROOT, "%.3f", movementTime.multiplier()));
                     sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
                 }
-                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order|eta|queue|queue-show>");
+                default -> sender.sendMessage("§e/danta army <create|list|gui|show|troops|status|location|move|order|eta|queue|queue-show>");
             }
         } catch (RuntimeException ex) {
             sendCommandError(sender, "군단", ex);
