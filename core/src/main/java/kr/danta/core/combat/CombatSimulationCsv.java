@@ -38,6 +38,6 @@ public final class CombatSimulationCsv {
         if (value.indexOf(',') < 0 && value.indexOf('"') < 0 && value.indexOf('\n') < 0 && value.indexOf('\r') < 0) {
             return value;
         }
-        return '"' + value.replace(""", """") + '"';
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 }
