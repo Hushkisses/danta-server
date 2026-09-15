@@ -959,7 +959,12 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 order.route().originPointId(), order.route().destinationPointId(), order.route().edgeId(),
                 order.status(), dueRuntimeMillis);
         pendingMovementSnapshots.put(order.armyId(), movement);
-        if (snapshotService != null) snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
+        if (snapshotService != null) {
+            List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
+            updated.removeIf(existing -> existing.armyId().equals(order.armyId()));
+            updated.add(movement);
+            snapshotService.setActiveArmyMovements(updated);
+        }
     }
 
     private void removeActiveMovement(String armyId) {
