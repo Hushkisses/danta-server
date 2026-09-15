@@ -4,6 +4,7 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
+import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.persistence.AsyncKeyValueRepository;
 import kr.danta.core.runtime.RuntimeClockService;
 import kr.danta.core.snapshot.GameSnapshot;
@@ -12,6 +13,7 @@ import kr.danta.core.snapshot.ArmySnapshot;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.snapshot.NationSnapshot;
+import kr.danta.core.snapshot.PersonalWalletSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
 import kr.danta.core.state.GameState;
@@ -79,6 +81,10 @@ public final class SnapshotService {
         for (NationSnapshot nation : snapshot.nations()) {
             gameState.addNation(new NationState(nation.nationId(), nation.displayName(), nation.capitalPointId(),
                     nation.treasury(), nation.status()));
+        }
+        gameState.clearPersonalWallets();
+        for (PersonalWalletSnapshot wallet : snapshot.personalWallets()) {
+            gameState.addPersonalWallet(new PersonalWallet(wallet.playerId(), wallet.balance()));
         }
         gameState.clearStrategicEdges();
         gameState.clearStrategicPoints();
@@ -153,9 +159,12 @@ public final class SnapshotService {
                         order.route().originPointId(), order.route().destinationPointId(), order.route().edgeId(),
                         order.status(), dueByArmy.getOrDefault(order.armyId(), runtimeClock.elapsedMillis())))
                 .toList();
+        List<PersonalWalletSnapshot> wallets = gameState.personalWallets().stream()
+                .map(wallet -> new PersonalWalletSnapshot(wallet.playerId(), wallet.balance()))
+                .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies, armyOrders, armyOperationQueues);
+                nations, points, edges, armies, armyOrders, armyOperationQueues, wallets);
     }
 }
