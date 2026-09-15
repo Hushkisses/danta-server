@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-057 overextension/administrative demand v0 IMPLEMENTED; awaiting Windows verification
+Checkpoint: DEV-057 overextension/administrative demand v0 COMPLETE; next DEV-060 CombatResolver v1
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -59,12 +59,10 @@ Checkpoint: DEV-057 overextension/administrative demand v0 IMPLEMENTED; awaiting
 - DEV-054 local stockpile/supply isolation: COMPLETE, Windows isolation/reconnection/restart persistence verified
 - DEV-055 army food/supply consumption baseline: COMPLETE, Windows automated + stationed/moving EconomyTick verification passed
 - DEV-056 expedition supply selection: COMPLETE, Windows automated/Paper/restart verification passed
+- DEV-057 overextension/administrative demand v0: COMPLETE, Windows automated/Paper overextension + GOLD revenue verification passed
 
 ## Implemented tickets awaiting live verification
-- DEV-057 overextension/administrative demand v0: IMPLEMENTED
-  - Derived base capacity 6.0; demand normal 1, port 1.25, major 2, capital excluded in v0 pending separate treatment.
-  - Provisional progressive revenue multiplier: -10 percentage points per excess demand, floor 50%.
-  - Applies to GOLD point revenue only; no direct combat/resource-production penalty.
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -91,8 +89,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 2. RuntimeScheduler task-queue persistence is not yet a general persisted queue; domain-specific movement persistence must satisfy DEV-033.
 
 ## Next execution order
-1. DEV-057 Windows automated/Paper verification
-2. DEV-060 CombatResolver v1
+1. DEV-060 CombatResolver v1
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
