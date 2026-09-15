@@ -1,5 +1,6 @@
 package kr.danta.paper;
 
+import kr.danta.core.economy.SupplyConnectivityService;
 import kr.danta.core.economy.StrategicPointProductionService;
 import kr.danta.core.economy.EconomyTickService;
 import kr.danta.core.economy.StrategicResource;
@@ -621,7 +622,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             return true;
         }
         if (args.length < 3) {
-            sender.sendMessage("§e사용법: /danta resource <show|set> <국가-id> [자원] [수량]");
+            sender.sendMessage("§e사용법: /danta resource <show|set|available|local-show> <국가/거점-id> [자원] [수량]");
             return true;
         }
         try {
@@ -634,6 +635,30 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 sender.sendMessage("§f철: §e" + stock.amount(StrategicResource.IRON));
                 sender.sendMessage("§f희귀광물: §e" + stock.amount(StrategicResource.RARE_MINERAL));
                 sender.sendMessage("§f마력석: §e" + stock.amount(StrategicResource.MANA_STONE));
+                return true;
+            }
+            if (sub.equals("local-show")) {
+                String pointId = args[2];
+                var point = gameState.strategicPoint(pointId)
+                        .orElseThrow(() -> new IllegalArgumentException("거점을 찾을 수 없습니다: " + pointId));
+                var local = gameState.getOrCreateLocalResourceStockpile(pointId);
+                String owner = point.ownerNationId().orElse(null);
+                boolean connected = owner != null && new SupplyConnectivityService(gameState).isConnectedToCapital(owner, pointId);
+                sender.sendMessage("§6[현지 비축] §f" + point.displayName() + " §7(" + pointId + ")");
+                sender.sendMessage("§f수도 보급망: " + (connected ? "§a연결" : "§c고립"));
+                for (StrategicResource resource : StrategicResource.values())
+                    sender.sendMessage("§f" + resourceKorean(resource) + ": §e" + local.amount(resource));
+                return true;
+            }
+            if (sub.equals("available")) {
+                String nationId = args[2];
+                if (!gameState.hasNation(nationId)) throw new IllegalArgumentException("국가를 찾을 수 없습니다: " + nationId);
+                SupplyConnectivityService supply = new SupplyConnectivityService(gameState);
+                sender.sendMessage("§6[국가 전략자원] §f" + nationId);
+                for (StrategicResource resource : StrategicResource.values())
+                    sender.sendMessage("§f" + resourceKorean(resource) + ": §e총 "
+                            + supply.totalAmount(nationId, resource) + " / 가용 "
+                            + supply.availableAmount(nationId, resource));
                 return true;
             }
             if (sub.equals("set")) {
