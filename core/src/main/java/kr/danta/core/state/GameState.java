@@ -2,6 +2,7 @@ package kr.danta.core.state;
 
 import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyOrder;
+import kr.danta.core.combat.GarrisonState;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
@@ -21,6 +22,7 @@ public final class GameState {
     private final Map<String, StrategicEdge> strategicEdges = new LinkedHashMap<>();
     private final Map<String, ArmyState> armies = new LinkedHashMap<>();
     private final Map<String, ArmyOrder> armyOrdersByArmyId = new LinkedHashMap<>();
+    private final Map<String, GarrisonState> garrisonsByPointId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -171,6 +173,37 @@ public final class GameState {
 
     public synchronized void clearArmyOrders() {
         armyOrdersByArmyId.clear();
+    }
+
+    public synchronized void addGarrison(GarrisonState garrison) {
+        Objects.requireNonNull(garrison, "garrison");
+        if (!strategicPoints.containsKey(garrison.pointId())) {
+            throw new IllegalArgumentException("garrison point does not exist: " + garrison.pointId());
+        }
+        if (garrisonsByPointId.containsKey(garrison.pointId())) {
+            throw new IllegalArgumentException("garrison already exists: " + garrison.pointId());
+        }
+        garrisonsByPointId.put(garrison.pointId(), garrison);
+    }
+
+    public synchronized Optional<GarrisonState> garrison(String pointId) {
+        return Optional.ofNullable(garrisonsByPointId.get(pointId));
+    }
+
+    public synchronized List<GarrisonState> garrisons() {
+        return List.copyOf(new ArrayList<>(garrisonsByPointId.values()));
+    }
+
+    public synchronized boolean hasGarrison(String pointId) {
+        return garrisonsByPointId.containsKey(pointId);
+    }
+
+    public synchronized Optional<GarrisonState> removeGarrison(String pointId) {
+        return Optional.ofNullable(garrisonsByPointId.remove(pointId));
+    }
+
+    public synchronized void clearGarrisons() {
+        garrisonsByPointId.clear();
     }
 
 }
