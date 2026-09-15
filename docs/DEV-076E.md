@@ -1,6 +1,6 @@
 # DEV-076E — General special-ability effect contracts/hooks
 
-Status: IMPLEMENTED — Windows automated verification pending
+Status: VERIFIED — Windows automated tests/build and Paper boot verified
 
 ## Goal
 Give the provisional A/S ability IDs stable semantic integration points without freezing unresolved numeric balance values.
@@ -28,3 +28,6 @@ This avoids duplicating EconomyTick/StrategicPointProductionService/Administrati
 - exact combat phase for combat hooks;
 - point-capture behavior for assigned civil generals;
 - authoritative general persistence/bootstrap ownership.
+
+## Verification result
+The representative confirmed Windows quick-deploy and normal Paper startup on 2026-09-15.
