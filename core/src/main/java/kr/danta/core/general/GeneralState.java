@@ -1,6 +1,7 @@
 package kr.danta.core.general;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * DEV-070 general aggregate baseline.
@@ -16,6 +17,7 @@ public final class GeneralState {
     private GeneralGrade grade;
     private int level;
     private GeneralStats stats;
+    private GeneralTroopSynergy troopSynergy;
 
     public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level) {
         this(generalId, ownerNationId, grade, level, GeneralStats.zero());
@@ -34,6 +36,15 @@ public final class GeneralState {
     public synchronized GeneralGrade grade() { return grade; }
     public synchronized int level() { return level; }
     public synchronized GeneralStats stats() { return stats; }
+    public synchronized Optional<GeneralTroopSynergy> troopSynergy() { return Optional.ofNullable(troopSynergy); }
+
+    public synchronized void setTroopSynergy(GeneralTroopSynergy troopSynergy) {
+        this.troopSynergy = Objects.requireNonNull(troopSynergy, "troopSynergy");
+    }
+
+    public synchronized void clearTroopSynergy() {
+        this.troopSynergy = null;
+    }
 
     public synchronized void setStats(GeneralStats stats) {
         this.stats = Objects.requireNonNull(stats, "stats");
