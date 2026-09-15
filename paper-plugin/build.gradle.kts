@@ -14,6 +14,7 @@ dependencies {
 
     // DEV-016: bundled because Paper does not provide the PostgreSQL JDBC driver.
     bundled("org.postgresql:postgresql:42.7.13")
+    bundled("org.yaml:snakeyaml:2.5")
 }
 
 // The production server uses one main plugin JAR. Bundle the Paper-independent
