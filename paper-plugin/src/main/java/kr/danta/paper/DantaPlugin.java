@@ -5,6 +5,8 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyStatus;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyOrderService;
+import kr.danta.core.army.ArmyMovementTime;
+import kr.danta.core.army.ArmyMovementTimeService;
 import kr.danta.core.event.DomainEventBus;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
@@ -64,6 +66,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private RuntimeScheduler runtimeScheduler;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
+    private ArmyMovementTimeService armyMovementTimeService;
     private NationGuiController nationGuiController;
     private MapGuiController mapGuiController;
     private DevMapDefinition devMapDefinition;
@@ -81,6 +84,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         eventBus = new DomainEventBus();
         territoryService = new TerritoryService(gameState, eventBus);
         armyOrderService = new ArmyOrderService(gameState);
+        armyMovementTimeService = new ArmyMovementTimeService(gameState);
         nationGuiController = new NationGuiController(gameState);
         getServer().getPluginManager().registerEvents(nationGuiController, this);
         mapGuiController = new MapGuiController(gameState);
@@ -605,7 +609,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 case "move" -> {
                     requireArgs(args, 4, "/danta army move <군단-id> <목적지-거점-id>");
                     ArmyOrder order = armyOrderService.issueMoveOrder(args[2], args[3]);
+                    ArmyMovementTime movementTime = armyMovementTimeService.calculateForArmy(order.armyId());
                     sender.sendMessage("§a이동 명령을 접수했습니다: §e" + order.orderId());
+                    sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
                     sendArmyOrder(sender, order);
                 }
                 case "order" -> {
@@ -615,7 +621,15 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     if (order.isEmpty()) sender.sendMessage("§7현재 등록된 군단 명령이 없습니다: §e" + army.armyId());
                     else sendArmyOrder(sender, order.get());
                 }
-                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order>");
+                case "eta" -> {
+                    requireArgs(args, 3, "/danta army eta <군단-id>");
+                    ArmyMovementTime movementTime = armyMovementTimeService.calculateForArmy(args[2]);
+                    sender.sendMessage("§6[군단 이동시간] §e" + args[2]);
+                    sender.sendMessage("§f간선 기본시간: §e" + formatRuntime(movementTime.baseDuration().toMillis()));
+                    sender.sendMessage("§f경로 수정치: §ex" + String.format(Locale.ROOT, "%.3f", movementTime.multiplier()));
+                    sender.sendMessage("§f예상 이동시간: §e" + formatRuntime(movementTime.effectiveDuration().toMillis()));
+                }
+                default -> sender.sendMessage("§e/danta army <create|list|show|troops|status|location|move|order|eta>");
             }
         } catch (RuntimeException ex) {
             sendCommandError(sender, "군단", ex);
