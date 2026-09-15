@@ -969,7 +969,11 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private void removeActiveMovement(String armyId) {
         pendingMovementSnapshots.remove(armyId);
-        if (snapshotService != null) snapshotService.setActiveArmyMovements(List.copyOf(pendingMovementSnapshots.values()));
+        if (snapshotService != null) {
+            List<ArmyOrderSnapshot> updated = new java.util.ArrayList<>(snapshotService.restoredArmyOrders());
+            updated.removeIf(existing -> existing.armyId().equals(armyId));
+            snapshotService.setActiveArmyMovements(updated);
+        }
     }
 
     private void restoreArmyMovements() {
