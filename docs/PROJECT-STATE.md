@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-072 troop synergy IMPLEMENTED; Windows automated verification pending
+Checkpoint: DEV-072 troop synergy COMPLETE; next DEV-073 general equipment slots
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -69,7 +69,7 @@ Checkpoint: DEV-072 troop synergy IMPLEMENTED; Windows automated verification pe
 - DEV-066 CSV combat balance report: COMPLETE, Windows automated tests/build and Paper boot verified after quote-escaping compile fix
 
 ## Implemented tickets awaiting live verification
-- DEV-072 troop synergy: IMPLEMENTED — optional whole-army or troop-specific GeneralTroopSynergy contract added without unfixed bonus coefficients; Windows quick-deploy/Paper boot verification pending
+- None
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -99,8 +99,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 5. General troop synergy unresolved by design: assignment per general, single vs multiple affinities, effect category/magnitude/scaling, origin layer (innate/trait/unique/equipment), and future magic-support synergy.
 
 ## Next execution order
-1. Verify DEV-072 on Windows; if successful mark COMPLETE
-2. DEV-073 general equipment slots
+1. DEV-073 general equipment slots
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
