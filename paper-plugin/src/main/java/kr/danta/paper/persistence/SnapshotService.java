@@ -10,6 +10,7 @@ import kr.danta.core.snapshot.GameSnapshot;
 import kr.danta.core.snapshot.GameSnapshotCodec;
 import kr.danta.core.snapshot.ArmySnapshot;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
+import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.snapshot.NationSnapshot;
 import kr.danta.core.snapshot.StrategicPointSnapshot;
 import kr.danta.core.snapshot.StrategicEdgeSnapshot;
@@ -37,6 +38,7 @@ public final class SnapshotService {
     private final GameState gameState;
     private final Logger logger;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
+    private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
     public SnapshotService(AsyncKeyValueRepository repository, RuntimeClockService runtimeClock,
                            GameState gameState, Logger logger) {
@@ -96,6 +98,7 @@ public final class SnapshotService {
                     army.status(), army.baseTroops()));
         }
         restoredArmyOrders = snapshot.armyOrders();
+        armyOperationQueues = snapshot.armyOperationQueues();
         for (ArmyOrderSnapshot order : snapshot.armyOrders()) {
             gameState.addArmyOrder(new ArmyOrder(order.orderId(), order.armyId(), order.type(),
                     new ArmyRoute(order.originPointId(), order.destinationPointId(), order.edgeId()), order.status()));
@@ -108,6 +111,11 @@ public final class SnapshotService {
 
     public void setActiveArmyMovements(List<ArmyOrderSnapshot> movements) {
         restoredArmyOrders = movements == null ? List.of() : List.copyOf(movements);
+    }
+
+    public List<ArmyOperationQueueSnapshot> armyOperationQueues() { return List.copyOf(armyOperationQueues); }
+    public void setArmyOperationQueues(List<ArmyOperationQueueSnapshot> queues) {
+        armyOperationQueues = queues == null ? List.of() : List.copyOf(queues);
     }
 
     public void flushOnShutdown() {
@@ -148,6 +156,6 @@ public final class SnapshotService {
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
-                nations, points, edges, armies, armyOrders);
+                nations, points, edges, armies, armyOrders, armyOperationQueues);
     }
 }
