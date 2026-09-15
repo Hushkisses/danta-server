@@ -8,6 +8,7 @@ import kr.danta.core.nation.NationStatus;
 import kr.danta.core.general.GeneralGrade;
 import kr.danta.core.general.GeneralHealthStatus;
 import kr.danta.core.economy.StrategicResource;
+import kr.danta.core.facility.FacilityTier;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
 
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v12; DEV-076F writes v12. */
+/** Dependency-free snapshot codec. Reads schema v1-v13; DEV-081 writes v13. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -34,7 +35,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -126,12 +127,59 @@ public final class GameSnapshotCodec {
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]));
         }
+        if (schema == 13) {
+            if (p.length != 19) throw new IllegalArgumentException("invalid schema v13 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
 
 
 
+    private static String encodeFacilities(List<FacilitySnapshot> facilities) {
+        if (facilities == null || facilities.isEmpty()) return "-";
+        return facilities.stream()
+                .map(f -> String.join(",", enc(f.pointId()), enc(f.facilityId()), f.tier().name()))
+                .reduce((a, b) -> a + ";" + b).orElse("-");
+    }
+
+    private static List<FacilitySnapshot> decodeFacilities(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<FacilitySnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 3) throw new IllegalArgumentException("invalid facility snapshot row");
+            result.add(new FacilitySnapshot(dec(f[0]), dec(f[1]), FacilityTier.valueOf(f[2])));
+        }
+        return List.copyOf(result);
+    }
+
+    private static String encodeFacilityConstructions(List<FacilityConstructionSnapshot> constructions) {
+        if (constructions == null || constructions.isEmpty()) return "-";
+        return constructions.stream()
+                .map(x -> String.join(",", x.constructionId().toString(), enc(x.pointId()), enc(x.facilityId()),
+                        x.targetTier().name(), Long.toString(x.dueRuntimeMillis())))
+                .reduce((a, b) -> a + ";" + b).orElse("-");
+    }
+
+    private static List<FacilityConstructionSnapshot> decodeFacilityConstructions(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<FacilityConstructionSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 5) throw new IllegalArgumentException("invalid facility construction snapshot row");
+            result.add(new FacilityConstructionSnapshot(java.util.UUID.fromString(f[0]), dec(f[1]), dec(f[2]),
+                    FacilityTier.valueOf(f[3]), Long.parseLong(f[4])));
+        }
+        return List.copyOf(result);
+    }
 
     private static String encodeGenerals(List<GeneralSnapshot> generals) {
         if (generals == null || generals.isEmpty()) return "-";
