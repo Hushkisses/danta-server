@@ -1,5 +1,6 @@
 package kr.danta.paper;
 
+import kr.danta.core.economy.StrategicPointProductionService;
 import kr.danta.core.economy.EconomyTickService;
 import kr.danta.core.economy.StrategicResource;
 import kr.danta.core.economy.StrategicResourceStockpile;
@@ -84,6 +85,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private DomainEventBus eventBus;
     private RuntimeScheduler runtimeScheduler;
     private EconomyTickService economyTickService;
+    private StrategicPointProductionService strategicPointProductionService;
     private long economyTicksProcessed;
     private TerritoryService territoryService;
     private ArmyOrderService armyOrderService;
@@ -132,6 +134,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         restoreRuntime();
         runtimeClock.start();
         economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
+        strategicPointProductionService = new StrategicPointProductionService(gameState);
 
         runtimeScheduler = new RuntimeScheduler(runtimeClock);
         runtimeScheduler.registerHandler("dev.echo", task ->
@@ -1278,6 +1281,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         int due = economyTickService.claimDueTicks(runtimeClock.elapsedMillis());
         if (due <= 0) return;
         economyTicksProcessed += due;
+        for (int i = 0; i < due; i++) strategicPointProductionService.produceOneTick();
+        flushEconomyState("economy-tick:" + economyTicksProcessed);
         getLogger().info("[EconomyTick] " + due + "회 처리, 누적=" + economyTicksProcessed
                 + ", runtime=" + formatRuntime(runtimeClock.elapsedMillis()));
     }
