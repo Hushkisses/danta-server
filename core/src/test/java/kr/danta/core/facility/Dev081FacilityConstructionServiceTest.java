@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class Dev081FacilityConstructionServiceTest {
     @Test void buildCompletesOnlyAfterServerRuntimeDeadline() {
-        AtomicLong nanos = new AtomicLong();
         RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
@@ -34,7 +33,6 @@ class Dev081FacilityConstructionServiceTest {
     }
 
     @Test void pausedRuntimeDoesNotAdvanceConstruction() {
-        AtomicLong nanos = new AtomicLong();
         RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
@@ -53,7 +51,6 @@ class Dev081FacilityConstructionServiceTest {
     }
 
     @Test void pendingBuildReservesSlotAndRestoreKeepsOriginalDeadline() {
-        AtomicLong nanos = new AtomicLong();
         RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
