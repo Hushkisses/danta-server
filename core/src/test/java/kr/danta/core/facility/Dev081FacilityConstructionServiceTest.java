@@ -45,7 +45,16 @@ class Dev081FacilityConstructionServiceTest {
         construction.scheduleBuild("p1", "warehouse", Duration.ofSeconds(5));
         clock.setElapsedMillis(Duration.ofSeconds(2).toMillis());
         clock.pause();
-        clock.setElapsedMillis(Duration.ofHours(1).toMillis());
+        // Paused runtime must remain frozen even while real wall-clock time passes.
+        // setElapsedMillis() is a restore/dev mutator, not elapsed wall-clock time, so
+        // using it here would intentionally move the authoritative runtime forward.
+        try {
+            Thread.sleep(20L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("test interrupted", e);
+        }
+        assertEquals(Duration.ofSeconds(2).toMillis(), clock.elapsedMillis());
         assertTrue(scheduler.executeDueTasks().isEmpty());
         assertTrue(facilities.facilities("p1").isEmpty());
     }
