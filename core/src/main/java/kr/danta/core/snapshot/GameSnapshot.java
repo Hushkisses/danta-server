@@ -17,9 +17,10 @@ public record GameSnapshot(
         List<ArmySnapshot> armies,
         List<ArmyOrderSnapshot> armyOrders,
         List<ArmyOperationQueueSnapshot> armyOperationQueues,
-        List<PersonalWalletSnapshot> personalWallets
+        List<PersonalWalletSnapshot> personalWallets,
+        List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles
 ) {
-    public static final int CURRENT_SCHEMA = 8;
+    public static final int CURRENT_SCHEMA = 9;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -37,6 +38,7 @@ public record GameSnapshot(
         armyOrders = armyOrders == null ? List.of() : List.copyOf(armyOrders);
         armyOperationQueues = armyOperationQueues == null ? List.of() : List.copyOf(armyOperationQueues);
         personalWallets = personalWallets == null ? List.of() : List.copyOf(personalWallets);
+        strategicResourceStockpiles = strategicResourceStockpiles == null ? List.of() : List.copyOf(strategicResourceStockpiles);
     }
 
     /** Backward source-compatible constructor used by pre-DEV-050 callers/tests. */
@@ -48,6 +50,18 @@ public record GameSnapshot(
                         List<ArmyOperationQueueSnapshot> armyOperationQueues) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, List.of());
+                armyOperationQueues, List.of(), List.of());
     }
+    /** Backward source-compatible DEV-050 constructor with wallets but no strategic resources. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
+                        boolean runtimePaused, double runtimeSpeedMultiplier, String seasonId,
+                        String seasonDisplayName, List<NationSnapshot> nations,
+                        List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies, List<ArmyOrderSnapshot> armyOrders,
+                        List<ArmyOperationQueueSnapshot> armyOperationQueues, List<PersonalWalletSnapshot> personalWallets) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
+                armyOperationQueues, personalWallets, List.of());
+    }
+
 }
