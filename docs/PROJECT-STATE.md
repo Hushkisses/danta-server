@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-076F core persistence live recovery VERIFIED (ironwall owner/stats/forest_crossing assignment restored); Korean general rejection mapping IMPLEMENTED; rebuild verification pending
+Checkpoint: DEV-076 COMPLETE; DEV-080 Facility I~III / slots IMPLEMENTED; Windows automated verification pending
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -70,9 +70,10 @@ Checkpoint: DEV-076F core persistence live recovery VERIFIED (ironwall owner/sta
 - DEV-070 General F-S + Lv1-10: COMPLETE, Windows automated tests/build and Paper boot verified
 - DEV-071 General stats baseline: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution plan names the four axes 통솔/무력/지략/병참 while current implementation followed design v0.3 wording 통솔/무력/지력/정치. Reconciliation remains open.
 - DEV-072 troop synergy foundation: COMPLETE, Windows automated tests/build and Paper boot verified; NOTE execution-plan DEV-072 is Trait/Ability, so this work is retained as a reusable sub-foundation and DEV-072A must complete the missing Trait/Ability scope.
+- DEV-076 initial elite general data/acquisition-persistence foundation: COMPLETE, A×7/S×3 catalog + Paper restart recovery + duplicate-acquisition Korean rejection verified.
 
 ## Implemented tickets awaiting live verification
-- DEV-076F acquisition + persistence foundation: IMPLEMENTED — automated tests/build passed; Paper restart recovered ironwall owner=red, A/Lv4 stats and forest_crossing point assignment; duplicate ownership rejection behaved correctly. Korean rejection-detail mapping added and awaits rebuild verification.
+- DEV-080 Facility I~III / slots: IMPLEMENTED — logical tier/slot rules + automated tests added; Windows quick-deploy/Paper boot verification pending.
 
 ## Important implementation decisions
 - All player-facing text (GUI, chat messages, warnings, rejection reasons, and command feedback) defaults to Korean.
@@ -112,11 +113,10 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 15. Point-general assignment unresolved details: independent general travel time/cost, exact civil-effect categories/coefficients, injury interaction, ownership-loss behavior, and snapshot persistence.
 
 ## Next execution order
-1. Verify the Korean general rejection mapping with Windows quick-deploy and one duplicate-acquire command.
-2. Treat DEV-076F ownership/stats/point-assignment restart recovery as live-verified; injury/captivity persistence remains covered automatically until those live mutation paths exist.
-3. Keep actual recruitment/raid/event acquisition routes unresolved until their systems exist; do not invent prices/spawn schedules.
-4. Continue DEV-076 with configurable ability-effect consumers while keeping coefficients provisional/configurable. (A×7, S×3), populate YAML, then integrate at the authoritative bootstrap/acquisition boundary and COMPLETE DEV-076.
-3. Later ticket: general equipment slots (weapon/armor/treasure), ticket number to be assigned without colliding with execution plan.
+1. Verify DEV-080 with Windows quick-deploy and Paper boot.
+2. COMPLETE DEV-080 after verification.
+3. Proceed to DEV-081 construction Runtime Scheduler and add authoritative facility/construction persistence there.
+4. DEV-082 world appearance sync follows DEV-081.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
