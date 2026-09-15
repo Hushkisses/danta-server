@@ -301,6 +301,14 @@ public final class GameState {
         return generalsById.containsKey(generalId);
     }
 
+    public synchronized Optional<String> commandedArmyId(String generalId) {
+        Objects.requireNonNull(generalId, "generalId");
+        for (ArmyState army : armies.values()) {
+            if (army.commanderGeneralId().filter(generalId::equals).isPresent()) return Optional.of(army.armyId());
+        }
+        return Optional.empty();
+    }
+
     public synchronized void clearGenerals() {
         generalsById.clear();
     }
