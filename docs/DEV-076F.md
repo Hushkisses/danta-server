@@ -1,6 +1,6 @@
 # DEV-076F — General acquisition boundary + persistence foundation
 
-Status: IMPLEMENTED — automated build/tests verified; live Paper restart verification pending
+Status: COMPLETE — automated build/tests + Paper restart recovery + Korean rejection output verified
 
 ## Implemented
 - GeneralAcquisitionService converts an unowned catalog GeneralDefinition into nation-owned GeneralState only after the calling content system has resolved eligibility/payment/reward.
@@ -20,3 +20,8 @@ Acquisition is therefore a common domain boundary, not a fake recruitment/raid i
 
 ## Live verification support
 Development-only admin commands now expose catalog acquisition, general inspection, strategic-point assignment and army-command assignment. All state-changing commands immediately request an important snapshot flush. This is verification tooling, not the final player recruitment UI/content.
+
+## Final live verification
+- ironwall restored after restart with owner red, A/Lv4 stats and forest_crossing assignment.
+- duplicate acquisition remained blocked.
+- representative verified the specific Korean duplicate-acquisition rejection after rebuild.
