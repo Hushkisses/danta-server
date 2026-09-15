@@ -36,6 +36,6 @@ class Dev053PointProductionTest {
         state.addStrategicPoint(new StrategicPoint("market", "Market", StrategicPointType.COMMERCIAL, "red",
                 new PointPosition("world", 0, 64, 0), 2, Map.of("gold", 160L)));
         new StrategicPointProductionService(state).produceOneTick();
-        assertEquals(80, state.requireNation("red").treasury());
+        assertEquals(80, state.nation("red").orElseThrow().treasury());
     }
 }
