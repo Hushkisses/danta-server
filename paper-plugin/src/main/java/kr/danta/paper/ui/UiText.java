@@ -109,6 +109,9 @@ public final class UiText {
         if (message.startsWith("order is not a movement order")) return "현재 명령은 이동시간을 계산할 수 있는 이동 명령이 아닙니다.";
         if (message.startsWith("army not found")) return "해당 군단을 찾을 수 없습니다.";
         if (message.startsWith("strategic point not found")) return "해당 전략 거점을 찾을 수 없습니다.";
+        if (message.startsWith("general is already owned")) return "이미 다른 국가가 소유하고 있는 장수입니다.";
+        if (message.startsWith("general not found")) return "해당 장수를 찾을 수 없습니다.";
+        if (message.startsWith("catalog general not found")) return "해당 장수는 현재 장수 후보 목록에 없습니다.";
         if (message.startsWith("nation not found")) return "해당 국가를 찾을 수 없습니다.";
         if (message.startsWith("strategic edge not found")) return "해당 전략 간선을 찾을 수 없습니다.";
         if (message.contains("already exists")) return "같은 식별자를 사용하는 데이터가 이미 존재합니다.";
