@@ -7,14 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class Dev081FacilityConstructionServiceTest {
     @Test void buildCompletesOnlyAfterServerRuntimeDeadline() {
         AtomicLong nanos = new AtomicLong();
-        RuntimeClockService clock = new RuntimeClockService(nanos::get);
+        RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
         GameState state = stateWithPoint(1);
@@ -24,11 +23,11 @@ class Dev081FacilityConstructionServiceTest {
                 task -> construction.complete(UUID.fromString(task.payload().get("constructionId"))));
 
         construction.scheduleBuild("p1", "warehouse", Duration.ofSeconds(10));
-        nanos.set(Duration.ofSeconds(9).toNanos());
+        clock.setElapsedMillis(Duration.ofSeconds(9).toMillis());
         scheduler.executeDueTasks();
         assertTrue(facilities.facilities("p1").isEmpty());
 
-        nanos.set(Duration.ofSeconds(10).toNanos());
+        clock.setElapsedMillis(Duration.ofSeconds(10).toMillis());
         assertTrue(scheduler.executeDueTasks().getFirst().success());
         assertEquals(FacilityTier.I, facilities.facility("p1", "warehouse").orElseThrow().tier());
         assertTrue(construction.pending().isEmpty());
@@ -36,7 +35,7 @@ class Dev081FacilityConstructionServiceTest {
 
     @Test void pausedRuntimeDoesNotAdvanceConstruction() {
         AtomicLong nanos = new AtomicLong();
-        RuntimeClockService clock = new RuntimeClockService(nanos::get);
+        RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
         GameState state = stateWithPoint(1);
@@ -46,16 +45,16 @@ class Dev081FacilityConstructionServiceTest {
                 task -> construction.complete(UUID.fromString(task.payload().get("constructionId"))));
 
         construction.scheduleBuild("p1", "warehouse", Duration.ofSeconds(5));
-        nanos.set(Duration.ofSeconds(2).toNanos());
+        clock.setElapsedMillis(Duration.ofSeconds(2).toMillis());
         clock.pause();
-        nanos.set(Duration.ofHours(1).toNanos());
+        clock.setElapsedMillis(Duration.ofHours(1).toMillis());
         assertTrue(scheduler.executeDueTasks().isEmpty());
         assertTrue(facilities.facilities("p1").isEmpty());
     }
 
     @Test void pendingBuildReservesSlotAndRestoreKeepsOriginalDeadline() {
         AtomicLong nanos = new AtomicLong();
-        RuntimeClockService clock = new RuntimeClockService(nanos::get);
+        RuntimeClockService clock = new RuntimeClockService();
         clock.start();
         RuntimeScheduler scheduler = new RuntimeScheduler(clock);
         GameState state = stateWithPoint(1);
