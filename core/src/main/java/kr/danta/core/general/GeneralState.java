@@ -15,18 +15,29 @@ public final class GeneralState {
     private final String ownerNationId;
     private GeneralGrade grade;
     private int level;
+    private GeneralStats stats;
 
     public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level) {
+        this(generalId, ownerNationId, grade, level, GeneralStats.zero());
+    }
+
+    public GeneralState(String generalId, String ownerNationId, GeneralGrade grade, int level, GeneralStats stats) {
         this.generalId = requireId(generalId, "generalId");
         this.ownerNationId = requireId(ownerNationId, "ownerNationId");
         this.grade = Objects.requireNonNull(grade, "grade");
         setLevel(level);
+        this.stats = Objects.requireNonNull(stats, "stats");
     }
 
     public String generalId() { return generalId; }
     public String ownerNationId() { return ownerNationId; }
     public synchronized GeneralGrade grade() { return grade; }
     public synchronized int level() { return level; }
+    public synchronized GeneralStats stats() { return stats; }
+
+    public synchronized void setStats(GeneralStats stats) {
+        this.stats = Objects.requireNonNull(stats, "stats");
+    }
 
     public synchronized void setGrade(GeneralGrade grade) {
         this.grade = Objects.requireNonNull(grade, "grade");
