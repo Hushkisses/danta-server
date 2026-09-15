@@ -96,6 +96,8 @@ public final class UiText {
         if (message.startsWith("army already has an order")) return "해당 군단에는 이미 명령이 등록되어 있습니다.";
         if (message.startsWith("destination is not adjacent")) return "목적지가 군단의 현재 위치와 인접하지 않습니다.";
         if (message.startsWith("army is already at destination")) return "군단이 이미 해당 목적지에 있습니다.";
+        if (message.startsWith("army must be stationed before loading expedition supply")) return "군단이 주둔 중일 때만 출정 보급을 적재할 수 있습니다.";
+        if (message.startsWith("not enough food for expedition supply")) return "출정 보급을 적재하기 위한 국가 식량이 부족합니다.";
         if (message.startsWith("army must be STATIONED")) return "군단이 주둔 중일 때만 이동 명령을 내릴 수 있습니다.";
         if (message.startsWith("operation queue must contain at least one destination")) return "연속 작전에는 목적지가 하나 이상 필요합니다.";
         if (message.startsWith("operation route contains duplicate current point")) return "연속 작전 경로에 현재 위치와 같은 거점이 연속으로 포함되어 있습니다.";
