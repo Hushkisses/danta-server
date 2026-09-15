@@ -106,6 +106,10 @@ public final class SnapshotService {
         return List.copyOf(restoredArmyOrders);
     }
 
+    public void setActiveArmyMovements(List<ArmyOrderSnapshot> movements) {
+        restoredArmyOrders = movements == null ? List.of() : List.copyOf(movements);
+    }
+
     public void flushOnShutdown() {
         try {
             saveAsync("shutdown").get(SHUTDOWN_FLUSH_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
