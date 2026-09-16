@@ -9,6 +9,7 @@ import kr.danta.core.nation.VassalService;
 import kr.danta.core.nation.IndependenceWarService;
 import kr.danta.core.nation.IndependenceWarState;
 import kr.danta.core.snapshot.IndependenceWarSnapshot;
+import kr.danta.core.snapshot.FameScoreSnapshot;
 import kr.danta.core.diplomacy.DiplomacyService;
 import kr.danta.core.diplomacy.DiplomaticRelation;
 import kr.danta.core.snapshot.DiplomaticRelationSnapshot;
@@ -240,6 +241,10 @@ public final class SnapshotService {
                         research.nationId(), research.researchSlots(), research.completed(), queue, research.doctrineSlots(), research.doctrines()));
             }
         }
+        gameState.clearFameScores();
+        for (FameScoreSnapshot fame : snapshot.fameScores()) {
+            gameState.restoreFameScore(fame.nationId(), fame.score());
+        }
         // Restore assignments after points, armies and generals all exist.
         for (GeneralSnapshot general : snapshot.generals()) {
             if (general.commandedArmyId() != null) {
@@ -348,10 +353,12 @@ public final class SnapshotService {
         List<DiplomaticRelationSnapshot> diplomaticRelations = diplomacyService == null ? List.of() : diplomacyService.relations().stream().map(r -> new DiplomaticRelationSnapshot(r.nationAId(), r.nationBId(), r.status())).toList();
         List<VassalRelationSnapshot> vassalRelations = vassalService == null ? List.of() : vassalService.relations().stream().map(r -> new VassalRelationSnapshot(r.vassalNationId(), r.overlordNationId(), r.vassalizedAtRuntimeMillis())).toList();
         List<IndependenceWarSnapshot> independenceWars = independenceWarService == null ? List.of() : independenceWarService.states().stream().map(w -> new IndependenceWarSnapshot(w.vassalNationId(), w.overlordNationId(), w.declaredAtRuntimeMillis(), w.holdUntilRuntimeMillis(), w.redeclareAfterRuntimeMillis(), w.active())).toList();
+        List<FameScoreSnapshot> fameScores = gameState.fameScores().entrySet().stream()
+                .map(e -> new FameScoreSnapshot(e.getKey(), e.getValue())).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars);
+                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores);
     }
 }
