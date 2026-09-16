@@ -1,0 +1,159 @@
+researches:
+  # DEV-088 development-only sample tree.
+  # These nodes validate the four fields, five tiers, branching prerequisites,
+  # doctrine metadata and major-point gates. They are NOT final season content.
+  - id: dev088_military_1
+    name: "개발 샘플 - 군사 기초"
+    field: MILITARY
+    tier: TIER_1
+    durationMinutes: 30
+    goldCost: 500
+  - id: dev088_military_2
+    name: "개발 샘플 - 군사 방향"
+    field: MILITARY
+    tier: TIER_2
+    durationMinutes: 60
+    goldCost: 1500
+    prerequisites: [dev088_military_1]
+  - id: dev088_military_3
+    name: "개발 샘플 - 군사 전문"
+    field: MILITARY
+    tier: TIER_3
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_military_2]
+    requiredMajorPointType: ACADEMIC
+  - id: dev088_military_4
+    name: "개발 샘플 - 철벽 교리"
+    field: MILITARY
+    tier: TIER_4
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_military_3]
+    doctrineKey: iron_wall
+    requiredMajorPointType: ACADEMIC
+  - id: dev088_military_5
+    name: "개발 샘플 - 군사 최종"
+    field: MILITARY
+    tier: TIER_5
+    durationMinutes: 180
+    goldCost: 5000
+    prerequisites: [dev088_military_4]
+    requiredMajorPointType: ACADEMIC
+
+  - id: dev088_industry_1
+    name: "개발 샘플 - 산업 기초"
+    field: INDUSTRY
+    tier: TIER_1
+    durationMinutes: 30
+    goldCost: 500
+  - id: dev088_industry_2
+    name: "개발 샘플 - 산업 방향"
+    field: INDUSTRY
+    tier: TIER_2
+    durationMinutes: 60
+    goldCost: 1500
+    prerequisites: [dev088_industry_1]
+  - id: dev088_industry_3
+    name: "개발 샘플 - 산업 전문"
+    field: INDUSTRY
+    tier: TIER_3
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_industry_2]
+    requiredMajorPointType: MINE
+  - id: dev088_industry_4
+    name: "개발 샘플 - 대량생산 교리"
+    field: INDUSTRY
+    tier: TIER_4
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_industry_3]
+    doctrineKey: mass_production
+    requiredMajorPointType: MINE
+  - id: dev088_industry_5
+    name: "개발 샘플 - 산업 최종"
+    field: INDUSTRY
+    tier: TIER_5
+    durationMinutes: 180
+    goldCost: 5000
+    prerequisites: [dev088_industry_4]
+    requiredMajorPointType: MINE
+
+  - id: dev088_administration_1
+    name: "개발 샘플 - 내정 기초"
+    field: ADMINISTRATION
+    tier: TIER_1
+    durationMinutes: 30
+    goldCost: 500
+  - id: dev088_administration_2
+    name: "개발 샘플 - 내정 방향"
+    field: ADMINISTRATION
+    tier: TIER_2
+    durationMinutes: 60
+    goldCost: 1500
+    prerequisites: [dev088_administration_1]
+  - id: dev088_administration_3
+    name: "개발 샘플 - 내정 전문"
+    field: ADMINISTRATION
+    tier: TIER_3
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_administration_2]
+    requiredMajorPointType: COMMERCIAL
+  - id: dev088_administration_4
+    name: "개발 샘플 - 중앙집권 교리"
+    field: ADMINISTRATION
+    tier: TIER_4
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_administration_3]
+    doctrineKey: centralization
+    requiredMajorPointType: COMMERCIAL
+  - id: dev088_administration_5
+    name: "개발 샘플 - 내정 최종"
+    field: ADMINISTRATION
+    tier: TIER_5
+    durationMinutes: 180
+    goldCost: 5000
+    prerequisites: [dev088_administration_4]
+    requiredMajorPointType: COMMERCIAL
+
+  - id: dev088_magic_1
+    name: "개발 샘플 - 마법 기초"
+    field: MAGIC
+    tier: TIER_1
+    durationMinutes: 30
+    goldCost: 500
+  - id: dev088_magic_2
+    name: "개발 샘플 - 마법 방향"
+    field: MAGIC
+    tier: TIER_2
+    durationMinutes: 60
+    goldCost: 1500
+    prerequisites: [dev088_magic_1]
+  - id: dev088_magic_3
+    name: "개발 샘플 - 마법 전문"
+    field: MAGIC
+    tier: TIER_3
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_magic_2]
+    requiredMajorPointType: MAJOR
+  - id: dev088_magic_4
+    name: "개발 샘플 - 전략마법 교리"
+    field: MAGIC
+    tier: TIER_4
+    durationMinutes: 120
+    goldCost: 3000
+    prerequisites: [dev088_magic_3]
+    doctrineKey: strategic_magic
+    requiredMajorPointType: MAJOR
+  - id: dev088_magic_5
+    name: "개발 샘플 - 마법 최종"
+    field: MAGIC
+    tier: TIER_5
+    durationMinutes: 180
+    goldCost: 5000
+    prerequisites: [dev088_magic_4]
+    requiredMajorPointType: MAJOR
