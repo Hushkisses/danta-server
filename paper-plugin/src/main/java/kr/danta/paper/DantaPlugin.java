@@ -49,6 +49,7 @@ import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
 import kr.danta.core.research.ResearchDefinition;
+import kr.danta.core.research.ResearchDefinitionLoader;
 import kr.danta.core.research.ResearchField;
 import kr.danta.core.research.ResearchService;
 import kr.danta.core.research.ResearchTier;
@@ -178,12 +179,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                         + " [id=" + task.id() + "]"));
         runtimeScheduler.registerHandler("army.move.arrive", task ->
                 completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
-        // DEV-084 verification-only definitions. Final/sample research content is DEV-088 data, not these values.
-        java.util.Map<String, ResearchDefinition> devResearchDefinitions = java.util.Map.of(
-                "dev084_alpha", new ResearchDefinition("dev084_alpha", "개발 검증 연구 A", ResearchField.MILITARY,
-                        ResearchTier.TIER_1, 30_000L, 0L, java.util.Map.of(), java.util.List.of(), null, null),
-                "dev084_beta", new ResearchDefinition("dev084_beta", "개발 검증 연구 B", ResearchField.INDUSTRY,
-                        ResearchTier.TIER_1, 45_000L, 0L, java.util.Map.of(), java.util.List.of(), null, null));
+        // DEV-088 development sample tree. This is intentionally provisional test content, not the final season tree.
+        java.util.Map<String, ResearchDefinition> devResearchDefinitions;
+        try (var input = getResource("research/dev088-sample-research.yml")) {
+            if (input == null) throw new IllegalStateException("DEV-088 sample research resource is missing");
+            devResearchDefinitions = new ResearchDefinitionLoader().load(input);
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException("DEV-088 sample research resource could not be closed", ex);
+        }
         researchService = new ResearchService(runtimeScheduler, devResearchDefinitions);
         runtimeScheduler.registerHandler(ResearchService.TASK_TYPE, task -> {
             researchService.complete(UUID.fromString(task.payload().get("entryId")), task.payload().get("nationId"));
@@ -1574,7 +1577,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         try {
             switch (sub) {
                 case "reserve" -> {
-                    requireArgs(args, 4, "/danta research reserve <국가-id> <dev084_alpha|dev084_beta>");
+                    requireArgs(args, 4, "/danta research reserve <국가-id> <연구-id>");
                     var entry = researchService.reserve(args[2], args[3]);
                     flushResearchState("research-reserve:" + entry.entryId());
                     sender.sendMessage("§a개발 검증용 연구를 예약했습니다: §e" + entry.researchId()
