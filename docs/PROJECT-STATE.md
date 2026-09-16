@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-087 COMPLETE; DEV-088 development sample research tree IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-088 COMPLETE; DEV-090 diplomacy relationship state IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -78,9 +78,10 @@ Checkpoint: DEV-087 COMPLETE; DEV-088 development sample research tree IMPLEMENT
 - DEV-085 four-field/prerequisite eligibility: COMPLETE, Windows quick-deploy automated tests/build verified. Prerequisites are explicit ResearchDefinition data; queued/active research does not satisfy them.
 - DEV-086 doctrine slots 2→max3: COMPLETE, Windows quick-deploy automated tests/build verified. National doctrine capacity defaults to 2 and may expand to max 3; slot-3 unlock condition and doctrine-change balance remain unresolved by design.
 - DEV-087 major-point-loss high-research deactivation: COMPLETE, Windows quick-deploy automated tests/build verified. Completed research remains learned; requiredMajorPointType effects derive active/inactive state from authoritative point ownership and reactivate on recovery.
+- DEV-088 development sample research tree: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified. 4 fields × Tier 1-5 sample remains provisional development content, not final season balance.
 
 ## Implemented tickets awaiting live verification
-- DEV-088 development sample research tree: 4 fields × Tier 1-5 provisional YAML content loaded through ResearchDefinitionLoader; prerequisites/doctrine/major-point metadata covered by JUnit. Windows quick-deploy + Paper boot pending. Sample values/content are not final season balance.
+- DEV-090 friendly/alliance/war relationship state: IMPLEMENTED. Symmetric bilateral state with neutral default, Korean dev command output, Snapshot schema v16 persistence and v1-v15 read compatibility; Windows quick-deploy/Paper/restart verification pending. Alliance auto-war propagation belongs to DEV-091 and passage/supply rights to DEV-092.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -122,7 +123,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-088 with Windows quick-deploy and Paper boot. If successful mark COMPLETE; Phase 8 code tickets are then complete except deferred live NBT verification for DEV-082, and proceed to Phase 9 DEV-090.
+2. Verify DEV-090 with Windows quick-deploy, Paper commands and restart persistence. If successful mark COMPLETE and proceed to DEV-091 support/automatic alliance war participation.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
