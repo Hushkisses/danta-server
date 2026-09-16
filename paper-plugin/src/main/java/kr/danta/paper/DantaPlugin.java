@@ -262,6 +262,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             snapshotService = new SnapshotService(devRepository, runtimeClock, gameState, getLogger());
             snapshotService.bindFacilities(facilityService, facilityConstructionService);
             snapshotService.bindResearch(researchService);
+            snapshotService.bindDiplomacy(diplomacyService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
