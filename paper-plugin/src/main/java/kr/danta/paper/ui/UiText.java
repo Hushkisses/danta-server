@@ -93,6 +93,12 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
+        if (message.startsWith("independence support recipient is not vassal")) return "독립 준비 지원은 현재 속국인 국가에만 보낼 수 있습니다.";
+        if (message.startsWith("overlord cannot provide independence support")) return "종주국은 이 독립 준비 지원 경로를 사용할 수 없습니다.";
+        if (message.startsWith("nation cannot support itself")) return "자기 국가에 독립 준비 지원을 보낼 수 없습니다.";
+        if (message.startsWith("supporter treasury is insufficient")) return "지원국의 국고가 부족합니다.";
+        if (message.startsWith("supporter strategic resource is insufficient")) return "지원국의 해당 전략자원이 부족합니다.";
+        if (message.startsWith("support amount must be > 0")) return "지원 수량은 1 이상이어야 합니다.";
         if (message.startsWith("minimum subordination period not elapsed")) return "아직 최소 종속기간이 지나지 않아 독립전쟁을 선언할 수 없습니다.";
         if (message.startsWith("independence war already active")) return "이미 독립전쟁이 진행 중입니다.";
         if (message.startsWith("independence war redeclare cooldown active")) return "독립전쟁 재선언 대기시간이 아직 끝나지 않았습니다.";
