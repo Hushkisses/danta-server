@@ -70,6 +70,7 @@ public final class SnapshotService {
     private volatile FacilityConstructionService facilityConstructionService;
     private volatile ResearchService researchService;
     private volatile DiplomacyService diplomacyService;
+    private volatile VassalService vassalService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -80,6 +81,8 @@ public final class SnapshotService {
         this.gameState = gameState;
         this.logger = logger;
     }
+
+    public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }
 
     public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
@@ -125,6 +128,7 @@ public final class SnapshotService {
                     nation.treasury(), nation.status()));
         }
         if (diplomacyService != null) { diplomacyService.clear(); for (DiplomaticRelationSnapshot relation : snapshot.diplomaticRelations()) diplomacyService.restore(new DiplomaticRelation(relation.nationAId(), relation.nationBId(), relation.status())); }
+        if (vassalService != null) { vassalService.clear(); for (VassalRelationSnapshot relation : snapshot.vassalRelations()) vassalService.restore(new VassalRelation(relation.vassalNationId(), relation.overlordNationId(), relation.vassalizedAtRuntimeMillis())); }
         gameState.clearPersonalWallets();
         for (PersonalWalletSnapshot wallet : snapshot.personalWallets()) {
             gameState.addPersonalWallet(new PersonalWallet(wallet.playerId(), wallet.balance()));
@@ -301,10 +305,11 @@ public final class SnapshotService {
                                         q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis())).toList(), state.doctrineSlots(), state.doctrines()))
                         .toList();
         List<DiplomaticRelationSnapshot> diplomaticRelations = diplomacyService == null ? List.of() : diplomacyService.relations().stream().map(r -> new DiplomaticRelationSnapshot(r.nationAId(), r.nationBId(), r.status())).toList();
+        List<VassalRelationSnapshot> vassalRelations = vassalService == null ? List.of() : vassalService.relations().stream().map(r -> new VassalRelationSnapshot(r.vassalNationId(), r.overlordNationId(), r.vassalizedAtRuntimeMillis())).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates, diplomaticRelations);
+                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations);
     }
 }
