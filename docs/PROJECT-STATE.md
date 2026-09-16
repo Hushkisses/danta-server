@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-094 COMPLETE; DEV-095 capital fall -> vassal IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-097 COMPLETE; DEV-098 third-country independence material support IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -88,6 +88,7 @@ Checkpoint: DEV-094 COMPLETE; DEV-095 capital fall -> vassal IMPLEMENTED awaitin
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
+- DEV-098 third-country independence material support: IMPLEMENTED. Third countries may transfer treasury gold or strategic resources to a vassal before or during an independence war. Support is material only: it does not auto-declare independence, bypass DEV-097 eligibility/cooldown/capital conditions, or grant military participation. Overlord/self support through this channel is rejected. Korean Paper commands: `independence-support-gold` and `independence-support-resource`. Automated core tests added; Windows quick-deploy/Paper verification pending.
 - DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
@@ -130,7 +131,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. DEV-097 is IMPLEMENTED and awaiting Windows quick-deploy/Paper/restart verification. If successful mark COMPLETE and proceed to DEV-098 third-country independence support. Keep 1h/10m/30m DEV-097 durations provisional/configurable.
+2. DEV-098 is IMPLEMENTED and awaiting Windows quick-deploy/Paper verification. Verify third-country GOLD/resource transfer, insufficient-balance rejection, overlord rejection, and that receiving support does not change vassal/independence-war state. After verification, proceed to the next execution-plan ticket. Keep DEV-097 1h/10m/30m durations provisional/configurable.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
