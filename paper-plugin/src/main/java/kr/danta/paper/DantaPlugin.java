@@ -65,6 +65,7 @@ import kr.danta.core.npc.NpcNationService;
 import kr.danta.core.npc.NpcPoliticalService;
 import kr.danta.core.nation.VassalService;
 import kr.danta.core.nation.VassalPolicyService;
+import kr.danta.core.nation.IndependenceWarService;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.PointPosition;
@@ -132,6 +133,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private NpcPoliticalService npcPoliticalService;
     private VassalService vassalService;
     private VassalPolicyService vassalPolicyService;
+    private IndependenceWarService independenceWarService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -190,6 +192,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         npcPoliticalService = new NpcPoliticalService(gameState, npcNationService, diplomacyService, territoryService);
         vassalService = new VassalService(gameState);
         vassalPolicyService = new VassalPolicyService(gameState, vassalService);
+        independenceWarService = new IndependenceWarService(gameState, vassalService);
         strategicPointProductionService = new StrategicPointProductionService(gameState, vassalPolicyService);
         warService = new WarService(gameState, diplomacyService, vassalPolicyService);
         diplomaticAccessService = new DiplomaticAccessService(gameState, diplomacyService, vassalPolicyService);
@@ -285,6 +288,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             snapshotService.bindResearch(researchService);
             snapshotService.bindDiplomacy(diplomacyService);
             snapshotService.bindVassals(vassalService);
+            snapshotService.bindIndependenceWars(independenceWarService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
@@ -1529,11 +1533,27 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private void pumpRuntimeScheduler() {
         if (runtimeScheduler == null) return;
         pumpEconomyTicks();
+        pumpIndependenceWars();
         for (RuntimeTaskExecution execution : runtimeScheduler.executeDueTasks()) {
             if (!execution.success()) {
                 getLogger().severe("Runtime task failed: id=" + execution.task().id()
                         + ", type=" + execution.task().taskType()
                         + ", error=" + execution.error().getMessage());
+            }
+        }
+    }
+
+    private void pumpIndependenceWars() {
+        if (independenceWarService == null || runtimeClock == null) return;
+        for (var state : independenceWarService.states()) {
+            if (!state.active()) continue;
+            var outcome = independenceWarService.tick(state.vassalNationId(), runtimeClock.elapsedMillis());
+            if (outcome == IndependenceWarService.Outcome.INDEPENDENCE_SUCCESS) {
+                getLogger().info("[IndependenceWar] independence succeeded: " + state.vassalNationId());
+                flushDiplomacyState("independence-success:" + state.vassalNationId());
+            } else if (outcome == IndependenceWarService.Outcome.FAILED_CAPITAL_LOST) {
+                getLogger().info("[IndependenceWar] failed by capital loss: " + state.vassalNationId());
+                flushDiplomacyState("independence-failed:" + state.vassalNationId());
             }
         }
     }
@@ -1602,6 +1622,24 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
             switch (sub) {
                 case "vassalize" -> { requireArgs(args,4,"/danta diplomacy vassalize <패배국> <종주국>"); var r=vassalService.onCapitalFallen(args[2],args[3],runtimeClock.elapsedMillis()); flushDiplomacyState("vassalize:"+r.vassalNationId()+":"+r.overlordNationId()); sender.sendMessage("§c수도 함락으로 속국이 되었습니다: §e"+r.vassalNationId()+" §7종주국="+r.overlordNationId()); sender.sendMessage("§7국가·잔여 영토·연구·군단은 유지됩니다. 조공과 군사외교 제한은 후속 규칙에서 적용됩니다."); }
+                case "independence-declare" -> {
+                    requireArgs(args,3,"/danta diplomacy independence-declare <속국-id>");
+                    var s=independenceWarService.declare(args[2],runtimeClock.elapsedMillis());
+                    flushDiplomacyState("independence-declare:"+s.vassalNationId());
+                    sender.sendMessage("§c독립전쟁을 선언했습니다: §e"+s.vassalNationId()+" §7vs "+s.overlordNationId());
+                    sender.sendMessage("§7목표: 자기 수도를 서버 러닝타임 기준으로 계속 방어하십시오.");
+                    sender.sendMessage("§7남은 방어시간: §e"+formatRuntime(Math.max(0L,s.holdUntilRuntimeMillis()-runtimeClock.elapsedMillis()))+" §8(개발용 임시값)");
+                }
+                case "independence-status" -> {
+                    requireArgs(args,3,"/danta diplomacy independence-status <국가-id>");
+                    var outcome=independenceWarService.tick(args[2],runtimeClock.elapsedMillis());
+                    if(outcome!=IndependenceWarService.Outcome.ONGOING) flushDiplomacyState("independence-outcome:"+args[2]);
+                    var s=independenceWarService.state(args[2]).orElse(null);
+                    if(vassalService.relation(args[2]).isEmpty()){sender.sendMessage("§6[독립전쟁] §e"+args[2]+" §a독립국");}
+                    else if(s==null){var r=vassalService.relation(args[2]).orElseThrow();long ready=r.vassalizedAtRuntimeMillis()+independenceWarService.minimumSubordinationMillis();sender.sendMessage("§6[독립전쟁] §e"+args[2]+" §7미선언 / 선언 가능까지 서버시간≈"+formatRuntime(Math.max(0L,ready-runtimeClock.elapsedMillis())));}
+                    else if(s.active()){sender.sendMessage("§6[독립전쟁] §e진행 중 §7/ 수도 방어 남은 서버시간≈"+formatRuntime(Math.max(0L,s.holdUntilRuntimeMillis()-runtimeClock.elapsedMillis())));}
+                    else{sender.sendMessage("§6[독립전쟁] §c실패 §7/ 재선언 가능까지 서버시간≈"+formatRuntime(Math.max(0L,s.redeclareAfterRuntimeMillis()-runtimeClock.elapsedMillis())));}
+                }
                 case "tribute-status" -> { requireArgs(args,3,"/danta diplomacy tribute-status <속국-id>"); var r=vassalService.relation(args[2]).orElseThrow(()->new IllegalStateException("nation is not vassal")); sender.sendMessage("§6[속국 조공] §e"+args[2]+" → "+r.overlordNationId()); sender.sendMessage("§7국고 세입 조공률: §e"+vassalPolicyService.tributePercent()+"% §8(개발용 임시값, 기획 범위 10~25%)"); sender.sendMessage("§7개인지갑: §a조공 대상 아님"); }
                 case "vassal-status" -> { requireArgs(args,3,"/danta diplomacy vassal-status <국가-id>"); var n=gameState.nation(args[2]).orElseThrow(()->new IllegalArgumentException("nation does not exist: "+args[2])); var r=vassalService.relation(args[2]).orElse(null); sender.sendMessage("§6[종속 상태] §e"+args[2]+" §7"+(r==null?(n.status()==kr.danta.core.nation.NationStatus.VASSAL?"속국(종주국 정보 없음)":"독립"):"속국 / 종주국="+r.overlordNationId())); }
                                 case "npc-political" -> { requireArgs(args,4,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex|independent> [상대국-id]"); var action=args[3].toLowerCase(Locale.ROOT); if(action.equals("independent")){var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));s.restoreIndependent();sender.sendMessage("§aNPC 소국이 독립 상태로 복귀했습니다: §e"+args[2]);}else{requireArgs(args,5,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex> <상대국-id>");switch(action){case "ally"->{var s=npcPoliticalService.ally(args[2],args[4]);sender.sendMessage("§aNPC 소국과 동맹 관계를 수립했습니다: §e"+s.nationId()+" ↔ "+args[4]);}case "subjugate"->{var s=npcPoliticalService.subjugate(args[2],args[4]);sender.sendMessage("§aNPC 소국을 복속했습니다: §e"+s.nationId()+" §7종주국="+args[4]);}case "annex"->{var r=npcPoliticalService.annex(args[2],args[4]);sender.sendMessage("§aNPC 소국을 합병했습니다: §e"+r.npc().nationId()+" §7합병국="+args[4]+", 이전 거점="+r.transferredPoints()+"개");}default->throw new IllegalArgumentException("unknown npc political action");}} }
@@ -1624,7 +1662,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "show" -> { requireArgs(args, 4, "/danta diplomacy show <국가1> <국가2>"); sender.sendMessage("§6[외교 관계] §e"+args[2]+" ↔ "+args[3]+" §7"+diplomacyStatusKo(diplomacyService.status(args[2],args[3]))); }
                 case "list" -> { sender.sendMessage("§6[외교 관계 목록] §7총 "+diplomacyService.relations().size()+"개"); for(var r:diplomacyService.relations()) sender.sendMessage("§e"+r.nationAId()+" ↔ "+r.nationBId()+" §7"+diplomacyStatusKo(r.status())); }
-                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars|npc-register|npc-unregister|npc-step|npc-list|npc-political|npc-status|vassalize|vassal-status|tribute-status>");
+                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars|npc-register|npc-unregister|npc-step|npc-list|npc-political|npc-status|vassalize|vassal-status|tribute-status|independence-declare|independence-status>");
             }
         } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
         return true;
