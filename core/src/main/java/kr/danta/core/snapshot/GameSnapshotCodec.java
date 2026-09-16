@@ -1,6 +1,7 @@
 package kr.danta.core.snapshot;
 
 import kr.danta.core.army.ArmyStatus;
+import kr.danta.core.diplomacy.DiplomaticStatus;
 import kr.danta.core.army.ExpeditionSupplyLevel;
 import kr.danta.core.army.ArmyOrderStatus;
 import kr.danta.core.army.ArmyOrderType;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v15; DEV-086 writes v15. */
+/** Dependency-free snapshot codec. Reads schema v1-v16; DEV-090 writes v16. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -37,7 +38,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -159,11 +160,31 @@ public final class GameSnapshotCodec {
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]));
         }
+        if (schema == 16) {
+            if (p.length != 21) throw new IllegalArgumentException("invalid schema v16 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]),
+                    decodeDiplomaticRelations(p[20]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
-
-
+    private static String encodeDiplomaticRelations(List<DiplomaticRelationSnapshot> relations) {
+        if (relations == null || relations.isEmpty()) return "-";
+        return relations.stream().map(r -> String.join(",", enc(r.nationAId()), enc(r.nationBId()), r.status().name()))
+                .reduce((a,b)->a+";"+b).orElse("-");
+    }
+    private static List<DiplomaticRelationSnapshot> decodeDiplomaticRelations(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<DiplomaticRelationSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) { String[] f=row.split(",",-1); if(f.length!=3) throw new IllegalArgumentException("invalid diplomacy snapshot row"); result.add(new DiplomaticRelationSnapshot(dec(f[0]),dec(f[1]),DiplomaticStatus.valueOf(f[2]))); }
+        return List.copyOf(result);
+    }
 
     private static String encodeResearchStates(List<ResearchStateSnapshot> states) {
         if (states == null || states.isEmpty()) return "-";
