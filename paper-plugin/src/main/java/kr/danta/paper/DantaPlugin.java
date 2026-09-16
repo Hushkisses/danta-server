@@ -57,6 +57,9 @@ import kr.danta.core.runtime.RuntimeTaskExecution;
 import kr.danta.core.season.SeasonPhaseService;
 import kr.danta.core.season.SeasonAction;
 import kr.danta.core.season.SeasonActionGate;
+import kr.danta.core.score.FameScoreService;
+import kr.danta.core.score.HegemonyScoreService;
+import kr.danta.core.score.NationRankingService;
 import kr.danta.core.research.ResearchDefinition;
 import kr.danta.core.research.ResearchDefinitionLoader;
 import kr.danta.core.research.ResearchField;
@@ -121,6 +124,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private RuntimeScheduler runtimeScheduler;
     private SeasonPhaseService seasonPhaseService;
     private SeasonActionGate seasonActionGate;
+    private FameScoreService fameScoreService;
+    private HegemonyScoreService hegemonyScoreService;
+    private NationRankingService nationRankingService;
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
@@ -201,6 +207,10 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         npcPoliticalService = new NpcPoliticalService(gameState, npcNationService, diplomacyService, territoryService);
         vassalService = new VassalService(gameState);
         vassalPolicyService = new VassalPolicyService(gameState, vassalService);
+        fameScoreService = new FameScoreService(gameState);
+        HegemonyScoreService.HegemonyScorePolicy provisionalScorePolicy = type -> 0L;
+        hegemonyScoreService = new HegemonyScoreService(gameState, provisionalScorePolicy, vassalService, npcNationService);
+        nationRankingService = new NationRankingService(gameState, fameScoreService, hegemonyScoreService);
         independenceWarService = new IndependenceWarService(gameState, vassalService);
         independenceSupportService = new IndependenceSupportService(gameState, vassalService);
         strategicPointProductionService = new StrategicPointProductionService(gameState, vassalPolicyService);
@@ -364,6 +374,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (!command.getName().equalsIgnoreCase("danta")) return false;
         if (args.length > 0 && args[0].equalsIgnoreCase("runtime")) return handleRuntime(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("ranking")) return handleRanking(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("db")) return handleDatabase(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("snapshot")) return handleSnapshot(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
@@ -1379,6 +1390,30 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private void requireSeasonAction(SeasonAction action) {
         var decision=seasonActionGate.check(action);
         if(!decision.allowed()) throw new IllegalStateException(decision.reason());
+    }
+
+
+    private boolean handleRanking(CommandSender sender) {
+        var ranking = nationRankingService.ranking();
+        sender.sendMessage("§6[단타 천하 순위]");
+        if (ranking.isEmpty()) {
+            sender.sendMessage("§7등록된 국가가 없습니다.");
+            return true;
+        }
+        int rank = 1;
+        for (var row : ranking) {
+            sender.sendMessage("§e" + rank + "위 §f" + row.displayName()
+                    + " §7- 총점 §6" + row.totalScore()
+                    + " §7(누적 명성 §f" + row.fameScore()
+                    + "§7 / 현재 패권 §f" + row.hegemonyScore() + "§7)");
+            rank++;
+        }
+        if (seasonPhaseService.current() == kr.danta.core.season.SeasonPhase.FINISHED) {
+            sender.sendMessage("§a시즌 최종 결과입니다.");
+        } else {
+            sender.sendMessage("§7현재 서버 상태를 기준으로 한 실시간 순위입니다.");
+        }
+        return true;
     }
 
     private boolean handleSeason(CommandSender sender, String[] args) {
