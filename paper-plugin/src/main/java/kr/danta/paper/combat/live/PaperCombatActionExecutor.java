@@ -6,6 +6,7 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
@@ -14,7 +15,7 @@ import java.util.UUID;
 
 /**
  * Applies one DEV-115 live execution intent to Bukkit entities.
- * This is intentionally a short-anchor steering primitive, not global pathfinding.
+ * Uses Paper native mob pathfinding so movement keeps normal walking animation and facing.
  */
 public final class PaperCombatActionExecutor {
     private static final double WAYPOINT_REACHED_DISTANCE = 1.25;
@@ -23,7 +24,6 @@ public final class PaperCombatActionExecutor {
     private final CombatAttackPolicy attackPolicy;
     private final CombatTargetPolicy targetPolicy;
     private final WaypointProgressTracker waypointProgress;
-    private final WaypointStepMover stepMover;
 
     public PaperCombatActionExecutor() {
         this(new CombatEntityResolver(), CombatAttackPolicy.developmentDefaults(), new CombatTargetPolicy());
@@ -41,7 +41,6 @@ public final class PaperCombatActionExecutor {
         this.attackPolicy = attackPolicy;
         this.targetPolicy = targetPolicy;
         this.waypointProgress = new WaypointProgressTracker(WAYPOINT_REACHED_DISTANCE);
-        this.stepMover = new WaypointStepMover();
     }
 
     public void apply(LiveCombatUnit unit, LiveCombatExecution execution, RuntimeAccess runtime) {
@@ -53,7 +52,7 @@ public final class PaperCombatActionExecutor {
 
         LivingEntity primary = primaryOpt.orElseThrow();
         LivingEntity mover = moverOpt.orElseThrow();
-        move(unit, execution, mover);
+        move(unit, execution, primary, mover);
 
         Optional<LiveCombatUnit> targetUnitOpt = selectedTrackedHostile(unit, execution, runtime.units());
         CombatAttackPolicy.AttackSpec spec = attackPolicy.forType(unit.troopType());
@@ -71,6 +70,7 @@ public final class PaperCombatActionExecutor {
         if (targetOpt.isEmpty()) return;
         LivingEntity target = targetOpt.orElseThrow();
 
+        face(primary, target.getEyeLocation());
         double distance = primary.getLocation().distance(target.getLocation());
         if (distance > spec.range()) return;
         long now = System.currentTimeMillis();
@@ -83,7 +83,12 @@ public final class PaperCombatActionExecutor {
         }
     }
 
-    private void move(LiveCombatUnit unit, LiveCombatExecution execution, LivingEntity mover) {
+    private void move(
+            LiveCombatUnit unit,
+            LiveCombatExecution execution,
+            LivingEntity primary,
+            LivingEntity mover
+    ) {
         TacticalRoute route = execution.movementIntent().route();
         Location current = mover.getLocation();
         Optional<TacticalWaypoint> waypointOpt = waypointProgress.target(
@@ -93,18 +98,24 @@ public final class PaperCombatActionExecutor {
                 current.getY(),
                 current.getZ());
         if (waypointOpt.isEmpty()) {
-            mover.setVelocity(new Vector(0, mover.getVelocity().getY(), 0));
+            if (mover instanceof Mob mob) mob.getPathfinder().stopPathfinding();
             return;
         }
 
         TacticalWaypoint waypoint = waypointOpt.orElseThrow();
-        WaypointStepMover.Step next = stepMover.step(
-                current.getX(), current.getY(), current.getZ(),
-                waypoint.x(), waypoint.y(), waypoint.z(),
-                attackPolicy.moveSpeed(unit.troopType()));
-        Location destination = new Location(
-                mover.getWorld(), next.x(), next.y(), next.z(), current.getYaw(), current.getPitch());
-        mover.teleport(destination);
+        Location goal = resolver.toLocation(mover.getWorld(), waypoint);
+        face(primary, goal);
+        if (mover != primary) face(mover, goal);
+
+        if (mover instanceof Mob mob) {
+            double pathfinderSpeed = CombatMobNavigationPolicy.pathfinderSpeedMultiplier(
+                    attackPolicy.moveSpeed(unit.troopType()));
+            mob.getPathfinder().moveTo(goal, pathfinderSpeed);
+            return;
+        }
+
+        // All current DEV-115 visual bodies are mobs. Keep a safe fallback for future profiles.
+        mover.teleport(goal);
     }
 
     private Optional<LiveCombatUnit> selectedTrackedHostile(
@@ -118,6 +129,10 @@ public final class PaperCombatActionExecutor {
                 .filter(candidate -> selectedId.equals(candidate.unitId()))
                 .filter(candidate -> targetPolicy.mayTarget(attacker, candidate))
                 .findFirst();
+    }
+
+    private static void face(LivingEntity entity, Location target) {
+        if (entity instanceof Mob mob) mob.lookAt(target);
     }
 
     private static void fireArrow(LivingEntity attacker, LivingEntity target, double damage) {
