@@ -31,6 +31,7 @@ public final class GameState {
     private final Map<String, StrategicResourceStockpile> strategicResourcesByNationId = new LinkedHashMap<>();
     private final Map<String, LocalResourceStockpile> localResourcesByPointId = new LinkedHashMap<>();
     private final Map<String, GeneralState> generalsById = new LinkedHashMap<>();
+    private final Map<String, Long> fameScoresByNationId = new LinkedHashMap<>();
 
     public synchronized Optional<SeasonState> activeSeason() { return Optional.ofNullable(activeSeason); }
     public synchronized boolean hasActiveSeason() { return activeSeason != null; }
@@ -319,6 +320,33 @@ public final class GameState {
 
     public synchronized void clearGenerals() {
         generalsById.clear();
+    }
+
+    /** DEV-102 accumulated fame. Missing entries are authoritative zero. */
+    public synchronized long fameScore(String nationId) {
+        return fameScoresByNationId.getOrDefault(nationId, 0L);
+    }
+
+    public synchronized long addFameScore(String nationId, long amount) {
+        if (!nations.containsKey(nationId)) throw new IllegalArgumentException("nation does not exist: " + nationId);
+        if (amount <= 0L) throw new IllegalArgumentException("fame award must be > 0");
+        long updated = Math.addExact(fameScore(nationId), amount);
+        fameScoresByNationId.put(nationId, updated);
+        return updated;
+    }
+
+    public synchronized void restoreFameScore(String nationId, long score) {
+        if (!nations.containsKey(nationId)) throw new IllegalArgumentException("nation does not exist: " + nationId);
+        if (score < 0L) throw new IllegalArgumentException("fame score must be >= 0");
+        if (score == 0L) fameScoresByNationId.remove(nationId); else fameScoresByNationId.put(nationId, score);
+    }
+
+    public synchronized Map<String, Long> fameScores() {
+        return Map.copyOf(fameScoresByNationId);
+    }
+
+    public synchronized void clearFameScores() {
+        fameScoresByNationId.clear();
     }
 
 }
