@@ -1551,6 +1551,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         for (var state : independenceWarService.states()) {
             if (!state.active()) continue;
             var outcome = independenceWarService.tick(state.vassalNationId(), runtimeClock.elapsedMillis());
+            if (outcome != IndependenceWarService.Outcome.ONGOING) endIndependenceParticipation(state);
             if (outcome == IndependenceWarService.Outcome.INDEPENDENCE_SUCCESS) {
                 getLogger().info("[IndependenceWar] independence succeeded: " + state.vassalNationId());
                 flushDiplomacyState("independence-success:" + state.vassalNationId());
@@ -1559,6 +1560,14 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 flushDiplomacyState("independence-failed:" + state.vassalNationId());
             }
         }
+    }
+
+    private void endIndependenceParticipation(kr.danta.core.nation.IndependenceWarState state) {
+        if (warService == null || state == null) return;
+        warService.findBetween(state.vassalNationId(), state.overlordNationId()).ifPresent(war -> {
+            warService.endWar(war.warId());
+            getLogger().info("[IndependenceWar] participation closed: " + war.warId());
+        });
     }
 
     private void pumpEconomyTicks() {
@@ -1636,7 +1645,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "independence-status" -> {
                     requireArgs(args,3,"/danta diplomacy independence-status <국가-id>");
+                    var before=independenceWarService.state(args[2]).orElse(null);
                     var outcome=independenceWarService.tick(args[2],runtimeClock.elapsedMillis());
+                    if(outcome!=IndependenceWarService.Outcome.ONGOING && before!=null) endIndependenceParticipation(before);
                     if(outcome!=IndependenceWarService.Outcome.ONGOING) flushDiplomacyState("independence-outcome:"+args[2]);
                     var s=independenceWarService.state(args[2]).orElse(null);
                     if(vassalService.relation(args[2]).isEmpty()){sender.sendMessage("§6[독립전쟁] §e"+args[2]+" §a독립국");}
