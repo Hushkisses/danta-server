@@ -130,8 +130,6 @@ public final class SnapshotService {
             gameState.addNation(new NationState(nation.nationId(), nation.displayName(), nation.capitalPointId(),
                     nation.treasury(), nation.status()));
         }
-        if (diplomacyService != null) { diplomacyService.clear(); for (DiplomaticRelationSnapshot relation : snapshot.diplomaticRelations()) diplomacyService.restore(new DiplomaticRelation(relation.nationAId(), relation.nationBId(), relation.status())); }
-        if (vassalService != null) { vassalService.clear(); for (VassalRelationSnapshot relation : snapshot.vassalRelations()) vassalService.restore(new VassalRelation(relation.vassalNationId(), relation.overlordNationId(), relation.vassalizedAtRuntimeMillis())); }
         gameState.clearPersonalWallets();
         for (PersonalWalletSnapshot wallet : snapshot.personalWallets()) {
             gameState.addPersonalWallet(new PersonalWallet(wallet.playerId(), wallet.balance()));
@@ -149,7 +147,7 @@ public final class SnapshotService {
                     new PointPosition(point.worldName(), point.x(), point.y(), point.z()),
                     point.facilitySlots(), point.baseProductionPerHour()));
         }
-        for (StrategicEdgeSnapshot edge : snapshot.strategicEdges()) {
+        // Relations reference restored nations (and vassalization also depends on nation state), so restore them only after nations/points exist.\n        if (diplomacyService != null) { diplomacyService.clear(); for (DiplomaticRelationSnapshot relation : snapshot.diplomaticRelations()) diplomacyService.restore(new DiplomaticRelation(relation.nationAId(), relation.nationBId(), relation.status())); }\n        if (vassalService != null) { vassalService.clear(); for (VassalRelationSnapshot relation : snapshot.vassalRelations()) vassalService.restore(new VassalRelation(relation.vassalNationId(), relation.overlordNationId(), relation.vassalizedAtRuntimeMillis())); }\n        for (StrategicEdgeSnapshot edge : snapshot.strategicEdges()) {
             gameState.addStrategicEdge(new StrategicEdge(edge.edgeId(), edge.pointAId(), edge.pointBId(),
                     edge.baseTravelMillis(), edge.battlefieldTags()));
         }
