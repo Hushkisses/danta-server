@@ -93,7 +93,11 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
-        if (message.startsWith("cannot declare war on alliance")) return "혈맹 관계인 국가에는 전쟁을 선포할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
+        if (message.startsWith("nation is already npc controlled")) return "이미 NPC 국가로 등록된 국가입니다.";
+        if (message.startsWith("nation is not npc controlled")) return "NPC 국가로 등록되지 않은 국가입니다.";
+        if (message.startsWith("npc strategic ai phase must be")) return "현재 NPC 전략 AI 상태에서는 해당 단계로 전환할 수 없습니다.";
+        if (message.startsWith("unknown npc step")) return "알 수 없는 NPC 전략 AI 단계 명령입니다.";
+                if (message.startsWith("cannot declare war on alliance")) return "혈맹 관계인 국가에는 전쟁을 선포할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
         if (message.startsWith("cannot join against alliance")) return "해당 전쟁에 참전하면 현재 혈맹국과 적대하게 되므로 참전할 수 없습니다.";
         if (message.startsWith("nation already participates")) return "해당 국가는 이미 이 전쟁에 참전 중입니다.";
         if (message.startsWith("war not found")) return "해당 전쟁을 찾을 수 없습니다.";
