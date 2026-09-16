@@ -9,7 +9,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +22,7 @@ public final class PaperCombatActionExecutor {
     private final CombatEntityResolver resolver;
     private final CombatAttackPolicy attackPolicy;
     private final CombatTargetPolicy targetPolicy;
+    private final WaypointProgressTracker waypointProgress;
 
     public PaperCombatActionExecutor() {
         this(new CombatEntityResolver(), CombatAttackPolicy.developmentDefaults(), new CombatTargetPolicy());
@@ -39,6 +39,7 @@ public final class PaperCombatActionExecutor {
         this.resolver = resolver;
         this.attackPolicy = attackPolicy;
         this.targetPolicy = targetPolicy;
+        this.waypointProgress = new WaypointProgressTracker(WAYPOINT_REACHED_DISTANCE);
     }
 
     public void apply(LiveCombatUnit unit, LiveCombatExecution execution, RuntimeAccess runtime) {
@@ -82,20 +83,19 @@ public final class PaperCombatActionExecutor {
 
     private void move(LiveCombatUnit unit, LiveCombatExecution execution, LivingEntity mover) {
         TacticalRoute route = execution.movementIntent().route();
-        if (route.waypoints().isEmpty()) return;
-
-        TacticalWaypoint waypoint = route.waypoints().stream()
-                .min(Comparator.comparingDouble(w -> squaredDistance(mover.getLocation(), w)))
-                .orElse(route.waypoints().getFirst());
-
-        Location goal = resolver.toLocation(mover.getWorld(), waypoint);
-        Vector delta = goal.toVector().subtract(mover.getLocation().toVector());
-        double distance = delta.length();
-        if (distance <= WAYPOINT_REACHED_DISTANCE) {
+        Optional<TacticalWaypoint> waypointOpt = waypointProgress.target(
+                unit.unitId(),
+                route,
+                mover.getLocation().getX(),
+                mover.getLocation().getY(),
+                mover.getLocation().getZ());
+        if (waypointOpt.isEmpty()) {
             mover.setVelocity(new Vector(0, mover.getVelocity().getY(), 0));
             return;
         }
 
+        Location goal = resolver.toLocation(mover.getWorld(), waypointOpt.orElseThrow());
+        Vector delta = goal.toVector().subtract(mover.getLocation().toVector());
         Vector direction = delta.normalize().multiply(attackPolicy.moveSpeed(unit.troopType()));
         direction.setY(mover.getVelocity().getY());
         mover.setVelocity(direction);
@@ -112,13 +112,6 @@ public final class PaperCombatActionExecutor {
                 .filter(candidate -> selectedId.equals(candidate.unitId()))
                 .filter(candidate -> targetPolicy.mayTarget(attacker, candidate))
                 .findFirst();
-    }
-
-    private static double squaredDistance(Location location, TacticalWaypoint waypoint) {
-        double dx = waypoint.x() - location.getX();
-        double dy = waypoint.y() - location.getY();
-        double dz = waypoint.z() - location.getZ();
-        return dx * dx + dy * dy + dz * dz;
     }
 
     private static void fireArrow(LivingEntity attacker, LivingEntity target, double damage) {
