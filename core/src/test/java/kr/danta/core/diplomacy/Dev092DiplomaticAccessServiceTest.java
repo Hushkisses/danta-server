@@ -1,0 +1,7 @@
+package kr.danta.core.diplomacy;
+import kr.danta.core.nation.NationState;import kr.danta.core.state.GameState;import kr.danta.core.territory.*;import org.junit.jupiter.api.Test;import java.util.Map;import static org.junit.jupiter.api.Assertions.*;
+class Dev092DiplomaticAccessServiceTest {record F(DiplomacyService d,DiplomaticAccessService a){} F f(){GameState g=new GameState();g.addNation(new NationState("red","red"));g.addNation(new NationState("blue","blue"));g.addStrategicPoint(new StrategicPoint("p","p",StrategicPointType.FARM,"blue",new PointPosition("world",0,64,0),1,Map.of()));DiplomacyService d=new DiplomacyService(g);return new F(d,new DiplomaticAccessService(g,d));}
+ @Test void neutralAndWarDenyBoth(){var f=f();assertFalse(f.a.canEnterPoint("red","p"));assertFalse(f.a.canUsePointForSupply("red","p"));f.d.setStatus("red","blue",DiplomaticStatus.WAR);assertFalse(f.a.canEnterPoint("red","p"));assertFalse(f.a.canUsePointForSupply("red","p"));}
+ @Test void friendlyAndAllianceGrantBoth(){var f=f();f.d.setStatus("red","blue",DiplomaticStatus.FRIENDLY);assertTrue(f.a.canEnterPoint("red","p"));assertTrue(f.a.canUsePointForSupply("red","p"));f.d.setStatus("red","blue",DiplomaticStatus.ALLIANCE);assertTrue(f.a.canEnterPoint("red","p"));assertTrue(f.a.canUsePointForSupply("red","p"));}
+ @Test void ownTerritoryAlwaysPermits(){var f=f();assertTrue(f.a.hasRight("red","red",AccessRight.PASSAGE));assertTrue(f.a.hasRight("red","red",AccessRight.SUPPLY));}
+}
