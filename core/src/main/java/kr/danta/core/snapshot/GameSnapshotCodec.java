@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v18; DEV-097 writes v18. */
+/** Dependency-free snapshot codec. Reads schema v1-v19; DEV-102 writes v19. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -38,7 +38,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()), encodeVassalRelations(s.vassalRelations()), encodeIndependenceWars(s.independenceWars()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()), encodeVassalRelations(s.vassalRelations()), encodeIndependenceWars(s.independenceWars()), encodeFameScores(s.fameScores()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -192,6 +192,18 @@ public final class GameSnapshotCodec {
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]),
                     decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]), decodeIndependenceWars(p[22]));
+        }
+        if (schema == 19) {
+            if (p.length != 24) throw new IllegalArgumentException("invalid schema v19 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]),
+                    decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]), decodeIndependenceWars(p[22]),
+                    decodeFameScores(p[23]));
         }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
@@ -599,6 +611,24 @@ public final class GameSnapshotCodec {
             result.put(row.substring(0, colon), Long.parseLong(row.substring(colon + 1)));
         }
         return Map.copyOf(result);
+    }
+
+    private static String encodeFameScores(List<FameScoreSnapshot> values) {
+        if (values == null || values.isEmpty()) return "-";
+        return values.stream()
+                .map(v -> enc(v.nationId()) + "," + v.score())
+                .collect(java.util.stream.Collectors.joining(";"));
+    }
+
+    private static List<FameScoreSnapshot> decodeFameScores(String value) {
+        if (value == null || value.isEmpty() || value.equals("-")) return List.of();
+        List<FameScoreSnapshot> out = new ArrayList<>();
+        for (String row : value.split(";", -1)) {
+            String[] p = row.split(",", -1);
+            if (p.length != 2) throw new IllegalArgumentException("invalid fame score snapshot row");
+            out.add(new FameScoreSnapshot(dec(p[0]), Long.parseLong(p[1])));
+        }
+        return List.copyOf(out);
     }
 
     private static String encodeIndependenceWars(List<IndependenceWarSnapshot> values) {
