@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-16
-Checkpoint: DEV-105 COMPLETE; next execution-plan ticket DEV-106
+Checkpoint: execution-plan DEV-104 COMPLETE; DEV-105 IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -16,7 +16,7 @@ Checkpoint: DEV-105 COMPLETE; next execution-plan ticket DEV-106
 - Local workflow: preserve the existing dev-server runtime folder; use dev-server/quick-deploy.bat for normal code changes.
 
 ## Verified tickets
-- DEV-105 administrator-controlled season ending: COMPLETE. Windows quick-deploy/Paper live verification passed. From CONFLICT at runtime 25:18:52, console `/danta season end` moved runtime to 50:00:00, paused/ended the season, persisted important snapshots, and `/danta season` reported FINISHED with Korean output. Representative design override: no automatic score-threshold early finish; early ending is administrator-controlled only.
+- ADMIN-SEASON-END representative design override: COMPLETE. Windows quick-deploy/Paper live verification passed. From CONFLICT at runtime 25:18:52, console `/danta season end` moved runtime to 50:00:00, paused/ended the season, persisted important snapshots, and `/danta season` reported FINISHED with Korean output. Representative design override: no automatic score-threshold early finish; early ending is administrator-controlled only.
 - DEV-104 score-source integration: COMPLETE. Windows quick-deploy automated tests/build passed. Current hegemony composes authoritative strategic-point ownership, player vassal relations, and NPC subjugation state through configurable policy; exact numeric weights remain provisional/unfixed by design.
 - DEV-103 current hegemony score: COMPLETE. Windows quick-deploy automated tests/build passed. Current hegemony is recomputed from authoritative state rather than persisted as a mutable counter.
 - DEV-102 accumulated fame score: COMPLETE. Windows quick-deploy automated tests/build passed. Core keeps monotonic per-nation accumulated fame with zero default, positive-only awards and overflow protection; Snapshot schema v19 persists it and v1-v18 restore with zero fame. Exact score sources/amounts remain DEV-104.
@@ -95,6 +95,7 @@ Checkpoint: DEV-105 COMPLETE; next execution-plan ticket DEV-106
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
+- Execution-plan DEV-105 same-kind major-point diminishing returns: IMPLEMENTED. Design v0.3 rule 100%→75%→50% is applied to current hegemony scoring for same-kind MAJOR points. Because current StrategicPointType has only broad MAJOR, the scoring policy exposes a stable majorPointKind hook for later fortress/market/etc. content without changing aggregation. The document does not specify a fourth+ step, so the third 50% is retained as a floor rather than inventing further decay. Windows quick-deploy verification pending.
 - DEV-098B official third-country independence-war participation: COMPLETE. Windows quick-deploy/Paper live verification passed: pre-declaration join rejected; declaration created a WarService war ID; green joined red's independence side; duplicate and overlord joins were rejected with specific Korean reasons; successful independence removed the active war and restored red↔blue and green↔blue to NEUTRAL.
 - DEV-098A third-country pre-independence material support: COMPLETE. Windows quick-deploy/Paper live verification passed. Verified green -> red treasury GOLD transfer (1000→800 / 382→582), FOOD transfer (500→400 / 100→200), IRON transfer (100→80 / 60→80), vassal relation remained red -> blue, existing failed-war cooldown remained unchanged, and support did not auto-declare or bypass independence. Overlord support, insufficient treasury, insufficient strategic resource, and self-support were all rejected with specific Korean reasons. DEV-098B post-declaration official military support remains to implement using existing DEV-091 WarService participation rules rather than duplicating war logic.
 - DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
@@ -143,11 +144,10 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 3. DEV-102 COMPLETE after Windows quick-deploy success.
 4. DEV-103 COMPLETE after Windows quick-deploy success.
 5. DEV-104 COMPLETE after Windows quick-deploy success. Numeric weights remain configurable/provisional rather than invented as final balance.
-6. DEV-105 COMPLETE. Representative design override: no automatic score-threshold early finish; admin `/danta season end` verified live.
-7. Live verification exposed EconomyTick catch-up when admin season end advances runtime from 25:18:52 to 50:00:00: 50 ticks processed immediately before snapshots. This is the same class of runtime-jump catch-up previously observed with development runtime set and should be addressed before treating admin early-end as production-safe.
-8. Next execution-plan ticket: DEV-106 season-end freeze/final-result handling.
-9. Current live baseline after DEV-105 verification: runtime 50:00:00, season FINISHED, runtime paused by admin season end. Previous clean pre-test baseline was active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
-10. Previous clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
+6. Numbering correction: execution plan v1.0 defines DEV-105 as same-kind major-point diminishing returns, DEV-106 as ranking UI/season result, and DEV-107 as chronicle event log. The previously implemented administrator `/danta season end` is retained as an approved representative design override but is not execution-plan DEV-105.
+7. Execution-plan DEV-105 diminishing returns is IMPLEMENTED and awaits Windows quick-deploy verification.
+8. Live verification exposed EconomyTick catch-up when admin season end advances runtime from 25:18:52 to 50:00:00: 50 ticks processed immediately before snapshots. This is the same class of runtime-jump catch-up previously observed with development runtime set and should be addressed before treating admin early-end as production-safe.
+9. Current live baseline restored after admin-end test: runtime 25:18:52, speed x1.0, season CONFLICT, runtime running.\n10. Previous clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
 11. Observed during dev runtime restoration: advancing runtime from the 4h test range back to ~25h16m caused EconomyTick to catch up 42 ticks at once. Treat this as an observation for future runtime manipulation/snapshot/economy scheduler review, not as a DEV-101 defect.
 
 ## Automated verification baseline
