@@ -1,7 +1,7 @@
 package kr.danta.core.combat;
 
 /**
- * DEV-061 phase ownership policy for the four basic troop roles.
+ * DEV-061 phase ownership policy for the basic troop roles.
  *
  * The existing DEV-040 soft-counter multiplier remains the only numeric counter
  * bonus. DEV-061 moves that bonus into its logical battle phase instead of
@@ -13,7 +13,7 @@ public final class CombatPhasePolicy {
     public static CombatPhase phaseFor(TroopType type) {
         return switch (BasicTroopTypes.definition(type).role()) {
             case FRONTLINE -> CombatPhase.FRONTLINE;
-            case RANGED -> CombatPhase.BACKLINE;
+            case RANGED, SUPPORT -> CombatPhase.BACKLINE;
             case MOBILE -> CombatPhase.MOBILE;
         };
     }
