@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-090 COMPLETE; DEV-091 support participation / direct-alliance automatic war entry IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-091 COMPLETE; DEV-092 passage/supply rights IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -80,9 +80,10 @@ Checkpoint: DEV-090 COMPLETE; DEV-091 support participation / direct-alliance au
 - DEV-087 major-point-loss high-research deactivation: COMPLETE, Windows quick-deploy automated tests/build verified. Completed research remains learned; requiredMajorPointType effects derive active/inactive state from authoritative point ownership and reactivate on recovery.
 - DEV-088 development sample research tree: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified. 4 fields × Tier 1-5 sample remains provisional development content, not final season balance.
 - DEV-090 friendly/alliance/war relationship state: COMPLETE, Windows quick-deploy/Paper command/restart persistence verified. Symmetric bilateral state, Korean dev output, Snapshot v16 with v1-v15 compatibility.
+- DEV-091 support participation/direct-alliance automatic war entry: COMPLETE, Windows quick-deploy/Paper war declaration/list verification passed. Direct alliance declaration rejection verified. Specific Korean diplomacy rejection messages were added after live verification exposed the generic fallback.
 
 ## Implemented tickets awaiting live verification
-- DEV-091 support participation/direct-alliance automatic war entry: War aggregate + attacker/defender sides + direct alliance auto-entry without chain propagation + explicit nation-level support join + Korean dev commands + JUnit implemented. Windows quick-deploy/Paper verification pending. Actual army deployment remains player-controlled. War lifecycle/persistence is intentionally not guessed in this ticket; DEV-090 relationship state remains Snapshot-persisted.
+- DEV-092 passage/supply rights: IMPLEMENTED. Separate PASSAGE/SUPPLY policy derived from DEV-090 relationship state: FRIENDLY/ALLIANCE grant both, NEUTRAL/WAR deny both; own territory allowed. Point-level policy hooks, Korean verification command, and JUnit added. Windows quick-deploy/Paper verification pending. Existing movement/allied-logistics algorithms are not silently broadened in this ticket.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -124,7 +125,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-091 with Windows quick-deploy and Paper commands. If successful mark COMPLETE and proceed to DEV-092 passage/supply rights.
+2. Verify DEV-092 with Windows quick-deploy/Paper access command, including the improved Korean alliance-war rejection message. If successful mark COMPLETE and proceed to DEV-093 trade route.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
