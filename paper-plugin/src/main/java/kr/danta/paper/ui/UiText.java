@@ -93,6 +93,12 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
+        if (message.startsWith("independence war is not active")) return "현재 진행 중인 독립전쟁이 없어 공식 참전할 수 없습니다.";
+        if (message.startsWith("overlord cannot join independence side")) return "종주국은 자기 속국의 독립측에 참전할 수 없습니다.";
+        if (message.startsWith("independence war participation record not found")) return "독립전쟁 참전 정보를 찾을 수 없습니다. 서버 상태를 확인해 주세요.";
+        if (message.startsWith("vassal cannot independently support-join war")) return "속국은 제3국 전쟁에 독자적으로 공식 참전할 수 없습니다.";
+        if (message.startsWith("cannot join against alliance")) return "혈맹 관계인 국가를 상대로는 공식 참전할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
+        if (message.startsWith("nation already participates")) return "이미 해당 전쟁에 참전 중인 국가입니다.";
         if (message.startsWith("independence support recipient is not vassal")) return "독립 준비 지원은 현재 속국인 국가에만 보낼 수 있습니다.";
         if (message.startsWith("overlord cannot provide independence support")) return "종주국은 이 독립 준비 지원 경로를 사용할 수 없습니다.";
         if (message.startsWith("nation cannot support itself")) return "자기 국가에 독립 준비 지원을 보낼 수 없습니다.";
