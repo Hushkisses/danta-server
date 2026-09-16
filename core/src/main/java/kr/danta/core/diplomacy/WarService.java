@@ -1,0 +1,13 @@
+package kr.danta.core.diplomacy;
+import kr.danta.core.state.GameState;import java.util.*;
+/** DEV-091 war participation. Direct alliances auto-enter only at declaration; their alliances do not chain. */
+public final class WarService {
+ private final GameState gameState; private final DiplomacyService diplomacy; private final Map<UUID,War> wars=new LinkedHashMap<>();
+ public WarService(GameState gameState,DiplomacyService diplomacy){this.gameState=Objects.requireNonNull(gameState);this.diplomacy=Objects.requireNonNull(diplomacy);}
+ public synchronized War declareWar(String attacker,String defender){requireNation(attacker);requireNation(defender);if(attacker.equals(defender))throw new IllegalArgumentException("same nation war");if(diplomacy.status(attacker,defender)==DiplomaticStatus.ALLIANCE)throw new IllegalStateException("cannot declare war on alliance");War w=new War(UUID.randomUUID(),attacker,defender);wars.put(w.warId(),w);diplomacy.setStatus(attacker,defender,DiplomaticStatus.WAR);List<String> attackerAllies=directAllies(attacker);List<String> defenderAllies=directAllies(defender);for(String ally:attackerAllies) if(!w.participates(ally)&&!defenderAllies.contains(ally)) joinInternal(w,ally,WarSide.ATTACKER);for(String ally:defenderAllies) if(!w.participates(ally)) joinInternal(w,ally,WarSide.DEFENDER);return w;}
+ public synchronized War supportJoin(UUID warId,String nationId,WarSide side){War w=requireWar(warId);requireNation(nationId);joinInternal(w,nationId,side);return w;}
+ public synchronized List<War> wars(){return List.copyOf(wars.values());} public synchronized Optional<War> find(UUID id){return Optional.ofNullable(wars.get(id));}
+ private void joinInternal(War w,String nation,WarSide side){if(w.participates(nation))throw new IllegalStateException("nation already participates");for(String opponent:(side==WarSide.ATTACKER?w.defenders():w.attackers())) if(diplomacy.status(nation,opponent)==DiplomaticStatus.ALLIANCE)throw new IllegalStateException("cannot join against alliance");w.join(nation,side);for(String opponent:(side==WarSide.ATTACKER?w.defenders():w.attackers())) diplomacy.setStatus(nation,opponent,DiplomaticStatus.WAR);}
+ private List<String> directAllies(String nation){return diplomacy.relationsOf(nation).stream().filter(r->r.status()==DiplomaticStatus.ALLIANCE).map(r->r.nationAId().equals(nation)?r.nationBId():r.nationAId()).toList();}
+ private War requireWar(UUID id){War w=wars.get(id);if(w==null)throw new IllegalArgumentException("war not found");return w;} private void requireNation(String id){if(!gameState.hasNation(id))throw new IllegalArgumentException("nation does not exist: "+id);}
+}
