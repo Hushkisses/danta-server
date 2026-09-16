@@ -363,7 +363,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (command.getName().equalsIgnoreCase("mapgui")) return handleMapGuiCommand(sender);
         if (!command.getName().equalsIgnoreCase("danta")) return false;
         if (args.length > 0 && args[0].equalsIgnoreCase("runtime")) return handleRuntime(sender, args);
-        if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender);
+        if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("db")) return handleDatabase(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("snapshot")) return handleSnapshot(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
@@ -1381,7 +1381,25 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if(!decision.allowed()) throw new IllegalStateException(decision.reason());
     }
 
-    private boolean handleSeason(CommandSender sender) {
+    private boolean handleSeason(CommandSender sender, String[] args) {
+        if (args.length >= 2 && args[1].equalsIgnoreCase("end")) {
+            if (!sender.hasPermission("danta.admin.season")) {
+                sender.sendMessage("§c시즌을 종료할 권한이 없습니다.");
+                return true;
+            }
+            if (seasonPhaseService.current() == kr.danta.core.season.SeasonPhase.FINISHED) {
+                sender.sendMessage("§c이미 시즌이 종료된 상태입니다.");
+                return true;
+            }
+            long finishRuntime = java.time.Duration.ofHours(50).toMillis();
+            runtimeClock.setElapsedMillis(finishRuntime);
+            runtimeClock.pause();
+            persistRuntime();
+            if (snapshotService != null) snapshotService.flushImportantAsync("admin-season-end");
+            sender.sendMessage("§6[단타] §f관리자에 의해 시즌이 조기 종료되었습니다.");
+            getLogger().info("[Season] Administrator ended the season early: " + sender.getName());
+            return true;
+        }
         var phase = seasonPhaseService.current();
         sender.sendMessage("§6[단타 시즌 단계]");
         sender.sendMessage("§f현재 단계: §e" + phase.displayName() + " §7(" + phase.name() + ")");
@@ -1389,7 +1407,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (phase != kr.danta.core.season.SeasonPhase.FINISHED) {
             sender.sendMessage("§f다음 단계까지: §e" + formatRuntime(seasonPhaseService.remainingMillis()));
         } else {
-            sender.sendMessage("§7시즌 기준 러닝타임 50시간에 도달했습니다.");
+            sender.sendMessage("§7시즌이 종료되었습니다.");
         }
         return true;
     }
