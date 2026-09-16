@@ -12,7 +12,7 @@ public record GameSnapshot(
         List<LocalResourceStockpileSnapshot> localResourceStockpiles, List<GeneralSnapshot> generals,
         List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
         List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
-        List<VassalRelationSnapshot> vassalRelations
+        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars
 ) {
     public static final int CURRENT_SCHEMA = 18;
 
