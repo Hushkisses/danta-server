@@ -74,7 +74,7 @@ class Dev098IndependenceSupportServiceTest {
         g.addNation(red); g.addNation(blue); g.addNation(green);
         g.addStrategicPoint(new kr.danta.core.territory.StrategicPoint(
                 "red_capital", "Red Capital", kr.danta.core.territory.StrategicPointType.CAPITAL,
-                new kr.danta.core.territory.PointPosition("world", 0, 70, 0), 3, java.util.Map.of(), "blue"));
+                "blue", new kr.danta.core.territory.PointPosition("world", 0, 70, 0), 3, java.util.Map.of()));
         return g;
     }
 }
