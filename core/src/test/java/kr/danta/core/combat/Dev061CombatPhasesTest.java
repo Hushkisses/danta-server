@@ -40,6 +40,10 @@ class Dev061CombatPhasesTest {
         assertEquals(1250.0, result.finalResult().first().effectivePower(), 0.000001);
     }
 
+    @Test void magicSupportTypeUsesBacklinePhase() {
+        assertEquals(CombatPhase.BACKLINE, CombatPhasePolicy.phaseFor(TroopType.MAGIC));
+    }
+
     @Test void finalResultsRemainRegressionCompatibleWithV0() {
         CombatSideInput red = new CombatSideInput("red", TroopType.SPEARMEN, 900, 1.1, 1.2, 0.9, 0.8, 1.05);
         CombatSideInput blue = new CombatSideInput("blue", TroopType.CAVALRY, 1000, 0.9, 1.0, 1.1, 1.0, 0.95);
