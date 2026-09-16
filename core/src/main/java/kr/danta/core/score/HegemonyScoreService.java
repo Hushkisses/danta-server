@@ -3,6 +3,11 @@ package kr.danta.core.score;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.nation.VassalRelation;
+import kr.danta.core.nation.VassalService;
+import kr.danta.core.npc.NpcNationService;
+import kr.danta.core.npc.NpcNationState;
+import kr.danta.core.npc.NpcPoliticalStatus;
 
 import java.util.Objects;
 
@@ -16,10 +21,19 @@ import java.util.Objects;
 public final class HegemonyScoreService {
     private final GameState gameState;
     private final HegemonyScorePolicy policy;
+    private final VassalService vassals;
+    private final NpcNationService npcs;
 
     public HegemonyScoreService(GameState gameState, HegemonyScorePolicy policy) {
+        this(gameState, policy, null, null);
+    }
+
+    public HegemonyScoreService(GameState gameState, HegemonyScorePolicy policy,
+                                VassalService vassals, NpcNationService npcs) {
         this.gameState = Objects.requireNonNull(gameState, "gameState");
         this.policy = Objects.requireNonNull(policy, "policy");
+        this.vassals = vassals;
+        this.npcs = npcs;
     }
 
     public long score(String nationId) {
@@ -28,6 +42,21 @@ public final class HegemonyScoreService {
         for (StrategicPoint point : gameState.strategicPoints()) {
             if (!point.ownerNationId().filter(nationId::equals).isPresent()) continue;
             total = Math.addExact(total, policy.strategicPointValue(point.type()));
+        }
+        if (vassals != null) {
+            for (VassalRelation relation : vassals.relations()) {
+                if (relation.overlordNationId().equals(nationId)) {
+                    total = Math.addExact(total, policy.vassalValue());
+                }
+            }
+        }
+        if (npcs != null) {
+            for (NpcNationState npc : npcs.states()) {
+                if (npc.politicalStatus() == NpcPoliticalStatus.SUBJUGATED
+                        && nationId.equals(npc.patronNationId())) {
+                    total = Math.addExact(total, policy.subjugatedNpcValue());
+                }
+            }
         }
         return total;
     }
@@ -38,8 +67,9 @@ public final class HegemonyScoreService {
         }
     }
 
-    @FunctionalInterface
     public interface HegemonyScorePolicy {
         long strategicPointValue(StrategicPointType type);
+        default long vassalValue() { return 0L; }
+        default long subjugatedNpcValue() { return 0L; }
     }
 }
