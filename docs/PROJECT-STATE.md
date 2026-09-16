@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-087 COMPLETE; next DEV-088 development sample research tree
+Checkpoint: DEV-087 COMPLETE; DEV-088 development sample research tree IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -80,6 +80,7 @@ Checkpoint: DEV-087 COMPLETE; next DEV-088 development sample research tree
 - DEV-087 major-point-loss high-research deactivation: COMPLETE, Windows quick-deploy automated tests/build verified. Completed research remains learned; requiredMajorPointType effects derive active/inactive state from authoritative point ownership and reactivate on recovery.
 
 ## Implemented tickets awaiting live verification
+- DEV-088 development sample research tree: 4 fields × Tier 1-5 provisional YAML content loaded through ResearchDefinitionLoader; prerequisites/doctrine/major-point metadata covered by JUnit. Windows quick-deploy + Paper boot pending. Sample values/content are not final season balance.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -121,7 +122,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Proceed to DEV-088 development sample research tree. Keep it explicitly provisional/test content: design v0.3 leaves the full research-node tree unresolved.
+2. Verify DEV-088 with Windows quick-deploy and Paper boot. If successful mark COMPLETE; Phase 8 code tickets are then complete except deferred live NBT verification for DEV-082, and proceed to Phase 9 DEV-090.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
