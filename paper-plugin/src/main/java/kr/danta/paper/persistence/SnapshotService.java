@@ -63,6 +63,7 @@ import java.util.logging.Logger;
 public final class SnapshotService {
     private static final String NAMESPACE = "snapshot";
     private static final String ACTIVE_KEY = "active";
+    private static final String BACKUP_KEY = "backup";
     private static final Duration SHUTDOWN_FLUSH_TIMEOUT = Duration.ofSeconds(5);
 
     private final AsyncKeyValueRepository repository;
@@ -100,7 +101,18 @@ public final class SnapshotService {
 
     public CompletableFuture<Void> saveAsync(String reason) {
         GameSnapshot snapshot = capture();
-        return repository.save(NAMESPACE, ACTIVE_KEY, GameSnapshotCodec.encode(snapshot))
+        if (snapshot.nations().isEmpty() && snapshot.strategicPoints().isEmpty()) {
+            logger.warning("DEV-017 snapshot save blocked: refusing to overwrite persistent state with an empty GameState, reason=" + reason);
+            return CompletableFuture.failedFuture(new IllegalStateException("refusing to save empty game state"));
+        }
+        String encoded = GameSnapshotCodec.encode(snapshot);
+        return repository.find(NAMESPACE, ACTIVE_KEY)
+                .thenCompose(previous -> {
+                    CompletableFuture<Void> backup = previous.isPresent()
+                            ? repository.save(NAMESPACE, BACKUP_KEY, previous.get())
+                            : CompletableFuture.completedFuture(null);
+                    return backup.thenCompose(ignored -> repository.save(NAMESPACE, ACTIVE_KEY, encoded));
+                })
                 .whenComplete((ignored, error) -> {
                     if (error == null) logger.info("DEV-017 snapshot saved: reason=" + reason
                             + ", runtimeMs=" + snapshot.runtimeElapsedMillis());
@@ -115,6 +127,10 @@ public final class SnapshotService {
 
     public CompletableFuture<Optional<GameSnapshot>> loadAsync() {
         return repository.find(NAMESPACE, ACTIVE_KEY).thenApply(value -> value.map(GameSnapshotCodec::decode));
+    }
+
+    public CompletableFuture<Optional<GameSnapshot>> loadBackupAsync() {
+        return repository.find(NAMESPACE, BACKUP_KEY).thenApply(value -> value.map(GameSnapshotCodec::decode));
     }
 
     public void apply(GameSnapshot snapshot) {
