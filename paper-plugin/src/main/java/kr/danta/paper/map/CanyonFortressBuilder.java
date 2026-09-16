@@ -47,11 +47,34 @@ public final class CanyonFortressBuilder {
 
         // Main assault road and courtyard guide.
         fill(world, 730, BASE_Y - 1, -123, 790, BASE_Y - 1, -117, Material.SMOOTH_STONE);
-        // Lighting for test usability.
-        for (int x = 750; x <= 830; x += 16) {
-            world.getBlockAt(x, BASE_Y, -160).setType(Material.TORCH, false);
-            world.getBlockAt(x, BASE_Y, -80).setType(Material.TORCH, false);
+        // Courtyard zoning: gardens and compact supply/market stalls break up the empty stone plane.
+        garden(world, 752, -150, 766, -136);
+        garden(world, 752, -104, 766, -90);
+        garden(world, 814, -150, 828, -136);
+        garden(world, 814, -104, 828, -90);
+        stall(world, 760, -132); stall(world, 760, -108);
+        stall(world, 820, -132); stall(world, 820, -108);
+
+        // Secondary raised command tower over the core to create a stronger skyline.
+        fill(world, 787, BASE_Y + 12, -129, 803, BASE_Y + 20, -111, Material.STONE_BRICKS);
+        fill(world, 789, BASE_Y + 13, -127, 801, BASE_Y + 19, -113, Material.AIR);
+        crenellateRect(world, 787, 803, -129, -111, BASE_Y + 21);
+        set(world, 790, BASE_Y + 20, -120, Material.BLUE_BANNER);
+        set(world, 800, BASE_Y + 20, -120, Material.BLUE_BANNER);
+
+        // Blue banners make the fortress readable as a military objective.
+        for (int z : new int[]{-152, -120, -88}) {
+            set(world, 743, BASE_Y + 5, z, Material.BLUE_BANNER);
+            set(world, 837, BASE_Y + 5, z, Material.BLUE_BANNER);
         }
+
+        // Invisible LIGHT blocks provide gameplay lighting without torch clutter.
+        // Ground lights are suspended two blocks above walking surfaces; wall-walk/keep lights sit above their floors.
+        lightGrid(world, 750, 830, -160, -80, BASE_Y + 2, 12);
+        lightGrid(world, 746, 834, -164, -76, BASE_Y + 11, 12);
+        lightGrid(world, 782, 818, -142, -98, BASE_Y + 12, 10);
+        lightGrid(world, 789, 801, -127, -113, BASE_Y + 16, 8);
+        setLight(world, 790, BASE_Y + 4, -120);
         return new BuildResult(CENTER_X, BASE_Y, CENTER_Z);
     }
 
@@ -73,6 +96,25 @@ public final class CanyonFortressBuilder {
     }
     private void arch(World w,int x,int y,int minZ,int maxZ){
         fill(w,x-1,y,minZ,x+3,y+1,maxZ,Material.STONE_BRICKS);
+    }
+    private void garden(World w,int x0,int z0,int x1,int z1){
+        fill(w,x0,BASE_Y-1,z0,x1,BASE_Y-1,z1,Material.MOSS_BLOCK);
+        for(int x=x0+2;x<x1;x+=4) for(int z=z0+2;z<z1;z+=4) set(w,x,BASE_Y,z,Material.OAK_LEAVES);
+        for(int x=x0;x<=x1;x++){ set(w,x,BASE_Y-1,z0,Material.STONE_BRICKS); set(w,x,BASE_Y-1,z1,Material.STONE_BRICKS); }
+        for(int z=z0;z<=z1;z++){ set(w,x0,BASE_Y-1,z,Material.STONE_BRICKS); set(w,x1,BASE_Y-1,z,Material.STONE_BRICKS); }
+    }
+    private void stall(World w,int x,int z){
+        fill(w,x-3,BASE_Y,z-2,x+3,BASE_Y,z+2,Material.OAK_PLANKS);
+        for(int dx : new int[]{-3,3}) for(int dz : new int[]{-2,2}) fill(w,x+dx,BASE_Y+1,z+dz,x+dx,BASE_Y+3,z+dz,Material.OAK_FENCE);
+        fill(w,x-3,BASE_Y+4,z-2,x+3,BASE_Y+4,z+2,Material.BLUE_WOOL);
+        fill(w,x-2,BASE_Y+4,z-2,x+2,BASE_Y+4,z+2,Material.WHITE_WOOL);
+    }
+    private void lightGrid(World w,int minX,int maxX,int minZ,int maxZ,int y,int step){
+        for(int x=minX;x<=maxX;x+=step) for(int z=minZ;z<=maxZ;z+=step) setLight(w,x,y,z);
+    }
+    private void setLight(World w,int x,int y,int z){
+        var block=w.getBlockAt(x,y,z);
+        if(block.getType().isAir()) block.setType(Material.LIGHT,false);
     }
     private void fill(World w,int x0,int y0,int z0,int x1,int y1,int z1,Material m){
         int minCx=Math.floorDiv(Math.min(x0,x1),16), maxCx=Math.floorDiv(Math.max(x0,x1),16);
