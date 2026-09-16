@@ -60,6 +60,9 @@ import kr.danta.core.season.SeasonActionGate;
 import kr.danta.core.score.FameScoreService;
 import kr.danta.core.score.HegemonyScoreService;
 import kr.danta.core.score.NationRankingService;
+import kr.danta.core.chronicle.ChronicleService;
+import kr.danta.core.chronicle.ChronicleEventType;
+import kr.danta.core.territory.event.StrategicPointOwnershipChangedEvent;
 import kr.danta.core.research.ResearchDefinition;
 import kr.danta.core.research.ResearchDefinitionLoader;
 import kr.danta.core.research.ResearchField;
@@ -127,6 +130,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private FameScoreService fameScoreService;
     private HegemonyScoreService hegemonyScoreService;
     private NationRankingService nationRankingService;
+    private ChronicleService chronicleService;
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
@@ -211,6 +215,13 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         HegemonyScoreService.HegemonyScorePolicy provisionalScorePolicy = type -> 0L;
         hegemonyScoreService = new HegemonyScoreService(gameState, provisionalScorePolicy, vassalService, npcNationService);
         nationRankingService = new NationRankingService(gameState, fameScoreService, hegemonyScoreService);
+        chronicleService = new ChronicleService();
+        snapshotService.bindChronicle(chronicleService);
+        domainEventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> chronicleService.record(
+                runtimeClock.elapsedMillis(), ChronicleEventType.TERRITORY_CHANGE,
+                "거점 " + event.pointId() + " 소유권 변경: "
+                        + (event.previousOwnerNationId() == null ? "중립" : event.previousOwnerNationId()) + " → "
+                        + (event.newOwnerNationId() == null ? "중립" : event.newOwnerNationId())));
         independenceWarService = new IndependenceWarService(gameState, vassalService);
         independenceSupportService = new IndependenceSupportService(gameState, vassalService);
         strategicPointProductionService = new StrategicPointProductionService(gameState, vassalPolicyService);
@@ -375,6 +386,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("runtime")) return handleRuntime(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("ranking")) return handleRanking(sender);
+        if (args.length > 0 && args[0].equalsIgnoreCase("chronicle")) return handleChronicle(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("db")) return handleDatabase(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("snapshot")) return handleSnapshot(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
@@ -1393,6 +1405,20 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
 
+
+    private boolean handleChronicle(CommandSender sender) {
+        sender.sendMessage("§6[단타 연대기]");
+        var entries = chronicleService.recent(20);
+        if (entries.isEmpty()) {
+            sender.sendMessage("§7아직 기록된 주요 사건이 없습니다.");
+            return true;
+        }
+        for (var entry : entries) {
+            sender.sendMessage("§7[" + formatRuntime(entry.runtimeMillis()) + "] §f" + entry.summary());
+        }
+        return true;
+    }
+
     private boolean handleRanking(CommandSender sender) {
         var ranking = nationRankingService.ranking();
         sender.sendMessage("§6[단타 천하 순위]");
@@ -1429,6 +1455,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             long finishRuntime = java.time.Duration.ofHours(50).toMillis();
             runtimeClock.setElapsedMillis(finishRuntime);
             runtimeClock.pause();
+            chronicleService.record(runtimeClock.elapsedMillis(), ChronicleEventType.SEASON_ENDED, "관리자에 의해 시즌이 종료됨");
             persistRuntime();
             if (snapshotService != null) snapshotService.flushImportantAsync("admin-season-end");
             sender.sendMessage("§6[단타] §f관리자에 의해 시즌이 조기 종료되었습니다.");
