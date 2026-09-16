@@ -34,4 +34,19 @@ class LiveCombatRuntimeStateTest {
         assertTrue(request.entityIds().contains(rider));
         assertTrue(request.entityIds().contains(mount));
     }
+
+    @Test
+    void attackCooldownIsTrackedPerUnitAndClearedWhenRuntimeFinishes() {
+        LiveCombatRuntimeState state = new LiveCombatRuntimeState();
+        UUID unitA = UUID.randomUUID();
+        UUID unitB = UUID.randomUUID();
+
+        assertTrue(state.tryAcquireAttack(unitA, 1_000L, 500L));
+        assertFalse(state.tryAcquireAttack(unitA, 1_499L, 500L));
+        assertTrue(state.tryAcquireAttack(unitB, 1_100L, 500L));
+        assertTrue(state.tryAcquireAttack(unitA, 1_500L, 500L));
+
+        state.finish();
+        assertTrue(state.tryAcquireAttack(unitA, 1_501L, 500L));
+    }
 }
