@@ -1,0 +1,2 @@
+package kr.danta.core.snapshot;
+public record IndependenceWarSnapshot(String vassalNationId,String overlordNationId,long declaredAtRuntimeMillis,long holdUntilRuntimeMillis,long redeclareAfterRuntimeMillis,boolean active) {}
