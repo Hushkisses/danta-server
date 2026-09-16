@@ -93,7 +93,12 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
-        if (message.startsWith("npc nation is not independent")) return "독립 상태인 NPC 소국만 새 동맹을 맺을 수 있습니다.";
+        if (message.startsWith("nation is already vassal")) return "이미 속국인 국가입니다.";
+        if (message.startsWith("nation has no designated capital")) return "해당 국가에 지정된 수도가 없어 속국화할 수 없습니다.";
+        if (message.startsWith("designated capital point does not exist")) return "지정된 수도 거점을 찾을 수 없습니다.";
+        if (message.startsWith("capital is not controlled by victor")) return "종주국이 패배국의 수도를 점령한 상태가 아니므로 속국화할 수 없습니다.";
+        if (message.startsWith("vassal and overlord must differ")) return "자기 자신을 종주국으로 지정할 수 없습니다.";
+                if (message.startsWith("npc nation is not independent")) return "독립 상태인 NPC 소국만 새 동맹을 맺을 수 있습니다.";
         if (message.startsWith("npc nation is annexed")) return "이미 합병된 NPC 소국에는 이 외교 행동을 할 수 없습니다.";
         if (message.startsWith("annexed npc requires restoration system")) return "합병된 NPC 소국은 단순 명령으로 독립시킬 수 없습니다. 복국 절차가 필요합니다.";
         if (message.startsWith("npc cannot target itself")) return "NPC 소국은 자기 자신과 동맹·복속·합병 관계를 맺을 수 없습니다.";
