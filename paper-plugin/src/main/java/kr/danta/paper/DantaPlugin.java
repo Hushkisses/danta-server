@@ -1658,7 +1658,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     long amount=Long.parseLong(args[5]);
                     var r=independenceSupportService.transferResource(args[2],args[3],resource,amount);
                     flushEconomyState("independence-support-resource:"+r.supporterNationId()+":"+r.recipientNationId()+":"+r.resource());
-                    sender.sendMessage("§a독립 준비 자원을 지원했습니다: §e"+r.supporterNationId()+" → "+r.recipientNationId()+" §7"+resourceKo(r.resource())+" "+r.amount());
+                    sender.sendMessage("§a독립 준비 자원을 지원했습니다: §e"+r.supporterNationId()+" → "+r.recipientNationId()+" §7"+resourceKorean(r.resource())+" "+r.amount());
                     sender.sendMessage("§7지원국 잔량="+r.supporterAmount()+" / 수령국 보유량="+r.recipientAmount());
                     sender.sendMessage("§8이 지원은 독립전쟁을 자동으로 시작하거나 선언 조건을 우회하지 않습니다.");
                 }
