@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-098A COMPLETE; DEV-098B official third-country independence-war participation IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-098 COMPLETE; next execution-plan ticket is DEV-100 (there is no DEV-099 in execution plan v1.0)
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -88,7 +88,7 @@ Checkpoint: DEV-098A COMPLETE; DEV-098B official third-country independence-war 
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
-- DEV-098B official third-country independence-war participation: IMPLEMENTED. Independence declaration now creates a DEV-091 WarService participation record without ordinary alliance auto-entry; an independent third country can explicitly join the independence (attacker) side via `independence-support-join`. Existing WarService support-join restrictions are reused (including vassal independent-participation and alliance-conflict checks). Independence success/failure closes the participation record and clears WAR relations created between opposing participants. Automated test added; Windows quick-deploy/Paper verification pending.
+- DEV-098B official third-country independence-war participation: COMPLETE. Windows quick-deploy/Paper live verification passed: pre-declaration join rejected; declaration created a WarService war ID; green joined red's independence side; duplicate and overlord joins were rejected with specific Korean reasons; successful independence removed the active war and restored red↔blue and green↔blue to NEUTRAL.
 - DEV-098A third-country pre-independence material support: COMPLETE. Windows quick-deploy/Paper live verification passed. Verified green -> red treasury GOLD transfer (1000→800 / 382→582), FOOD transfer (500→400 / 100→200), IRON transfer (100→80 / 60→80), vassal relation remained red -> blue, existing failed-war cooldown remained unchanged, and support did not auto-declare or bypass independence. Overlord support, insufficient treasury, insufficient strategic resource, and self-support were all rejected with specific Korean reasons. DEV-098B post-declaration official military support remains to implement using existing DEV-091 WarService participation rules rather than duplicating war logic.
 - DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
@@ -132,7 +132,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. DEV-098A pre-independence material support is COMPLETE. DEV-098B official post-declaration participation is IMPLEMENTED awaiting Windows verification. Verify: no official join before declaration; independence declaration emits a war ID; independent third country joins independence side; duplicate/overlord/vassal/alliance-conflict joins reject in Korean; independence success/failure closes participation. Keep DEV-097 1h/10m/30m durations provisional/configurable.
+2. DEV-098 is COMPLETE. Execution plan v1.0 has no DEV-099; Phase 9 ends at DEV-098 and Phase 10 begins with DEV-100. Next implement DEV-100 SeasonPhase (0~8h / 8~20h / 20~38h / 38~50h), preserving server-runtime semantics and keeping phase thresholds configurable/provisional where design does not fix further detail.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
