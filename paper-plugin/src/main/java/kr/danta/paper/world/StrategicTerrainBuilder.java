@@ -7,7 +7,7 @@ import org.bukkit.World;
 import java.util.Objects;
 
 /**
- * DEV-MAP-004/004A deterministic terrain renderer for the flat strategic mainland.
+ * DEV-MAP-004 deterministic terrain renderer for the flat strategic mainland.
  * Explicit admin setup only; it never runs automatically on server startup.
  */
 public final class StrategicTerrainBuilder {
@@ -29,40 +29,30 @@ public final class StrategicTerrainBuilder {
         int originX = spawn.getBlockX() + DEV_ORIGIN_X_OFFSET;
         int originZ = spawn.getBlockZ();
 
-        // First normalize every nominal tile. Rendering is a second pass so edge spill from one tile
-        // is not erased when its neighbour is prepared.
-        for (TerrainTileSpec tile : layout.tiles()) {
-            normalize(world, surfaceY, originX, originZ, layout.tileSize(), tile);
-        }
         for (TerrainTileSpec tile : layout.tiles()) {
             render(world, surfaceY, originX, originZ, layout.tileSize(), tile);
         }
         return new BuildResult(layout.layoutId(), layout.tiles().size(), world.getName(), originX, surfaceY, originZ);
     }
 
-    private void normalize(World world, int surfaceY, int originX, int originZ, int size, TerrainTileSpec tile) {
+    private void render(World world, int surfaceY, int originX, int originZ, int size, TerrainTileSpec tile) {
         int minX = originX + tile.tileX() * size;
         int minZ = originZ + tile.tileZ() * size;
         int maxX = minX + size - 1;
         int maxZ = minZ + size - 1;
         loadArea(world, minX, maxX, minZ, maxZ);
+
+        // Normalize this development tile without touching the bedrock/deep layers of the flat world.
         fill(world, minX, surfaceY - 2, minZ, maxX, surfaceY - 1, maxZ, Material.DIRT);
         fill(world, minX, surfaceY, minZ, maxX, surfaceY, maxZ, Material.GRASS_BLOCK);
         fill(world, minX, surfaceY + 1, minZ, maxX, surfaceY + CLEAR_HEIGHT, maxZ, Material.AIR);
-    }
-
-    private void render(World world, int surfaceY, int originX, int originZ, int size, TerrainTileSpec tile) {
-        int minX = originX + tile.tileX() * size;
-        int minZ = originZ + tile.tileZ() * size;
-        int spill = TerrainBlendPolicy.spillDistance(tile.tileX(), tile.tileZ(), tile.type());
-        loadArea(world, minX - spill, minX + size - 1 + spill, minZ - spill, minZ + size - 1 + spill);
 
         switch (tile.type()) {
             case PLAINS -> renderPlains(world, surfaceY, minX, minZ, size);
-            case FOREST -> renderForest(world, surfaceY, minX, minZ, size, tile);
-            case MOUNTAIN -> renderMountain(world, surfaceY, minX, minZ, size, tile);
-            case RIVER -> renderRiver(world, surfaceY, minX, minZ, size, tile);
-            case ROAD -> renderRoad(world, surfaceY, minX, minZ, size, tile);
+            case FOREST -> renderForest(world, surfaceY, minX, minZ, size);
+            case MOUNTAIN -> renderMountain(world, surfaceY, minX, minZ, size, tile.eastWest());
+            case RIVER -> renderRiver(world, surfaceY, minX, minZ, size, tile.eastWest());
+            case ROAD -> renderRoad(world, surfaceY, minX, minZ, size, tile.eastWest());
         }
     }
 
@@ -74,39 +64,26 @@ public final class StrategicTerrainBuilder {
         }
     }
 
-    private void renderForest(World world, int surfaceY, int minX, int minZ, int size, TerrainTileSpec tile) {
+    private void renderForest(World world, int surfaceY, int minX, int minZ, int size) {
         renderPlains(world, surfaceY, minX, minZ, size);
-        int spill = TerrainBlendPolicy.spillDistance(tile.tileX(), tile.tileZ(), TerrainTileType.FOREST);
-        for (int x = minX - spill + 5; x < minX + size + spill - 4; x += 8) {
-            for (int z = minZ - spill + 5; z < minZ + size + spill - 4; z += 8) {
-                int sx = x - minX;
-                int sz = z - minZ;
-                int jitterX = TerrainBlendPolicy.lateralJitter(tile.tileX(), tile.tileZ(), sx * 131 + sz, 2);
-                int jitterZ = TerrainBlendPolicy.lateralJitter(tile.tileZ(), tile.tileX(), sz * 131 + sx, 2);
-                int tx = x + jitterX;
-                int tz = z + jitterZ;
-                if (Math.floorMod(tx * 31 + tz * 17, 5) == 0) continue;
-                tree(world, tx, surfaceY + 1, tz);
+        for (int x = minX + 5; x < minX + size - 4; x += 8) {
+            for (int z = minZ + 5; z < minZ + size - 4; z += 8) {
+                tree(world, x, surfaceY + 1, z);
             }
         }
     }
 
-    private void renderMountain(World world, int surfaceY, int minX, int minZ, int size, TerrainTileSpec tile) {
-        boolean eastWest = tile.eastWest();
+    private void renderMountain(World world, int surfaceY, int minX, int minZ, int size, boolean eastWest) {
         int center = size / 2;
-        int spill = TerrainBlendPolicy.spillDistance(tile.tileX(), tile.tileZ(), TerrainTileType.MOUNTAIN);
-        for (int dx = -spill; dx < size + spill; dx++) {
-            for (int dz = -spill; dz < size + spill; dz++) {
+        for (int dx = 0; dx < size; dx++) {
+            for (int dz = 0; dz < size; dz++) {
                 int cross = eastWest ? dz : dx;
                 int along = eastWest ? dx : dz;
-                int jitter = TerrainBlendPolicy.lateralJitter(tile.tileX(), tile.tileZ(), along, 3);
-                int ridge = Math.max(0, 13 - Math.abs(cross - center - jitter));
-                int edgeFade = Math.max(0, Math.max(-dx, dx - size + 1));
-                edgeFade = Math.max(edgeFade, Math.max(-dz, dz - size + 1));
-                int variation = ((Math.floorDiv(along, 5)) % 3) - 1;
-                int height = Math.max(0, ridge + variation - edgeFade * 2);
-                if (height <= 2) continue;
+                int ridge = Math.max(0, 13 - Math.abs(cross - center));
+                int variation = ((along / 5) % 3) - 1;
+                int height = Math.max(1, ridge + variation);
                 int x = minX + dx, z = minZ + dz;
+                if (height <= 2) continue;
                 for (int y = surfaceY + 1; y < surfaceY + height; y++) {
                     world.getBlockAt(x, y, z).setType(Material.STONE, false);
                 }
@@ -116,13 +93,11 @@ public final class StrategicTerrainBuilder {
         }
     }
 
-    private void renderRiver(World world, int surfaceY, int minX, int minZ, int size, TerrainTileSpec tile) {
-        boolean eastWest = tile.eastWest();
+    private void renderRiver(World world, int surfaceY, int minX, int minZ, int size, boolean eastWest) {
         int center = size / 2;
         int halfWidth = 4;
-        int spill = TerrainBlendPolicy.spillDistance(tile.tileX(), tile.tileZ(), TerrainTileType.RIVER);
-        for (int i = -spill; i < size + spill; i++) {
-            int bend = TerrainBlendPolicy.lateralJitter(tile.tileX(), tile.tileZ(), i, 2);
+        for (int i = 0; i < size; i++) {
+            int bend = ((i / 8) % 3) - 1;
             for (int cross = center - halfWidth + bend; cross <= center + halfWidth + bend; cross++) {
                 int x = eastWest ? minX + i : minX + cross;
                 int z = eastWest ? minZ + cross : minZ + i;
@@ -133,18 +108,14 @@ public final class StrategicTerrainBuilder {
         }
     }
 
-    private void renderRoad(World world, int surfaceY, int minX, int minZ, int size, TerrainTileSpec tile) {
-        boolean eastWest = tile.eastWest();
+    private void renderRoad(World world, int surfaceY, int minX, int minZ, int size, boolean eastWest) {
         int center = size / 2;
         int halfWidth = 2;
-        int spill = TerrainBlendPolicy.spillDistance(tile.tileX(), tile.tileZ(), TerrainTileType.ROAD);
-        for (int i = -spill; i < size + spill; i++) {
-            int bend = TerrainBlendPolicy.lateralJitter(tile.tileX(), tile.tileZ(), i, 1);
-            for (int cross = center - halfWidth + bend; cross <= center + halfWidth + bend; cross++) {
+        for (int i = 0; i < size; i++) {
+            for (int cross = center - halfWidth; cross <= center + halfWidth; cross++) {
                 int x = eastWest ? minX + i : minX + cross;
                 int z = eastWest ? minZ + cross : minZ + i;
-                world.getBlockAt(x, surfaceY, z).setType((Math.floorMod(i, 7) == 0)
-                        ? Material.GRAVEL : Material.COARSE_DIRT, false);
+                world.getBlockAt(x, surfaceY, z).setType((i % 7 == 0) ? Material.GRAVEL : Material.COARSE_DIRT, false);
             }
         }
     }
