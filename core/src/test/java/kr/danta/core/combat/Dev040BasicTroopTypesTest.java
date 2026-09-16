@@ -5,17 +5,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class Dev040BasicTroopTypesTest {
-    @Test void definesExactlyFourBasicTypes() {
-        assertEquals(4, BasicTroopTypes.all().size());
+    @Test void definesExactlyFiveBasicTypes() {
+        assertEquals(5, BasicTroopTypes.all().size());
     }
 
-    @Test void followsDesignSoftCounterCycle() {
+    @Test void followsDesignSoftCounterCycleForOriginalCombatTypes() {
         assertEquals(TroopType.SPEARMEN, BasicTroopTypes.definition(TroopType.INFANTRY).strongAgainst());
         assertEquals(TroopType.CAVALRY, BasicTroopTypes.definition(TroopType.SPEARMEN).strongAgainst());
         assertEquals(TroopType.ARCHERS, BasicTroopTypes.definition(TroopType.CAVALRY).strongAgainst());
         assertEquals(TroopType.INFANTRY, BasicTroopTypes.definition(TroopType.ARCHERS).strongAgainst());
-        for (TroopTypeDefinition definition : BasicTroopTypes.all()) {
-            assertEquals(1.25, definition.strongAgainstMultiplier(), 0.000001);
+        for (TroopType type : new TroopType[]{TroopType.INFANTRY, TroopType.SPEARMEN, TroopType.ARCHERS, TroopType.CAVALRY}) {
+            assertEquals(1.25, BasicTroopTypes.definition(type).strongAgainstMultiplier(), 0.000001);
         }
     }
 
@@ -24,5 +24,11 @@ class Dev040BasicTroopTypesTest {
         assertEquals(TroopRole.FRONTLINE, BasicTroopTypes.definition(TroopType.SPEARMEN).role());
         assertEquals(TroopRole.RANGED, BasicTroopTypes.definition(TroopType.ARCHERS).role());
         assertEquals(TroopRole.MOBILE, BasicTroopTypes.definition(TroopType.CAVALRY).role());
+    }
+
+    @Test void magicTroopIsSharedSupportType() {
+        TroopTypeDefinition magic = BasicTroopTypes.definition(TroopType.MAGIC);
+        assertEquals(TroopRole.SUPPORT, magic.role());
+        assertEquals(1.0, magic.basePowerMultiplier(), 0.000001);
     }
 }
