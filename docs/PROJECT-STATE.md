@@ -87,7 +87,7 @@ Checkpoint: DEV-094 COMPLETE; DEV-095 capital fall -> vassal IMPLEMENTED awaitin
 - DEV-095 capital fall -> vassal: COMPLETE. Windows live verification passed: capital-control prerequisite rejection is specific Korean text; successful vassalization preserves remaining territory; Snapshot schema v17 restart recovery preserved red -> blue vassal relation, 10 strategic points, and nation states. During verification, snapshot restore-order bugs were fixed and empty GameState snapshot overwrite protection + previous-active backup were added.
 
 ## Implemented tickets awaiting live verification
-- DEV-096 tribute/subordination restrictions: IMPLEMENTED. Vassal treasury GOLD revenue pays a configurable provisional tribute rate (default 15%, constrained to design v0.3 10-25% range); personal wallets are untouched. Vassals cannot form alliances, independently support-join wars, or declare war on their overlord. Overlords receive basic passage through vassal territory but no automatic supply right. Paper dev output includes tribute-status. Windows quick-deploy/Paper/live verification pending. DEV-097 independence timing/war remains separate.
+- DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -129,7 +129,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. DEV-096 is IMPLEMENTED and awaiting Windows quick-deploy/Paper verification. If successful mark COMPLETE and proceed to DEV-097 independence war. Do not treat the provisional 15% tribute as final season balance.
+2. DEV-096 is COMPLETE. Proceed to DEV-097 minimum subordination duration / independence war. Reuse VassalService/VassalPolicyService/WarService and runtime-clock foundations; do not treat provisional balance values as final.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
