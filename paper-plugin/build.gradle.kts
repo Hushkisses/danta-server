@@ -11,6 +11,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testCompileOnly("io.papermc.paper:paper-api:26.2.build.123-stable")
+    testRuntimeOnly("io.papermc.paper:paper-api:26.2.build.123-stable")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // DEV-016: bundled because Paper does not provide the PostgreSQL JDBC driver.
