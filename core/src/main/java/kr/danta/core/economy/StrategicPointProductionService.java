@@ -1,6 +1,7 @@
 package kr.danta.core.economy;
 
 import kr.danta.core.state.GameState;
+import kr.danta.core.nation.VassalPolicyService;
 import kr.danta.core.territory.StrategicPoint;
 
 import java.util.LinkedHashMap;
@@ -12,11 +13,15 @@ public final class StrategicPointProductionService {
     private final GameState gameState;
     private final SupplyConnectivityService supplyConnectivity;
     private final AdministrativeCapacityService administrativeCapacity;
+    private final VassalPolicyService vassalPolicy;
 
-    public StrategicPointProductionService(GameState gameState) {
+    public StrategicPointProductionService(GameState gameState) { this(gameState, null); }
+
+    public StrategicPointProductionService(GameState gameState, VassalPolicyService vassalPolicy) {
         this.gameState = Objects.requireNonNull(gameState, "gameState");
         this.supplyConnectivity = new SupplyConnectivityService(gameState);
         this.administrativeCapacity = new AdministrativeCapacityService(gameState);
+        this.vassalPolicy = vassalPolicy;
     }
 
     public ProductionResult produceOneTick() {
@@ -47,6 +52,9 @@ public final class StrategicPointProductionService {
                             .merge(resource, perTick, Math::addExact);
                 }
             }
+        }
+        if (vassalPolicy != null) {
+            for (var entry : gold.entrySet()) vassalPolicy.transferGoldRevenueTribute(entry.getKey(), entry.getValue());
         }
         return new ProductionResult(resources, gold);
     }
