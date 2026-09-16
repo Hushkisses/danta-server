@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.Objects;
@@ -23,6 +24,13 @@ public final class LiveCombatListener implements Listener {
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
         runtime.onTrackedEntityDeath(event.getEntity().getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+        if (CombatMobNavigationPolicy.shouldSuppressVanillaTargeting(isDemoOwned(event.getEntity()))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
