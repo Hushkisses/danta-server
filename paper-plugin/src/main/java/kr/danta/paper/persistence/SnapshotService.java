@@ -4,6 +4,9 @@ import kr.danta.core.army.ArmyState;
 import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
+import kr.danta.core.diplomacy.DiplomacyService;
+import kr.danta.core.diplomacy.DiplomaticRelation;
+import kr.danta.core.snapshot.DiplomaticRelationSnapshot;
 import kr.danta.core.economy.PersonalWallet;
 import kr.danta.core.economy.StrategicResourceStockpile;
 import kr.danta.core.economy.LocalResourceStockpile;
@@ -66,6 +69,7 @@ public final class SnapshotService {
     private volatile FacilityService facilityService;
     private volatile FacilityConstructionService facilityConstructionService;
     private volatile ResearchService researchService;
+    private volatile DiplomacyService diplomacyService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -76,6 +80,8 @@ public final class SnapshotService {
         this.gameState = gameState;
         this.logger = logger;
     }
+
+    public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
     public void bindResearch(ResearchService researchService) {
         this.researchService = Objects.requireNonNull(researchService, "researchService");
@@ -118,6 +124,7 @@ public final class SnapshotService {
             gameState.addNation(new NationState(nation.nationId(), nation.displayName(), nation.capitalPointId(),
                     nation.treasury(), nation.status()));
         }
+        if (diplomacyService != null) { diplomacyService.clear(); for (DiplomaticRelationSnapshot relation : snapshot.diplomaticRelations()) diplomacyService.restore(new DiplomaticRelation(relation.nationAId(), relation.nationBId(), relation.status())); }
         gameState.clearPersonalWallets();
         for (PersonalWalletSnapshot wallet : snapshot.personalWallets()) {
             gameState.addPersonalWallet(new PersonalWallet(wallet.playerId(), wallet.balance()));
@@ -293,10 +300,11 @@ public final class SnapshotService {
                                 state.queue().stream().map(q -> new ResearchQueueSnapshot(
                                         q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis())).toList(), state.doctrineSlots(), state.doctrines()))
                         .toList();
+        List<DiplomaticRelationSnapshot> diplomaticRelations = diplomacyService == null ? List.of() : diplomacyService.relations().stream().map(r -> new DiplomaticRelationSnapshot(r.nationAId(), r.nationBId(), r.status())).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates);
+                facilities, facilityConstructions, researchStates, diplomaticRelations);
     }
 }
