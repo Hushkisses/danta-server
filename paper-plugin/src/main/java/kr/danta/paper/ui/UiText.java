@@ -93,7 +93,7 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
-        if (message.startsWith("independence war is not active")) return "현재 진행 중인 독립전쟁이 없어 공식 참전할 수 없습니다.";
+        if (message.startsWith("season-ended")) return "시즌 러닝타임 50시간에 도달하여 새로운 행동을 시작할 수 없습니다. 진행 중인 전투만 마무리할 수 있습니다.";\n        if (message.startsWith("player-war-locked")) return "개척기 초반에는 플레이어 국가 간 전쟁을 선포할 수 없습니다. 서버 러닝타임 4시간 이후 일반 충돌이 해금됩니다.";\n        if (message.startsWith("major-siege-locked")) return "주요 거점전은 서버 러닝타임 8시간 이후 해금됩니다.";\n        if (message.startsWith("capital-siege-locked")) return "수도 공성은 서버 러닝타임 20시간 이후 해금됩니다.";\n        if (message.startsWith("new-major-battle-locked")) return "서버 러닝타임 48시간 이후에는 새로운 주요 거점전을 선언할 수 없습니다.";\n        if (message.startsWith("independence war is not active")) return "현재 진행 중인 독립전쟁이 없어 공식 참전할 수 없습니다.";
         if (message.startsWith("overlord cannot join independence side")) return "종주국은 자기 속국의 독립측에 참전할 수 없습니다.";
         if (message.startsWith("independence war participation record not found")) return "독립전쟁 참전 정보를 찾을 수 없습니다. 서버 상태를 확인해 주세요.";
         if (message.startsWith("vassal cannot independently support-join war")) return "속국은 제3국 전쟁에 독자적으로 공식 참전할 수 없습니다.";
