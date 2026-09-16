@@ -11,20 +11,30 @@ import java.util.UUID;
 public final class LiveCombatUnitRegistry {
     private final Map<UUID, LiveCombatUnit> byUnitId = new LinkedHashMap<>();
     private final Map<UUID, LiveCombatUnit> byPrimaryEntityId = new LinkedHashMap<>();
+    private final Map<UUID, LiveCombatUnit> byEntityId = new LinkedHashMap<>();
 
     public void register(LiveCombatUnit unit) {
         if (unit == null) throw new NullPointerException("unit");
 
         LiveCombatUnit previous = byUnitId.put(unit.unitId(), unit);
         if (previous != null) {
-            byPrimaryEntityId.remove(previous.primaryEntityId());
+            removeEntityIndexes(previous);
         }
         byPrimaryEntityId.put(unit.primaryEntityId(), unit);
+        byEntityId.put(unit.primaryEntityId(), unit);
+        if (unit.mountEntityId() != null) {
+            byEntityId.put(unit.mountEntityId(), unit);
+        }
     }
 
     public Optional<LiveCombatUnit> byPrimaryEntity(UUID entityId) {
         if (entityId == null) return Optional.empty();
         return Optional.ofNullable(byPrimaryEntityId.get(entityId));
+    }
+
+    public Optional<LiveCombatUnit> byEntity(UUID entityId) {
+        if (entityId == null) return Optional.empty();
+        return Optional.ofNullable(byEntityId.get(entityId));
     }
 
     public Collection<LiveCombatUnit> units() {
@@ -35,12 +45,21 @@ public final class LiveCombatUnitRegistry {
         if (unitId == null) return;
         LiveCombatUnit removed = byUnitId.remove(unitId);
         if (removed != null) {
-            byPrimaryEntityId.remove(removed.primaryEntityId());
+            removeEntityIndexes(removed);
         }
     }
 
     public void clear() {
         byUnitId.clear();
         byPrimaryEntityId.clear();
+        byEntityId.clear();
+    }
+
+    private void removeEntityIndexes(LiveCombatUnit unit) {
+        byPrimaryEntityId.remove(unit.primaryEntityId());
+        byEntityId.remove(unit.primaryEntityId());
+        if (unit.mountEntityId() != null) {
+            byEntityId.remove(unit.mountEntityId());
+        }
     }
 }
