@@ -9,6 +9,8 @@ import kr.danta.core.general.GeneralGrade;
 import kr.danta.core.general.GeneralHealthStatus;
 import kr.danta.core.economy.StrategicResource;
 import kr.danta.core.facility.FacilityTier;
+import kr.danta.core.research.DoctrineSelection;
+import kr.danta.core.research.ResearchField;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
 
@@ -21,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v14; DEV-084 writes v14. */
+/** Dependency-free snapshot codec. Reads schema v1-v15; DEV-086 writes v15. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -147,6 +149,16 @@ public final class GameSnapshotCodec {
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]));
         }
+        if (schema == 15) {
+            if (p.length != 20) throw new IllegalArgumentException("invalid schema v15 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]));
+        }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
 
@@ -158,12 +170,13 @@ public final class GameSnapshotCodec {
         List<String> rows = new ArrayList<>();
         for (ResearchStateSnapshot state : states) {
             String completed = String.join("+", state.completed());
-            String queue = state.queue().stream().map(q -> String.join("~",
-                    q.entryId().toString(), enc(q.researchId()),
+            String queue = state.queue().stream().map(q -> String.join("~", q.entryId().toString(), enc(q.researchId()),
                     q.taskId() == null ? "-" : q.taskId().toString(),
-                    q.dueRuntimeMillis() == null ? "-" : Long.toString(q.dueRuntimeMillis())))
-                    .reduce((a,b) -> a + ":" + b).orElse("-");
-            rows.add(String.join(",", enc(state.nationId()), Integer.toString(state.researchSlots()), enc(completed), enc(queue)));
+                    q.dueRuntimeMillis() == null ? "-" : Long.toString(q.dueRuntimeMillis()))).reduce((a,b)->a+":"+b).orElse("-");
+            String doctrines = state.doctrines().stream().map(d -> enc(d.doctrineKey()) + "~" + d.field().name())
+                    .reduce((a,b)->a+":"+b).orElse("-");
+            rows.add(String.join(",", enc(state.nationId()), Integer.toString(state.researchSlots()), enc(completed),
+                    enc(queue), Integer.toString(state.doctrineSlots()), enc(doctrines)));
         }
         return String.join(";", rows);
     }
@@ -174,23 +187,52 @@ public final class GameSnapshotCodec {
         for (String row : payload.split(";", -1)) {
             String[] f = row.split(",", -1);
             if (f.length != 4) throw new IllegalArgumentException("invalid research state snapshot row");
-            Set<String> completed = new LinkedHashSet<>();
-            String completedText = dec(f[2]);
-            if (completedText != null && !completedText.isEmpty()) completed.addAll(List.of(completedText.split("\\+")));
-            List<ResearchQueueSnapshot> queue = new ArrayList<>();
-            String queueText = dec(f[3]);
-            if (queueText != null && !queueText.equals("-") && !queueText.isEmpty()) {
-                for (String item : queueText.split(":", -1)) {
-                    String[] q = item.split("~", -1);
-                    if (q.length != 4) throw new IllegalArgumentException("invalid research queue snapshot row");
-                    queue.add(new ResearchQueueSnapshot(java.util.UUID.fromString(q[0]), dec(q[1]),
-                            q[2].equals("-") ? null : java.util.UUID.fromString(q[2]),
-                            q[3].equals("-") ? null : Long.parseLong(q[3])));
-                }
-            }
-            result.add(new ResearchStateSnapshot(dec(f[0]), Integer.parseInt(f[1]), completed, queue));
+            result.add(new ResearchStateSnapshot(dec(f[0]), Integer.parseInt(f[1]), decodeCompleted(f[2]), decodeResearchQueue(f[3])));
         }
         return List.copyOf(result);
+    }
+
+    private static List<ResearchStateSnapshot> decodeResearchStatesV15(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return List.of();
+        List<ResearchStateSnapshot> result = new ArrayList<>();
+        for (String row : payload.split(";", -1)) {
+            String[] f = row.split(",", -1);
+            if (f.length != 6) throw new IllegalArgumentException("invalid v15 research state snapshot row");
+            List<DoctrineSelection> doctrines = new ArrayList<>();
+            String doctrineText = dec(f[5]);
+            if (doctrineText != null && !doctrineText.equals("-") && !doctrineText.isEmpty()) {
+                for (String item : doctrineText.split(":", -1)) {
+                    String[] d = item.split("~", -1);
+                    if (d.length != 2) throw new IllegalArgumentException("invalid doctrine snapshot row");
+                    doctrines.add(new DoctrineSelection(dec(d[0]), ResearchField.valueOf(d[1])));
+                }
+            }
+            result.add(new ResearchStateSnapshot(dec(f[0]), Integer.parseInt(f[1]), decodeCompleted(f[2]),
+                    decodeResearchQueue(f[3]), Integer.parseInt(f[4]), doctrines));
+        }
+        return List.copyOf(result);
+    }
+
+    private static Set<String> decodeCompleted(String encoded) {
+        Set<String> completed = new LinkedHashSet<>();
+        String text = dec(encoded);
+        if (text != null && !text.isEmpty()) completed.addAll(List.of(text.split("\\+")));
+        return completed;
+    }
+
+    private static List<ResearchQueueSnapshot> decodeResearchQueue(String encoded) {
+        List<ResearchQueueSnapshot> queue = new ArrayList<>();
+        String text = dec(encoded);
+        if (text != null && !text.equals("-") && !text.isEmpty()) {
+            for (String item : text.split(":", -1)) {
+                String[] q = item.split("~", -1);
+                if (q.length != 4) throw new IllegalArgumentException("invalid research queue snapshot row");
+                queue.add(new ResearchQueueSnapshot(java.util.UUID.fromString(q[0]), dec(q[1]),
+                        q[2].equals("-") ? null : java.util.UUID.fromString(q[2]),
+                        q[3].equals("-") ? null : Long.parseLong(q[3])));
+            }
+        }
+        return queue;
     }
 
     private static String encodeFacilities(List<FacilitySnapshot> facilities) {
