@@ -5,6 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
@@ -29,6 +30,13 @@ public final class LiveCombatListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onEntityTarget(EntityTargetLivingEntityEvent event) {
         if (CombatMobNavigationPolicy.shouldSuppressVanillaTargeting(isDemoOwned(event.getEntity()))) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityCombust(EntityCombustEvent event) {
+        if (CombatDemoEnvironmentPolicy.preventCombustion(isDemoOwned(event.getEntity()))) {
             event.setCancelled(true);
         }
     }
