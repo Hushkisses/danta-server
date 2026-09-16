@@ -29,6 +29,6 @@ class Dev040BasicTroopTypesTest {
     @Test void magicTroopIsSharedSupportType() {
         TroopTypeDefinition magic = BasicTroopTypes.definition(TroopType.MAGIC);
         assertEquals(TroopRole.SUPPORT, magic.role());
-        assertEquals(1.0, magic.basePowerMultiplier(), 0.000001);
+        assertEquals(1.0, magic.basePower(), 0.000001);
     }
 }
