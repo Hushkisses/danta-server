@@ -216,7 +216,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         hegemonyScoreService = new HegemonyScoreService(gameState, provisionalScorePolicy, vassalService, npcNationService);
         nationRankingService = new NationRankingService(gameState, fameScoreService, hegemonyScoreService);
         chronicleService = new ChronicleService();
-        snapshotService.bindChronicle(chronicleService);
         eventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> chronicleService.record(
                 runtimeClock.elapsedMillis(), ChronicleEventType.TERRITORY_CHANGE,
                 "거점 " + event.pointId() + " 소유권 변경: "
@@ -320,6 +319,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             snapshotService.bindDiplomacy(diplomacyService);
             snapshotService.bindVassals(vassalService);
             snapshotService.bindIndependenceWars(independenceWarService);
+            snapshotService.bindChronicle(chronicleService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
