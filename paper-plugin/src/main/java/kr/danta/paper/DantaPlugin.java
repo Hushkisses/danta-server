@@ -1,6 +1,8 @@
 package kr.danta.paper;
 
 import kr.danta.core.facility.FacilityService;
+import kr.danta.core.diplomacy.DiplomacyService;
+import kr.danta.core.diplomacy.DiplomaticStatus;
 import kr.danta.core.facility.FacilityConstructionService;
 import kr.danta.paper.facility.FacilityAppearanceService;
 import kr.danta.paper.facility.FacilityAppearanceListener;
@@ -115,6 +117,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private FacilityConstructionService facilityConstructionService;
     private FacilityAppearanceService facilityAppearanceService;
     private ResearchService researchService;
+    private DiplomacyService diplomacyService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -168,6 +171,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         armySupplyService = new ArmySupplyService(gameState);
         expeditionSupplyService = new ExpeditionSupplyService(gameState);
         generalAcquisitionService = new GeneralAcquisitionService(gameState);
+        diplomacyService = new DiplomacyService(gameState);
         pointGeneralAssignmentService = new PointGeneralAssignmentService(gameState);
         armyCommanderService = new ArmyCommanderService(gameState);
         loadGeneralCatalog();
@@ -336,6 +340,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("general")) return handleGeneral(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("facility")) return handleFacility(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("research")) return handleResearch(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("diplomacy")) return handleDiplomacy(sender, args);
 
         sender.sendMessage("§6[단타 서버 개발 정보]");
         sender.sendMessage("§f플러그인 버전: §e" + getPluginMeta().getVersion());
@@ -1567,6 +1572,28 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         long s = Math.max(0L, millis / 1000L);
         return String.format("%02d:%02d:%02d", s / 3600L, (s % 3600L) / 60L, s % 60L);
     }
+
+    private boolean handleDiplomacy(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("danta.admin.point")) { sender.sendMessage("§c외교 관리 권한이 없습니다."); return true; }
+        try {
+            String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
+            switch (sub) {
+                case "set" -> {
+                    requireArgs(args, 5, "/danta diplomacy set <국가1> <국가2> <neutral|friendly|alliance|war>");
+                    DiplomaticStatus status = DiplomaticStatus.valueOf(args[4].toUpperCase(Locale.ROOT));
+                    var relation = diplomacyService.setStatus(args[2], args[3], status);
+                    flushDiplomacyState("diplomacy-set:" + relation.nationAId() + ":" + relation.nationBId());
+                    sender.sendMessage("§a외교 관계를 변경했습니다: §e" + relation.nationAId() + " ↔ " + relation.nationBId() + " §7" + diplomacyStatusKo(status));
+                }
+                case "show" -> { requireArgs(args, 4, "/danta diplomacy show <국가1> <국가2>"); sender.sendMessage("§6[외교 관계] §e"+args[2]+" ↔ "+args[3]+" §7"+diplomacyStatusKo(diplomacyService.status(args[2],args[3]))); }
+                case "list" -> { sender.sendMessage("§6[외교 관계 목록] §7총 "+diplomacyService.relations().size()+"개"); for(var r:diplomacyService.relations()) sender.sendMessage("§e"+r.nationAId()+" ↔ "+r.nationBId()+" §7"+diplomacyStatusKo(r.status())); }
+                default -> sender.sendMessage("§e/danta diplomacy <set|show|list>");
+            }
+        } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
+        return true;
+    }
+    private static String diplomacyStatusKo(DiplomaticStatus s) { return switch(s){case NEUTRAL->"중립";case FRIENDLY->"우호";case ALLIANCE->"혈맹";case WAR->"전쟁";}; }
+    private void flushDiplomacyState(String reason) { if(snapshotService!=null && databaseService!=null && databaseService.health().status().name().equals("READY")) snapshotService.flushImportantAsync(reason); }
 
     private boolean handleResearch(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.point")) {
