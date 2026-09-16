@@ -55,6 +55,8 @@ import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
 import kr.danta.core.season.SeasonPhaseService;
+import kr.danta.core.season.SeasonAction;
+import kr.danta.core.season.SeasonActionGate;
 import kr.danta.core.research.ResearchDefinition;
 import kr.danta.core.research.ResearchDefinitionLoader;
 import kr.danta.core.research.ResearchField;
@@ -118,6 +120,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private DomainEventBus eventBus;
     private RuntimeScheduler runtimeScheduler;
     private SeasonPhaseService seasonPhaseService;
+    private SeasonActionGate seasonActionGate;
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
@@ -187,6 +190,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         restoreRuntime();
         runtimeClock.start();
         seasonPhaseService = new SeasonPhaseService(runtimeClock::elapsedMillis);
+        seasonActionGate = new SeasonActionGate(runtimeClock::elapsedMillis);
         economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
         strategicPointProductionService = null; // initialized after vassal policy wiring
         armySupplyService = new ArmySupplyService(gameState);
@@ -1372,6 +1376,11 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         sender.sendMessage("§7설정 파일: plugins/DantaServer/database.properties");
     }
 
+    private void requireSeasonAction(SeasonAction action) {
+        var decision=seasonActionGate.check(action);
+        if(!decision.allowed()) throw new IllegalStateException(decision.reason());
+    }
+
     private boolean handleSeason(CommandSender sender) {
         var phase = seasonPhaseService.current();
         sender.sendMessage("§6[단타 시즌 단계]");
@@ -1714,7 +1723,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 case "npc-step" -> { requireArgs(args,4,"/danta diplomacy npc-step <국가-id> <evaluate|decide|execute|finish|cancel> [결정-key]"); var state=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled")); switch(args[3].toLowerCase(Locale.ROOT)){case "evaluate"->state.beginEvaluation();case "decide"->{requireArgs(args,5,"/danta diplomacy npc-step <국가-id> decide <결정-key>");state.decide(args[4]);}case "execute"->state.beginExecution();case "finish"->state.finishExecution();case "cancel"->state.cancel();default->throw new IllegalArgumentException("unknown npc step");} sender.sendMessage("§aNPC 전략 AI 상태를 변경했습니다: §e"+args[2]+" §7"+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
                 case "npc-list" -> { sender.sendMessage("§6[NPC 국가] §7총 "+npcNationService.states().size()+"개"); for(var state:npcNationService.states())sender.sendMessage("§e"+state.nationId()+" §7상태="+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
                 case "access" -> { requireArgs(args, 4, "/danta diplomacy access <이용국> <영토국>"); sender.sendMessage("§6[외교 이용권] §e"+args[2]+" → "+args[3]); sender.sendMessage("§7통행권: "+(diplomaticAccessService.hasRight(args[2],args[3],AccessRight.PASSAGE)?"§a허용":"§c불허")); sender.sendMessage("§7보급권: "+(diplomaticAccessService.hasRight(args[2],args[3],AccessRight.SUPPLY)?"§a허용":"§c불허")); }
-                case "war" -> { requireArgs(args, 4, "/danta diplomacy war <공격국> <방어국>"); var war=warService.declareWar(args[2],args[3]); flushDiplomacyState("war-declare:"+war.warId()); sender.sendMessage("§c전쟁을 선언했습니다: §e"+war.initiatorNationId()+" → "+war.targetNationId()+" §7전쟁 ID="+war.warId()); sender.sendMessage("§7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
+                case "war" -> { requireArgs(args, 4, "/danta diplomacy war <공격국> <방어국>"); requireSeasonAction(SeasonAction.PLAYER_WAR); var war=warService.declareWar(args[2],args[3]); flushDiplomacyState("war-declare:"+war.warId()); sender.sendMessage("§c전쟁을 선언했습니다: §e"+war.initiatorNationId()+" → "+war.targetNationId()+" §7전쟁 ID="+war.warId()); sender.sendMessage("§7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
                 case "support" -> { requireArgs(args, 5, "/danta diplomacy support <전쟁-id> <국가-id> <attacker|defender>"); var war=warService.supportJoin(java.util.UUID.fromString(args[2]),args[3],WarSide.valueOf(args[4].toUpperCase(Locale.ROOT))); flushDiplomacyState("war-support:"+war.warId()+":"+args[3]); sender.sendMessage("§a공식 지원참전했습니다: §e"+args[3]+" §7"+(war.sideOf(args[3])==WarSide.ATTACKER?"공격측":"방어측")); }
                 case "wars" -> { sender.sendMessage("§6[진행 중 전쟁] §7총 "+warService.wars().size()+"개"); for(var war:warService.wars()) sender.sendMessage("§e"+war.warId()+" §7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
                 case "set" -> {
