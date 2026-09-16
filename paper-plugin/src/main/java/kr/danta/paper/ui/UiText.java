@@ -93,6 +93,10 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
+        if (message.startsWith("minimum subordination period not elapsed")) return "아직 최소 종속기간이 지나지 않아 독립전쟁을 선언할 수 없습니다.";
+        if (message.startsWith("independence war already active")) return "이미 독립전쟁이 진행 중입니다.";
+        if (message.startsWith("independence war redeclare cooldown active")) return "독립전쟁 재선언 대기시간이 아직 끝나지 않았습니다.";
+        if (message.startsWith("vassal does not control own capital")) return "자국 수도를 확보한 상태에서만 독립전쟁을 선언할 수 있습니다.";
         if (message.startsWith("vassal cannot form alliance")) return "속국은 독자적으로 혈맹을 체결할 수 없습니다. 종속 관계를 먼저 해소해야 합니다.";
         if (message.startsWith("vassal cannot declare war on overlord")) return "속국은 종주국에 일반 전쟁을 선포할 수 없습니다. 독립전쟁은 별도의 독립 절차를 통해서만 가능합니다.";
         if (message.startsWith("vassal cannot independently support-join war")) return "속국은 독자적으로 다른 국가의 전쟁에 지원 참전할 수 없습니다.";
