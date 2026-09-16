@@ -14,7 +14,9 @@ public final class BasicTroopTypes {
             TroopType.ARCHERS, new TroopTypeDefinition(TroopType.ARCHERS, TroopRole.RANGED, 1.0,
                     TroopType.INFANTRY, SOFT_COUNTER_MULTIPLIER),
             TroopType.CAVALRY, new TroopTypeDefinition(TroopType.CAVALRY, TroopRole.MOBILE, 1.0,
-                    TroopType.ARCHERS, SOFT_COUNTER_MULTIPLIER)
+                    TroopType.ARCHERS, SOFT_COUNTER_MULTIPLIER),
+            TroopType.MAGIC, new TroopTypeDefinition(TroopType.MAGIC, TroopRole.SUPPORT, 1.0,
+                    TroopType.MAGIC, 1.0)
     );
 
     private BasicTroopTypes() {}
@@ -30,7 +32,8 @@ public final class BasicTroopTypes {
                 definition(TroopType.INFANTRY),
                 definition(TroopType.SPEARMEN),
                 definition(TroopType.ARCHERS),
-                definition(TroopType.CAVALRY)
+                definition(TroopType.CAVALRY),
+                definition(TroopType.MAGIC)
         );
     }
 }
