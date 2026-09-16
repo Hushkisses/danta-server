@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-093 COMPLETE; DEV-094 NPC alliance/subjugation/annexation IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-094 COMPLETE; DEV-095 capital fall -> vassal IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -83,9 +83,10 @@ Checkpoint: DEV-093 COMPLETE; DEV-094 NPC alliance/subjugation/annexation IMPLEM
 - DEV-091 support participation/direct-alliance automatic war entry: COMPLETE, Windows quick-deploy/Paper war declaration/list verification passed. Direct alliance declaration rejection verified. Specific Korean diplomacy rejection messages were added after live verification exposed the generic fallback.
 - DEV-092 passage/supply rights: COMPLETE, Windows quick-deploy/Paper access verification passed for NEUTRAL/FRIENDLY/ALLIANCE, and improved Korean alliance-war rejection verified.
 - DEV-093 NPC Nation/StrategicAI state machine: COMPLETE, Windows quick-deploy/Paper lifecycle, invalid-transition, duplicate-register and unregister verification passed.
+- DEV-094 NPC alliance/subjugation/annexation: COMPLETE, Windows live verification passed: alliance/subjugation preserved NPC territory and annexation transferred all 7 red-owned strategic points to blue through TerritoryService.
 
 ## Implemented tickets awaiting live verification
-- DEV-094 NPC alliance/subjugation/annexation: IMPLEMENTED. NPC political state distinguishes INDEPENDENT/ALLIED/SUBJUGATED/ANNEXED. Alliance and subjugation preserve NPC territory; annexation transfers all NPC-owned strategic points through TerritoryService and marks the NPC polity annexed. Numeric influence thresholds, tribute, independence risk, residual restoration timer and score values remain unresolved/deferred. Windows verification pending; development NPC political metadata is not yet Snapshot-persistent.
+- DEV-095 capital fall -> vassal: IMPLEMENTED. Reuses NationStatus.VASSAL and designated capital. Vassalization requires the victor to control the defeated nation's designated capital, preserves remaining territory/research/armies, records overlord + runtime of subordination, and persists via Snapshot schema v17 with v1-v16 compatibility. Tribute/restrictions remain DEV-096; minimum subordination duration/independence war remain DEV-097. Windows quick-deploy/Paper/restart verification pending.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -127,7 +128,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-094 with Windows quick-deploy/Paper NPC political commands. If successful mark COMPLETE and proceed to DEV-095 capital fall -> vassal.
+2. Restore the dev map ownership after DEV-094 annexation, then verify DEV-095 capital fall -> vassal with Windows quick-deploy/Paper/restart. If successful mark COMPLETE and proceed to DEV-096 tribute/subordination restrictions.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
