@@ -93,6 +93,10 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
+        if (message.startsWith("vassal cannot form alliance")) return "속국은 독자적으로 혈맹을 체결할 수 없습니다. 종속 관계를 먼저 해소해야 합니다.";
+        if (message.startsWith("vassal cannot declare war on overlord")) return "속국은 종주국에 일반 전쟁을 선포할 수 없습니다. 독립전쟁은 별도의 독립 절차를 통해서만 가능합니다.";
+        if (message.startsWith("vassal cannot independently support-join war")) return "속국은 독자적으로 다른 국가의 전쟁에 지원 참전할 수 없습니다.";
+        if (message.startsWith("nation is not vassal")) return "해당 국가는 현재 속국이 아닙니다.";
         if (message.startsWith("nation is already vassal")) return "이미 속국인 국가입니다.";
         if (message.startsWith("nation has no designated capital")) return "해당 국가에 지정된 수도가 없어 속국화할 수 없습니다.";
         if (message.startsWith("designated capital point does not exist")) return "지정된 수도 거점을 찾을 수 없습니다.";
