@@ -1,6 +1,7 @@
 package kr.danta.paper.map;
 
 import kr.danta.core.territory.StrategicPointType;
+import kr.danta.paper.combat.ai.DantaCombatAiRuntime;
 import kr.danta.paper.siege.DantaSiegeRuntime;
 import kr.danta.paper.world.DantaWorldRuntime;
 import org.bukkit.Material;
@@ -16,10 +17,11 @@ public final class MapStructurePlacer {
 
     public MapStructurePlacer(JavaPlugin plugin) {
         this.plugin = plugin;
-        // DEV-MAP-003 integration hook: the existing map bootstrap already runs during plugin enable.
+        // Paper integration hook: the existing map bootstrap already runs during plugin enable.
         // The runtimes are idempotent and own only their separate Paper integration namespaces.
         DantaWorldRuntime.bootstrap(plugin);
         DantaSiegeRuntime.bootstrap(plugin);
+        DantaCombatAiRuntime.bootstrap(plugin);
     }
 
     /**
