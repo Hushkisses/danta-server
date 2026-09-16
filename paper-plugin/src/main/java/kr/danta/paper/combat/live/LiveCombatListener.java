@@ -1,0 +1,58 @@
+package kr.danta.paper.combat.live;
+
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.projectiles.ProjectileSource;
+
+import java.util.Objects;
+import java.util.UUID;
+
+/** Paper event boundary for DEV-115 temporary combat entities. */
+public final class LiveCombatListener implements Listener {
+    private final LiveCombatRuntime runtime;
+
+    public LiveCombatListener(LiveCombatRuntime runtime) {
+        this.runtime = Objects.requireNonNull(runtime, "runtime");
+    }
+
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        runtime.onTrackedEntityDeath(event.getEntity().getUniqueId());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        UUID attackerId = combatAttackerId(event.getDamager());
+        if (attackerId == null) return;
+
+        Entity victim = event.getEntity();
+        if (!(victim instanceof LivingEntity)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (!runtime.mayDamage(attackerId, victim.getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    private static UUID combatAttackerId(Entity damager) {
+        if (damager instanceof Projectile projectile) {
+            ProjectileSource shooter = projectile.getShooter();
+            if (shooter instanceof Entity entity && isDemoOwned(entity)) {
+                return entity.getUniqueId();
+            }
+            return null;
+        }
+        return isDemoOwned(damager) ? damager.getUniqueId() : null;
+    }
+
+    private static boolean isDemoOwned(Entity entity) {
+        return entity.getScoreboardTags().contains("danta_combat_demo");
+    }
+}
