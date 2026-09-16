@@ -54,6 +54,21 @@ public final class ResearchService {
     public synchronized void complete(UUID entryId, String nationId) { ResearchState state=state(nationId); ResearchQueueEntry entry=state.remove(entryId); state.complete(entry.researchId()); startAvailable(state); }
     public synchronized List<ResearchQueueEntry> queue(String nationId) { return state(nationId).queue(); }
     public synchronized void setResearchSlots(String nationId,int slots) { ResearchState state=state(nationId); state.setResearchSlots(slots); startAvailable(state); }
+    public synchronized void setDoctrineSlots(String nationId, int slots) { state(nationId).setDoctrineSlots(slots); }
+    public synchronized DoctrineSelection selectDoctrine(String nationId, String researchId) {
+        ResearchDefinition definition = definition(researchId);
+        if (definition.tier() != ResearchTier.TIER_4 || definition.doctrineKey() == null)
+            throw new IllegalArgumentException("research is not a doctrine: " + researchId);
+        ResearchState state = state(nationId);
+        if (!state.completed().contains(definition.researchId()))
+            throw new IllegalStateException("doctrine research not completed: " + researchId);
+        DoctrineSelection selection = new DoctrineSelection(definition.doctrineKey(), definition.field());
+        state.selectDoctrine(selection);
+        return selection;
+    }
+    public synchronized DoctrineSelection removeDoctrine(String nationId, String doctrineKey) {
+        return state(nationId).removeDoctrine(doctrineKey.trim().toLowerCase());
+    }
     public synchronized void restore(ResearchState restored) { if(states.putIfAbsent(restored.nationId(),restored)!=null) throw new IllegalArgumentException("duplicate research state"); for(ResearchQueueEntry e:restored.queue()) if(e.active()) scheduler.restore(new RuntimeScheduledTask(e.taskId(),e.dueRuntimeMillis(),TASK_TYPE,payload(restored.nationId(),e.entryId()))); startAvailable(restored); }
     private void startAvailable(ResearchState state) { long active=state.queue().stream().filter(ResearchQueueEntry::active).count(); if(active>=state.researchSlots()) return; for(ResearchQueueEntry e:state.queue()) { if(active>=state.researchSlots()) break; if(e.active()) continue; ResearchDefinition d=definition(e.researchId()); RuntimeScheduledTask task=scheduler.scheduleAfter(Duration.ofMillis(d.durationRuntimeMillis()),TASK_TYPE,payload(state.nationId(),e.entryId())); state.replace(e,e.activate(task.id(),task.dueRuntimeMillis())); active++; } }
     private ResearchQueueEntry findEntry(ResearchState s,UUID id){return s.queue().stream().filter(e->e.entryId().equals(id)).findFirst().orElseThrow();}
