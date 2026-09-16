@@ -3,6 +3,8 @@ package kr.danta.core.score;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.NationStatus;
 import kr.danta.core.state.GameState;
+import kr.danta.core.event.DomainEventBus;
+import kr.danta.core.territory.TerritoryService;
 import kr.danta.core.territory.PointPosition;
 import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicPointType;
@@ -31,7 +33,7 @@ class Dev103HegemonyScoreTest {
         assertEquals(7L, scores.score("red"));
         assertEquals(0L, scores.score("blue"));
 
-        farm.changeOwner("blue");
+        new TerritoryService(state, new DomainEventBus()).changeOwner("farm", "blue", "DEV-103 test");
 
         assertEquals(5L, scores.score("red"));
         assertEquals(2L, scores.score("blue"));
@@ -49,6 +51,6 @@ class Dev103HegemonyScoreTest {
 
     private static StrategicPoint point(String id, StrategicPointType type, String owner) {
         return new StrategicPoint(id, id, type, owner,
-                new PointPosition("world", 0, 64, 0), 1, 0L);
+                new PointPosition("world", 0, 64, 0), 1, Map.of());
     }
 }
