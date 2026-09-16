@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-092 COMPLETE; DEV-093 NPC Nation/StrategicAI state machine IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-093 COMPLETE; DEV-094 NPC alliance/subjugation/annexation IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -82,9 +82,10 @@ Checkpoint: DEV-092 COMPLETE; DEV-093 NPC Nation/StrategicAI state machine IMPLE
 - DEV-090 friendly/alliance/war relationship state: COMPLETE, Windows quick-deploy/Paper command/restart persistence verified. Symmetric bilateral state, Korean dev output, Snapshot v16 with v1-v15 compatibility.
 - DEV-091 support participation/direct-alliance automatic war entry: COMPLETE, Windows quick-deploy/Paper war declaration/list verification passed. Direct alliance declaration rejection verified. Specific Korean diplomacy rejection messages were added after live verification exposed the generic fallback.
 - DEV-092 passage/supply rights: COMPLETE, Windows quick-deploy/Paper access verification passed for NEUTRAL/FRIENDLY/ALLIANCE, and improved Korean alliance-war rejection verified.
+- DEV-093 NPC Nation/StrategicAI state machine: COMPLETE, Windows quick-deploy/Paper lifecycle, invalid-transition, duplicate-register and unregister verification passed.
 
 ## Implemented tickets awaiting live verification
-- DEV-093 NPC Nation/StrategicAI state machine: IMPLEMENTED. Existing NationState + explicit NPC-control metadata, guarded IDLE→EVALUATING→DECIDED→EXECUTING→IDLE lifecycle, opaque decision key, Korean dev commands, JUnit. No unapproved strategy scoring/action balance invented. Windows quick-deploy/Paper verification pending; dev registration is not restart-persistent yet.
+- DEV-094 NPC alliance/subjugation/annexation: IMPLEMENTED. NPC political state distinguishes INDEPENDENT/ALLIED/SUBJUGATED/ANNEXED. Alliance and subjugation preserve NPC territory; annexation transfers all NPC-owned strategic points through TerritoryService and marks the NPC polity annexed. Numeric influence thresholds, tribute, independence risk, residual restoration timer and score values remain unresolved/deferred. Windows verification pending; development NPC political metadata is not yet Snapshot-persistent.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -126,7 +127,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-093 with Windows quick-deploy/Paper NPC state-machine commands. If successful mark COMPLETE and proceed to DEV-094 NPC alliance/subjugation/annexation.
+2. Verify DEV-094 with Windows quick-deploy/Paper NPC political commands. If successful mark COMPLETE and proceed to DEV-095 capital fall -> vassal.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
