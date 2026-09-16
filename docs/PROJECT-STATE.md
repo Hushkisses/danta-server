@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-090 COMPLETE; next DEV-091 support participation / direct-alliance automatic war entry
+Checkpoint: DEV-090 COMPLETE; DEV-091 support participation / direct-alliance automatic war entry IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -82,6 +82,7 @@ Checkpoint: DEV-090 COMPLETE; next DEV-091 support participation / direct-allian
 - DEV-090 friendly/alliance/war relationship state: COMPLETE, Windows quick-deploy/Paper command/restart persistence verified. Symmetric bilateral state, Korean dev output, Snapshot v16 with v1-v15 compatibility.
 
 ## Implemented tickets awaiting live verification
+- DEV-091 support participation/direct-alliance automatic war entry: War aggregate + attacker/defender sides + direct alliance auto-entry without chain propagation + explicit nation-level support join + Korean dev commands + JUnit implemented. Windows quick-deploy/Paper verification pending. Actual army deployment remains player-controlled. War lifecycle/persistence is intentionally not guessed in this ticket; DEV-090 relationship state remains Snapshot-persisted.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -123,7 +124,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Proceed to DEV-091 support participation and direct-alliance automatic war entry. No chained automatic participation; actual army deployment remains player-controlled.
+2. Verify DEV-091 with Windows quick-deploy and Paper commands. If successful mark COMPLETE and proceed to DEV-092 passage/supply rights.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
