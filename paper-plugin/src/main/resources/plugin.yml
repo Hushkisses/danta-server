@@ -41,7 +41,6 @@ permissions:
     description: 개발용 PostgreSQL 관리와 저장소 테스트를 허용합니다.
     default: op
 
-
   danta.admin.nation:
     description: 개발용 국가 관리를 허용합니다.
     default: op
@@ -72,4 +71,8 @@ permissions:
 
   danta.admin.map:
     description: 개발용 시험 지도 불러오기와 구조물 배치를 허용합니다.
+    default: op
+
+  danta.admin.siege:
+    description: 개발용 공성 진행 검증을 허용합니다.
     default: op
