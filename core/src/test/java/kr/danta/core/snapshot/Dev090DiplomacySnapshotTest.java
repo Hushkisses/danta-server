@@ -16,7 +16,7 @@ class Dev090DiplomacySnapshotTest {
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(new DiplomaticRelationSnapshot("blue", "red", DiplomaticStatus.ALLIANCE)),
-                List.of());
+                List.of(), List.of());
 
         GameSnapshot decoded = GameSnapshotCodec.decode(GameSnapshotCodec.encode(current));
 
@@ -30,7 +30,7 @@ class Dev090DiplomacySnapshotTest {
                 15, 1, 2, false, 1.0, null, null,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of());
+                List.of(), List.of(), List.of());
 
         String currentShape = GameSnapshotCodec.encode(v15);
         int lastSeparator = currentShape.lastIndexOf('|');
