@@ -33,6 +33,10 @@ permissions:
     description: 개발용 서버 시간 관리를 허용합니다.
     default: op
 
+  danta.admin.season:
+    description: 관리자 시즌 조기 종료를 허용합니다.
+    default: op
+
   danta.admin.db:
     description: 개발용 PostgreSQL 관리와 저장소 테스트를 허용합니다.
     default: op
