@@ -2,7 +2,7 @@ package kr.danta.core.snapshot;
 
 import java.util.List;
 
-/** Restart-recovery snapshot. DEV-084 schema v14 adds per-nation research state/queue. */
+/** Restart-recovery snapshot. DEV-086 schema v15 adds national doctrine slot/selection state. */
 public record GameSnapshot(
         int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
         double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
@@ -13,7 +13,7 @@ public record GameSnapshot(
         List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
         List<ResearchStateSnapshot> researchStates
 ) {
-    public static final int CURRENT_SCHEMA = 14;
+    public static final int CURRENT_SCHEMA = 15;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
