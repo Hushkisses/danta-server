@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-16
-Checkpoint: DEV-104 COMPLETE; next execution-plan ticket DEV-105 requires design decision
+Checkpoint: DEV-104 COMPLETE; DEV-105 IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -94,6 +94,7 @@ Checkpoint: DEV-104 COMPLETE; next execution-plan ticket DEV-105 requires design
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
+- DEV-105 season ending: IMPLEMENTED with representative design override. Automatic score-threshold early finish is removed from scope. Normal season still reaches FINISHED at 50 runtime hours; an OP/admin with `danta.admin.season` may explicitly end it early via `/danta season end`. The command advances runtime to the existing 50h FINISHED boundary, pauses runtime, persists runtime, requests an important snapshot flush, gives Korean feedback, and rejects unauthorized/already-finished requests. Windows quick-deploy/Paper command verification pending.
 - DEV-098B official third-country independence-war participation: COMPLETE. Windows quick-deploy/Paper live verification passed: pre-declaration join rejected; declaration created a WarService war ID; green joined red's independence side; duplicate and overlord joins were rejected with specific Korean reasons; successful independence removed the active war and restored red↔blue and green↔blue to NEUTRAL.
 - DEV-098A third-country pre-independence material support: COMPLETE. Windows quick-deploy/Paper live verification passed. Verified green -> red treasury GOLD transfer (1000→800 / 382→582), FOOD transfer (500→400 / 100→200), IRON transfer (100→80 / 60→80), vassal relation remained red -> blue, existing failed-war cooldown remained unchanged, and support did not auto-declare or bypass independence. Overlord support, insufficient treasury, insufficient strategic resource, and self-support were all rejected with specific Korean reasons. DEV-098B post-declaration official military support remains to implement using existing DEV-091 WarService participation rules rather than duplicating war logic.
 - DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
@@ -142,7 +143,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 3. DEV-102 COMPLETE after Windows quick-deploy success.
 4. DEV-103 COMPLETE after Windows quick-deploy success.
 5. DEV-104 COMPLETE after Windows quick-deploy success. Numeric weights remain configurable/provisional rather than invented as final balance.
-6. Next execution-plan ticket is DEV-105 victory-threshold/early-finish check. Design v0.3 explicitly leaves the exact early-finish threshold and confirmation-window details as tuning/open items, so implementation should wait for representative design choice rather than invent final values.
+6. DEV-105 design override fixed by representative: no automatic score-threshold early finish. Admin explicit `/danta season end` is IMPLEMENTED and awaits Windows quick-deploy/Paper verification.
 7. Current clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
 8. Observed during dev runtime restoration: advancing runtime from the 4h test range back to ~25h16m caused EconomyTick to catch up 42 ticks at once. Treat this as an observation for future runtime manipulation/snapshot/economy scheduler review, not as a DEV-101 defect.
 
