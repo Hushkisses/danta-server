@@ -22,9 +22,14 @@ class TerrainLayoutTest {
     }
 
     @Test
+    void developmentSampleUsesThreeByThreeChunkTiles() {
+        TerrainLayout layout = DevTerrainLayouts.sample();
+        assertEquals(48, layout.tileSize());
+    }
+
+    @Test
     void developmentSampleContainsAllBaseTerrainTypes() {
         TerrainLayout layout = DevTerrainLayouts.sample();
-        assertEquals(32, layout.tileSize());
         for (TerrainTileType type : TerrainTileType.values()) {
             assertTrue(layout.count(type) > 0, "missing tile type: " + type);
         }
