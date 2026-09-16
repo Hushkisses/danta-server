@@ -84,9 +84,9 @@ Checkpoint: DEV-094 COMPLETE; DEV-095 capital fall -> vassal IMPLEMENTED awaitin
 - DEV-092 passage/supply rights: COMPLETE, Windows quick-deploy/Paper access verification passed for NEUTRAL/FRIENDLY/ALLIANCE, and improved Korean alliance-war rejection verified.
 - DEV-093 NPC Nation/StrategicAI state machine: COMPLETE, Windows quick-deploy/Paper lifecycle, invalid-transition, duplicate-register and unregister verification passed.
 - DEV-094 NPC alliance/subjugation/annexation: COMPLETE, Windows live verification passed: alliance/subjugation preserved NPC territory and annexation transferred all 7 red-owned strategic points to blue through TerritoryService.
+- DEV-095 capital fall -> vassal: COMPLETE. Windows live verification passed: capital-control prerequisite rejection is specific Korean text; successful vassalization preserves remaining territory; Snapshot schema v17 restart recovery preserved red -> blue vassal relation, 10 strategic points, and nation states. During verification, snapshot restore-order bugs were fixed and empty GameState snapshot overwrite protection + previous-active backup were added.
 
 ## Implemented tickets awaiting live verification
-- DEV-095 capital fall -> vassal: IMPLEMENTED. Reuses NationStatus.VASSAL and designated capital. Vassalization requires the victor to control the defeated nation's designated capital, preserves remaining territory/research/armies, records overlord + runtime of subordination, and persists via Snapshot schema v17 with v1-v16 compatibility. Tribute/restrictions remain DEV-096; minimum subordination duration/independence war remain DEV-097. Windows quick-deploy/Paper/restart verification pending.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -128,7 +128,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Restore the dev map ownership after DEV-094 annexation, then verify DEV-095 capital fall -> vassal with Windows quick-deploy/Paper/restart. If successful mark COMPLETE and proceed to DEV-096 tribute/subordination restrictions.
+2. DEV-095 is COMPLETE. Proceed to DEV-096 tribute/subordination restrictions. Reuse the authoritative VassalService/NationStatus/Snapshot v17 foundation; do not fold DEV-097 minimum subordination duration/independence-war rules into DEV-096.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
