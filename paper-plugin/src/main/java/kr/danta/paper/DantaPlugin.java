@@ -240,7 +240,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                         + " [id=" + task.id() + "]"));
         runtimeScheduler.registerHandler("army.move.arrive", task ->
                 completeArmyMovement(task.payload().get("armyId"), task.payload().get("orderId")));
-        // DEV-088 development sample tree. This is intentionally provisional test content, not the final season tree.
         java.util.Map<String, ResearchDefinition> devResearchDefinitions;
         try (var input = getResource("research/dev088-sample-research.yml")) {
             if (input == null) throw new IllegalStateException("DEV-088 sample research resource is missing");
@@ -381,11 +380,26 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         }
     }
 
+    static kr.danta.paper.combat.ai.DantaCombatAiCommandBridge.Result routeCombatAiCommand(String[] args) {
+        return new kr.danta.paper.combat.ai.DantaCombatAiCommandBridge().execute(args);
+    }
+
     @Override public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String label, @NotNull String[] args) {
         if (command.getName().equalsIgnoreCase("nationgui")) return handleNationGuiCommand(sender, args);
         if (command.getName().equalsIgnoreCase("mapgui")) return handleMapGuiCommand(sender);
         if (!command.getName().equalsIgnoreCase("danta")) return false;
+
+        var combatAiResult = routeCombatAiCommand(args);
+        if (combatAiResult.handled()) {
+            if (!sender.hasPermission("danta.admin.army")) {
+                sender.sendMessage("§c전투 AI 검증 권한이 없습니다.");
+                return true;
+            }
+            sender.sendMessage(combatAiResult.message());
+            return true;
+        }
+
         if (args.length > 0 && args[0].equalsIgnoreCase("runtime")) return handleRuntime(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("ranking")) return handleRanking(sender);
@@ -422,8 +436,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         }
         return true;
     }
-
-
 
     private void loadGeneralCatalog() {
         try (var input = getResource("generals/initial-generals.yml")) {
@@ -614,7 +626,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         });
     }
 
-
     private boolean handleMapGuiCommand(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§c지도 GUI는 플레이어만 열 수 있습니다.");
@@ -623,7 +634,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         mapGuiController.open(player);
         return true;
     }
-
 
     private boolean handleNationGuiCommand(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -638,7 +648,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         }
         return true;
     }
-
 
     private boolean handleStrategicEdge(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.edge")) {
@@ -757,7 +766,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             if (error != null) getLogger().warning("DEV-022 strategic edge snapshot flush failed: " + rootMessage(error));
         });
     }
-
 
     private boolean handleStrategicPoint(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.point")) {
@@ -1278,7 +1286,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
 
     private void startSnapshotTask() {
         if (snapshotTask != null) snapshotTask.cancel();
-        // Persistence housekeeping: every 5 real minutes. This does not advance game/runtime time.
         snapshotTask = getServer().getScheduler().runTaskTimer(this, () -> {
             if (snapshotService != null) snapshotService.saveAsync("periodic");
         }, 20L * 60L * 5L, 20L * 60L * 5L);
@@ -1326,6 +1333,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         }
         return true;
     }
+
     private boolean handleDatabase(CommandSender sender, String[] args) {
         if (!sender.hasPermission("danta.admin.db")) {
             sender.sendMessage("§c데이터베이스 관리 권한이 없습니다.");
@@ -1407,8 +1415,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         var decision=seasonActionGate.check(action);
         if(!decision.allowed()) throw new IllegalStateException(decision.reason());
     }
-
-
 
     private boolean handleBuildFortress(CommandSender sender) {
         if (!sender.hasPermission("danta.admin.map")) {
@@ -1599,7 +1605,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                     Map.of("armyId", movement.armyId(), "orderId", movement.orderId()));
             runtimeScheduler.restore(task);
         }
-        // Execute already-due arrivals immediately against restored server runtime.
         pumpRuntimeScheduler();
     }
 
@@ -1817,9 +1822,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "tribute-status" -> { requireArgs(args,3,"/danta diplomacy tribute-status <속국-id>"); var r=vassalService.relation(args[2]).orElseThrow(()->new IllegalStateException("nation is not vassal")); sender.sendMessage("§6[속국 조공] §e"+args[2]+" → "+r.overlordNationId()); sender.sendMessage("§7국고 세입 조공률: §e"+vassalPolicyService.tributePercent()+"% §8(개발용 임시값, 기획 범위 10~25%)"); sender.sendMessage("§7개인지갑: §a조공 대상 아님"); }
                 case "vassal-status" -> { requireArgs(args,3,"/danta diplomacy vassal-status <국가-id>"); var n=gameState.nation(args[2]).orElseThrow(()->new IllegalArgumentException("nation does not exist: "+args[2])); var r=vassalService.relation(args[2]).orElse(null); sender.sendMessage("§6[종속 상태] §e"+args[2]+" §7"+(r==null?(n.status()==kr.danta.core.nation.NationStatus.VASSAL?"속국(종주국 정보 없음)":"독립"):"속국 / 종주국="+r.overlordNationId())); }
-                                case "npc-political" -> { requireArgs(args,4,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex|independent> [상대국-id]"); var action=args[3].toLowerCase(Locale.ROOT); if(action.equals("independent")){var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));s.restoreIndependent();sender.sendMessage("§aNPC 소국이 독립 상태로 복귀했습니다: §e"+args[2]);}else{requireArgs(args,5,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex> <상대국-id>");switch(action){case "ally"->{var s=npcPoliticalService.ally(args[2],args[4]);sender.sendMessage("§aNPC 소국과 동맹 관계를 수립했습니다: §e"+s.nationId()+" ↔ "+args[4]);}case "subjugate"->{var s=npcPoliticalService.subjugate(args[2],args[4]);sender.sendMessage("§aNPC 소국을 복속했습니다: §e"+s.nationId()+" §7종주국="+args[4]);}case "annex"->{var r=npcPoliticalService.annex(args[2],args[4]);sender.sendMessage("§aNPC 소국을 합병했습니다: §e"+r.npc().nationId()+" §7합병국="+args[4]+", 이전 거점="+r.transferredPoints()+"개");}default->throw new IllegalArgumentException("unknown npc political action");}} }
+                case "npc-political" -> { requireArgs(args,4,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex|independent> [상대국-id]"); var action=args[3].toLowerCase(Locale.ROOT); if(action.equals("independent")){var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));s.restoreIndependent();sender.sendMessage("§aNPC 소국이 독립 상태로 복귀했습니다: §e"+args[2]);}else{requireArgs(args,5,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex> <상대국-id>");switch(action){case "ally"->{var s=npcPoliticalService.ally(args[2],args[4]);sender.sendMessage("§aNPC 소국과 동맹 관계를 수립했습니다: §e"+s.nationId()+" ↔ "+args[4]);}case "subjugate"->{var s=npcPoliticalService.subjugate(args[2],args[4]);sender.sendMessage("§aNPC 소국을 복속했습니다: §e"+s.nationId()+" §7종주국="+args[4]);}case "annex"->{var r=npcPoliticalService.annex(args[2],args[4]);sender.sendMessage("§aNPC 소국을 합병했습니다: §e"+r.npc().nationId()+" §7합병국="+args[4]+", 이전 거점="+r.transferredPoints()+"개");}default->throw new IllegalArgumentException("unknown npc political action");}} }
                 case "npc-status" -> { requireArgs(args,3,"/danta diplomacy npc-status <npc국가-id>");var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));sender.sendMessage("§6[NPC 정치 상태] §e"+s.nationId()+" §7"+npcPoliticalKo(s.politicalStatus())+(s.patronNationId()==null?"":" / 상대국="+s.patronNationId())); }
-                                case "npc-register" -> { requireArgs(args,3,"/danta diplomacy npc-register <국가-id>"); var state=npcNationService.register(args[2]); sender.sendMessage("§aNPC 국가로 등록했습니다: §e"+state.nationId()+" §7전략 AI 상태="+npcPhaseKo(state.phase())); }
+                case "npc-register" -> { requireArgs(args,3,"/danta diplomacy npc-register <국가-id>"); var state=npcNationService.register(args[2]); sender.sendMessage("§aNPC 국가로 등록했습니다: §e"+state.nationId()+" §7전략 AI 상태="+npcPhaseKo(state.phase())); }
                 case "npc-unregister" -> { requireArgs(args,3,"/danta diplomacy npc-unregister <국가-id>"); npcNationService.unregister(args[2]); sender.sendMessage("§aNPC 국가 지정을 해제했습니다: §e"+args[2]); }
                 case "npc-step" -> { requireArgs(args,4,"/danta diplomacy npc-step <국가-id> <evaluate|decide|execute|finish|cancel> [결정-key]"); var state=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled")); switch(args[3].toLowerCase(Locale.ROOT)){case "evaluate"->state.beginEvaluation();case "decide"->{requireArgs(args,5,"/danta diplomacy npc-step <국가-id> decide <결정-key>");state.decide(args[4]);}case "execute"->state.beginExecution();case "finish"->state.finishExecution();case "cancel"->state.cancel();default->throw new IllegalArgumentException("unknown npc step");} sender.sendMessage("§aNPC 전략 AI 상태를 변경했습니다: §e"+args[2]+" §7"+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
                 case "npc-list" -> { sender.sendMessage("§6[NPC 국가] §7총 "+npcNationService.states().size()+"개"); for(var state:npcNationService.states())sender.sendMessage("§e"+state.nationId()+" §7상태="+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
@@ -1843,6 +1848,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
         return true;
     }
+
     private static String npcPoliticalKo(kr.danta.core.npc.NpcPoliticalStatus s){return switch(s){case INDEPENDENT->"독립";case ALLIED->"동맹";case SUBJUGATED->"복속";case ANNEXED->"합병됨";};}
     private static String npcPhaseKo(kr.danta.core.npc.StrategicAiPhase p) { return switch(p){case IDLE->"대기";case EVALUATING->"상황 평가";case DECIDED->"행동 결정";case EXECUTING->"행동 실행";}; }
     private static String diplomacyStatusKo(DiplomaticStatus s) { return switch(s){case NEUTRAL->"중립";case FRIENDLY->"우호";case ALLIANCE->"혈맹";case WAR->"전쟁";}; }
@@ -1981,5 +1987,4 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 || !databaseService.health().status().name().equals("READY")) return;
         snapshotService.flushImportantAsync(reason);
     }
-
 }
