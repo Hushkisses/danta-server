@@ -10,6 +10,10 @@ import kr.danta.core.nation.IndependenceWarService;
 import kr.danta.core.nation.IndependenceWarState;
 import kr.danta.core.snapshot.IndependenceWarSnapshot;
 import kr.danta.core.snapshot.FameScoreSnapshot;
+import kr.danta.core.snapshot.ChronicleEntrySnapshot;
+import kr.danta.core.chronicle.ChronicleEntry;
+import kr.danta.core.chronicle.ChronicleEventType;
+import kr.danta.core.chronicle.ChronicleService;
 import kr.danta.core.diplomacy.DiplomacyService;
 import kr.danta.core.diplomacy.DiplomaticRelation;
 import kr.danta.core.snapshot.DiplomaticRelationSnapshot;
@@ -80,6 +84,7 @@ public final class SnapshotService {
     private volatile DiplomacyService diplomacyService;
     private volatile VassalService vassalService;
     private volatile IndependenceWarService independenceWarService;
+    private volatile ChronicleService chronicleService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -93,6 +98,7 @@ public final class SnapshotService {
 
     public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }
     public void bindIndependenceWars(IndependenceWarService service) { this.independenceWarService = Objects.requireNonNull(service, "independenceWarService"); }
+    public void bindChronicle(ChronicleService service) { this.chronicleService = Objects.requireNonNull(service, "chronicleService"); }
 
     public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
@@ -241,6 +247,11 @@ public final class SnapshotService {
                         research.nationId(), research.researchSlots(), research.completed(), queue, research.doctrineSlots(), research.doctrines()));
             }
         }
+        if (chronicleService != null) {
+            chronicleService.restore(snapshot.chronicleEntries().stream()
+                    .map(e -> new ChronicleEntry(e.runtimeMillis(), ChronicleEventType.valueOf(e.type()), e.summary()))
+                    .toList());
+        }
         gameState.clearFameScores();
         for (FameScoreSnapshot fame : snapshot.fameScores()) {
             gameState.restoreFameScore(fame.nationId(), fame.score());
@@ -355,10 +366,13 @@ public final class SnapshotService {
         List<IndependenceWarSnapshot> independenceWars = independenceWarService == null ? List.of() : independenceWarService.states().stream().map(w -> new IndependenceWarSnapshot(w.vassalNationId(), w.overlordNationId(), w.declaredAtRuntimeMillis(), w.holdUntilRuntimeMillis(), w.redeclareAfterRuntimeMillis(), w.active())).toList();
         List<FameScoreSnapshot> fameScores = gameState.fameScores().entrySet().stream()
                 .map(e -> new FameScoreSnapshot(e.getKey(), e.getValue())).toList();
+        List<ChronicleEntrySnapshot> chronicleEntries = chronicleService == null ? List.of()
+                : chronicleService.entries().stream()
+                .map(e -> new ChronicleEntrySnapshot(e.runtimeMillis(), e.type().name(), e.summary())).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores);
+                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, chronicleEntries);
     }
 }
