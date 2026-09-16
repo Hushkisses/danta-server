@@ -5,7 +5,7 @@ import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.VassalRelation;
-import kr.danta.core.nation.VassalService;
+import kr.danta.core.nation.VassalService;\nimport kr.danta.core.nation.IndependenceWarService;\nimport kr.danta.core.nation.IndependenceWarState;\nimport kr.danta.core.snapshot.IndependenceWarSnapshot;
 import kr.danta.core.diplomacy.DiplomacyService;
 import kr.danta.core.diplomacy.DiplomaticRelation;
 import kr.danta.core.snapshot.DiplomaticRelationSnapshot;
@@ -74,7 +74,7 @@ public final class SnapshotService {
     private volatile FacilityConstructionService facilityConstructionService;
     private volatile ResearchService researchService;
     private volatile DiplomacyService diplomacyService;
-    private volatile VassalService vassalService;
+    private volatile VassalService vassalService;\n    private volatile IndependenceWarService independenceWarService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -86,7 +86,7 @@ public final class SnapshotService {
         this.logger = logger;
     }
 
-    public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }
+    public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }\n    public void bindIndependenceWars(IndependenceWarService service) { this.independenceWarService = Objects.requireNonNull(service, "independenceWarService"); }
 
     public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
@@ -175,6 +175,12 @@ public final class SnapshotService {
             for (VassalRelationSnapshot relation : snapshot.vassalRelations()) {
                 vassalService.restore(new VassalRelation(relation.vassalNationId(), relation.overlordNationId(), relation.vassalizedAtRuntimeMillis()));
             }
+        }
+        if (independenceWarService != null) {
+            independenceWarService.clear();
+            for (IndependenceWarSnapshot war : snapshot.independenceWars()) independenceWarService.restore(
+                    new IndependenceWarState(war.vassalNationId(), war.overlordNationId(), war.declaredAtRuntimeMillis(),
+                            war.holdUntilRuntimeMillis(), war.redeclareAfterRuntimeMillis(), war.active()));
         }
         for (StrategicEdgeSnapshot edge : snapshot.strategicEdges()) {
             gameState.addStrategicEdge(new StrategicEdge(edge.edgeId(), edge.pointAId(), edge.pointBId(),
@@ -336,10 +342,11 @@ public final class SnapshotService {
                         .toList();
         List<DiplomaticRelationSnapshot> diplomaticRelations = diplomacyService == null ? List.of() : diplomacyService.relations().stream().map(r -> new DiplomaticRelationSnapshot(r.nationAId(), r.nationBId(), r.status())).toList();
         List<VassalRelationSnapshot> vassalRelations = vassalService == null ? List.of() : vassalService.relations().stream().map(r -> new VassalRelationSnapshot(r.vassalNationId(), r.overlordNationId(), r.vassalizedAtRuntimeMillis())).toList();
+        List<IndependenceWarSnapshot> independenceWars = independenceWarService == null ? List.of() : independenceWarService.states().stream().map(w -> new IndependenceWarSnapshot(w.vassalNationId(), w.overlordNationId(), w.declaredAtRuntimeMillis(), w.holdUntilRuntimeMillis(), w.redeclareAfterRuntimeMillis(), w.active())).toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations);
+                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars);
     }
 }
