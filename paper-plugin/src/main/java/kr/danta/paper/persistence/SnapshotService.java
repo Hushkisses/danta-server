@@ -5,7 +5,10 @@ import kr.danta.core.army.ArmyOrder;
 import kr.danta.core.army.ArmyRoute;
 import kr.danta.core.nation.NationState;
 import kr.danta.core.nation.VassalRelation;
-import kr.danta.core.nation.VassalService;\nimport kr.danta.core.nation.IndependenceWarService;\nimport kr.danta.core.nation.IndependenceWarState;\nimport kr.danta.core.snapshot.IndependenceWarSnapshot;
+import kr.danta.core.nation.VassalService;
+import kr.danta.core.nation.IndependenceWarService;
+import kr.danta.core.nation.IndependenceWarState;
+import kr.danta.core.snapshot.IndependenceWarSnapshot;
 import kr.danta.core.diplomacy.DiplomacyService;
 import kr.danta.core.diplomacy.DiplomaticRelation;
 import kr.danta.core.snapshot.DiplomaticRelationSnapshot;
@@ -74,7 +77,8 @@ public final class SnapshotService {
     private volatile FacilityConstructionService facilityConstructionService;
     private volatile ResearchService researchService;
     private volatile DiplomacyService diplomacyService;
-    private volatile VassalService vassalService;\n    private volatile IndependenceWarService independenceWarService;
+    private volatile VassalService vassalService;
+    private volatile IndependenceWarService independenceWarService;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -86,7 +90,8 @@ public final class SnapshotService {
         this.logger = logger;
     }
 
-    public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }\n    public void bindIndependenceWars(IndependenceWarService service) { this.independenceWarService = Objects.requireNonNull(service, "independenceWarService"); }
+    public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }
+    public void bindIndependenceWars(IndependenceWarService service) { this.independenceWarService = Objects.requireNonNull(service, "independenceWarService"); }
 
     public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
