@@ -93,7 +93,12 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
-        if (message.startsWith("nation is already npc controlled")) return "이미 NPC 국가로 등록된 국가입니다.";
+        if (message.startsWith("npc nation is not independent")) return "독립 상태인 NPC 소국만 새 동맹을 맺을 수 있습니다.";
+        if (message.startsWith("npc nation is annexed")) return "이미 합병된 NPC 소국에는 이 외교 행동을 할 수 없습니다.";
+        if (message.startsWith("annexed npc requires restoration system")) return "합병된 NPC 소국은 단순 명령으로 독립시킬 수 없습니다. 복국 절차가 필요합니다.";
+        if (message.startsWith("npc cannot target itself")) return "NPC 소국은 자기 자신과 동맹·복속·합병 관계를 맺을 수 없습니다.";
+        if (message.startsWith("unknown npc political action")) return "알 수 없는 NPC 외교 행동입니다.";
+                if (message.startsWith("nation is already npc controlled")) return "이미 NPC 국가로 등록된 국가입니다.";
         if (message.startsWith("nation is not npc controlled")) return "NPC 국가로 등록되지 않은 국가입니다.";
         if (message.startsWith("npc strategic ai phase must be")) return "현재 NPC 전략 AI 상태에서는 해당 단계로 전환할 수 없습니다.";
         if (message.startsWith("unknown npc step")) return "알 수 없는 NPC 전략 AI 단계 명령입니다.";
