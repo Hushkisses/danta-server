@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-085 COMPLETE; DEV-086 doctrine slots 2→max3 IMPLEMENTED awaiting Windows automated verification
+Checkpoint: DEV-086 COMPLETE; next DEV-087 major-point-loss high-research deactivation
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -76,9 +76,9 @@ Checkpoint: DEV-085 COMPLETE; DEV-086 doctrine slots 2→max3 IMPLEMENTED awaiti
 - DEV-083 ResearchDefinition data loader: COMPLETE, Windows quick-deploy automated tests/build verified.
 - DEV-084 ResearchState/Queue: COMPLETE. Windows quick-deploy, Paper boot, FIFO reservation, runtime pause, restart-mid-research recovery, automatic next-research start, completion persistence and Snapshot v14 recovery verified. dev084_alpha/beta remain verification-only provisional definitions, not final content.
 - DEV-085 four-field/prerequisite eligibility: COMPLETE, Windows quick-deploy automated tests/build verified. Prerequisites are explicit ResearchDefinition data; queued/active research does not satisfy them.
+- DEV-086 doctrine slots 2→max3: COMPLETE, Windows quick-deploy automated tests/build verified. National doctrine capacity defaults to 2 and may expand to max 3; slot-3 unlock condition and doctrine-change balance remain unresolved by design.
 
 ## Implemented tickets awaiting live verification
-- DEV-086 doctrine slots 2→max3: national doctrine capacity/selection + Snapshot v15 + JUnit implemented; Windows quick-deploy verification pending. Slot-3 unlock condition and doctrine-change cost/reorganization duration remain intentionally unresolved because v0.3 does not specify exact values/trigger.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -120,7 +120,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-086 with Windows quick-deploy. If successful, mark COMPLETE and proceed to DEV-087 major-point-loss high-research deactivation.
+2. Proceed to DEV-087 major-point-loss high-research deactivation using ResearchDefinition.requiredMajorPointType and authoritative territory ownership.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
