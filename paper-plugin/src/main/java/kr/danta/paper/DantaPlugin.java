@@ -189,7 +189,6 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         npcNationService = new NpcNationService(gameState);
         npcPoliticalService = new NpcPoliticalService(gameState, npcNationService, diplomacyService, territoryService);
         vassalService = new VassalService(gameState);
-        snapshotService.bindVassals(vassalService);
         pointGeneralAssignmentService = new PointGeneralAssignmentService(gameState);
         armyCommanderService = new ArmyCommanderService(gameState);
         loadGeneralCatalog();
@@ -281,6 +280,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             snapshotService.bindFacilities(facilityService, facilityConstructionService);
             snapshotService.bindResearch(researchService);
             snapshotService.bindDiplomacy(diplomacyService);
+            snapshotService.bindVassals(vassalService);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
