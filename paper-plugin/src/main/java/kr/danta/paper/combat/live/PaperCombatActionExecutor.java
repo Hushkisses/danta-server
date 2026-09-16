@@ -23,6 +23,7 @@ public final class PaperCombatActionExecutor {
     private final CombatAttackPolicy attackPolicy;
     private final CombatTargetPolicy targetPolicy;
     private final WaypointProgressTracker waypointProgress;
+    private final WaypointStepMover stepMover;
 
     public PaperCombatActionExecutor() {
         this(new CombatEntityResolver(), CombatAttackPolicy.developmentDefaults(), new CombatTargetPolicy());
@@ -40,6 +41,7 @@ public final class PaperCombatActionExecutor {
         this.attackPolicy = attackPolicy;
         this.targetPolicy = targetPolicy;
         this.waypointProgress = new WaypointProgressTracker(WAYPOINT_REACHED_DISTANCE);
+        this.stepMover = new WaypointStepMover();
     }
 
     public void apply(LiveCombatUnit unit, LiveCombatExecution execution, RuntimeAccess runtime) {
@@ -83,22 +85,26 @@ public final class PaperCombatActionExecutor {
 
     private void move(LiveCombatUnit unit, LiveCombatExecution execution, LivingEntity mover) {
         TacticalRoute route = execution.movementIntent().route();
+        Location current = mover.getLocation();
         Optional<TacticalWaypoint> waypointOpt = waypointProgress.target(
                 unit.unitId(),
                 route,
-                mover.getLocation().getX(),
-                mover.getLocation().getY(),
-                mover.getLocation().getZ());
+                current.getX(),
+                current.getY(),
+                current.getZ());
         if (waypointOpt.isEmpty()) {
             mover.setVelocity(new Vector(0, mover.getVelocity().getY(), 0));
             return;
         }
 
-        Location goal = resolver.toLocation(mover.getWorld(), waypointOpt.orElseThrow());
-        Vector delta = goal.toVector().subtract(mover.getLocation().toVector());
-        Vector direction = delta.normalize().multiply(attackPolicy.moveSpeed(unit.troopType()));
-        direction.setY(mover.getVelocity().getY());
-        mover.setVelocity(direction);
+        TacticalWaypoint waypoint = waypointOpt.orElseThrow();
+        WaypointStepMover.Step next = stepMover.step(
+                current.getX(), current.getY(), current.getZ(),
+                waypoint.x(), waypoint.y(), waypoint.z(),
+                attackPolicy.moveSpeed(unit.troopType()));
+        Location destination = new Location(
+                mover.getWorld(), next.x(), next.y(), next.z(), current.getYaw(), current.getPitch());
+        mover.teleport(destination);
     }
 
     private Optional<LiveCombatUnit> selectedTrackedHostile(
