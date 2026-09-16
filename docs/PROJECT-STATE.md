@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-088 COMPLETE; DEV-090 diplomacy relationship state IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-090 COMPLETE; next DEV-091 support participation / direct-alliance automatic war entry
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -79,9 +79,9 @@ Checkpoint: DEV-088 COMPLETE; DEV-090 diplomacy relationship state IMPLEMENTED a
 - DEV-086 doctrine slots 2→max3: COMPLETE, Windows quick-deploy automated tests/build verified. National doctrine capacity defaults to 2 and may expand to max 3; slot-3 unlock condition and doctrine-change balance remain unresolved by design.
 - DEV-087 major-point-loss high-research deactivation: COMPLETE, Windows quick-deploy automated tests/build verified. Completed research remains learned; requiredMajorPointType effects derive active/inactive state from authoritative point ownership and reactivate on recovery.
 - DEV-088 development sample research tree: COMPLETE, Windows quick-deploy automated tests/build and Paper boot verified. 4 fields × Tier 1-5 sample remains provisional development content, not final season balance.
+- DEV-090 friendly/alliance/war relationship state: COMPLETE, Windows quick-deploy/Paper command/restart persistence verified. Symmetric bilateral state, Korean dev output, Snapshot v16 with v1-v15 compatibility.
 
 ## Implemented tickets awaiting live verification
-- DEV-090 friendly/alliance/war relationship state: IMPLEMENTED. Symmetric bilateral state with neutral default, Korean dev command output, Snapshot schema v16 persistence and v1-v15 read compatibility; Windows quick-deploy/Paper/restart verification pending. Alliance auto-war propagation belongs to DEV-091 and passage/supply rights to DEV-092.
 - DEV-082 facility world appearance sync: IMPLEMENTED; vanilla/Paper NBT templates, pendingVisualSync on unloaded chunks, chunk-load retry, construction/snapshot-restore reconciliation. Windows quick-deploy and Paper boot verified. Live NBT placement/upgrade verification is deferred until representative requests/authors building NBT assets; do not mark COMPLETE before that verification.
 
 ## Important implementation decisions
@@ -123,7 +123,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. Verify DEV-090 with Windows quick-deploy, Paper commands and restart persistence. If successful mark COMPLETE and proceed to DEV-091 support/automatic alliance war participation.
+2. Proceed to DEV-091 support participation and direct-alliance automatic war entry. No chained automatic participation; actual army deployment remains player-controlled.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
