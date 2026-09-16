@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-15
-Checkpoint: DEV-098 COMPLETE; DEV-100 IMPLEMENTED awaiting Windows verification
+Checkpoint: DEV-098 COMPLETE; DEV-100/DEV-101 IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -88,6 +88,7 @@ Checkpoint: DEV-098 COMPLETE; DEV-100 IMPLEMENTED awaiting Windows verification
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
+- DEV-101 war/capital-siege phase unlock: IMPLEMENTED from design v0.3 pacing. Rules: player-vs-player war locked before 4h; general conflict allowed 4h+; major-point battle/siege unlocked at 8h; capital siege unlocked at 20h; new major-point battle declarations locked at 48h; all new actions locked at 50h while already-running battles are intentionally not cancelled. Existing `/danta diplomacy war` is now gated by the 4h rule. Major/capital siege gates are domain-ready for Phase 11 SiegeInstance integration rather than inventing a duplicate siege system now. Korean rejection messages and automated boundary tests added. Windows quick-deploy/Paper verification pending.
 - DEV-100 SeasonPhase: IMPLEMENTED. Execution plan v1.0 has no DEV-099; Phase 10 begins at DEV-100. Added runtime-derived phases 0~8h 초반 / 8~20h 확장기 / 20~38h 쟁패기 / 38~50h 최종전 / 50h+ 시즌 종료. The service reads existing RuntimeClockService only and adds no second clock or persistence. `/danta season` exposes Korean status. Automated boundary tests added; Windows quick-deploy/Paper verification pending.
 - DEV-098B official third-country independence-war participation: COMPLETE. Windows quick-deploy/Paper live verification passed: pre-declaration join rejected; declaration created a WarService war ID; green joined red's independence side; duplicate and overlord joins were rejected with specific Korean reasons; successful independence removed the active war and restored red↔blue and green↔blue to NEUTRAL.
 - DEV-098A third-country pre-independence material support: COMPLETE. Windows quick-deploy/Paper live verification passed. Verified green -> red treasury GOLD transfer (1000→800 / 382→582), FOOD transfer (500→400 / 100→200), IRON transfer (100→80 / 60→80), vassal relation remained red -> blue, existing failed-war cooldown remained unchanged, and support did not auto-declare or bypass independence. Overlord support, insufficient treasury, insufficient strategic resource, and self-support were all rejected with specific Korean reasons. DEV-098B post-declaration official military support remains to implement using existing DEV-091 WarService participation rules rather than duplicating war logic.
@@ -133,7 +134,7 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 
 ## Next execution order
 1. DEV-082 remains IMPLEMENTED with live NBT asset verification deferred; remind the representative when actual building NBT authoring/modification begins.
-2. DEV-100 SeasonPhase is IMPLEMENTED awaiting Windows verification. Verify automated tests/build, Paper boot, `/danta season` at current runtime, and boundary transitions using the existing development runtime-set command. After success mark COMPLETE and proceed to DEV-101.
+2. DEV-100 and DEV-101 are IMPLEMENTED awaiting Windows verification. Run quick-deploy, Paper boot, `/danta season`, then verify `/danta diplomacy war red blue` rejects below 4h and succeeds at/after 4h (reset diplomacy as needed). Automated DEV-101 tests cover 4h/8h/20h/48h/50h boundaries. Major/capital siege gate integration waits for DEV-110+ rather than creating a duplicate siege implementation. After verification mark DEV-100/101 COMPLETE and proceed DEV-102.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
