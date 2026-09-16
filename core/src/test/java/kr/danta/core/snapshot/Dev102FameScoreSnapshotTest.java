@@ -13,7 +13,7 @@ class Dev102FameScoreSnapshotTest {
                 GameSnapshot.CURRENT_SCHEMA, 1L, 2L, false, 1.0, null, null,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(
+                List.of(), List.of(), List.of(), List.of(), List.of(
                         new FameScoreSnapshot("red", 120L),
                         new FameScoreSnapshot("blue", 45L)));
 
@@ -30,7 +30,7 @@ class Dev102FameScoreSnapshotTest {
                 GameSnapshot.CURRENT_SCHEMA, 1L, 2L, false, 1.0, null, null,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), List.of(), List.of(new FameScoreSnapshot("red", 9L))));
+                List.of(), List.of(), List.of(), List.of(), List.of(new FameScoreSnapshot("red", 9L))));
         String[] fields = schema19.split("\\|", -1);
         fields[0] = "18";
         String schema18 = String.join("|", java.util.Arrays.copyOf(fields, fields.length - 1));
