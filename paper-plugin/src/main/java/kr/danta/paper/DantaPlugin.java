@@ -62,6 +62,7 @@ import kr.danta.core.research.ResearchTier;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.npc.NpcNationService;
+import kr.danta.core.npc.NpcPoliticalService;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.PointPosition;
@@ -126,6 +127,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private WarService warService;
     private DiplomaticAccessService diplomaticAccessService;
     private NpcNationService npcNationService;
+    private NpcPoliticalService npcPoliticalService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -183,6 +185,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         warService = new WarService(gameState, diplomacyService);
         diplomaticAccessService = new DiplomaticAccessService(gameState, diplomacyService);
         npcNationService = new NpcNationService(gameState);
+        npcPoliticalService = new NpcPoliticalService(gameState, npcNationService, diplomacyService, territoryService);
         pointGeneralAssignmentService = new PointGeneralAssignmentService(gameState);
         armyCommanderService = new ArmyCommanderService(gameState);
         loadGeneralCatalog();
@@ -1590,7 +1593,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         try {
             String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
             switch (sub) {
-                case "npc-register" -> { requireArgs(args,3,"/danta diplomacy npc-register <국가-id>"); var state=npcNationService.register(args[2]); sender.sendMessage("§aNPC 국가로 등록했습니다: §e"+state.nationId()+" §7전략 AI 상태="+npcPhaseKo(state.phase())); }
+                case "npc-political" -> { requireArgs(args,4,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex|independent> [상대국-id]"); var action=args[3].toLowerCase(Locale.ROOT); if(action.equals("independent")){var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));s.restoreIndependent();sender.sendMessage("§aNPC 소국이 독립 상태로 복귀했습니다: §e"+args[2]);}else{requireArgs(args,5,"/danta diplomacy npc-political <npc국가-id> <ally|subjugate|annex> <상대국-id>");switch(action){case "ally"->{var s=npcPoliticalService.ally(args[2],args[4]);sender.sendMessage("§aNPC 소국과 동맹 관계를 수립했습니다: §e"+s.nationId()+" ↔ "+args[4]);}case "subjugate"->{var s=npcPoliticalService.subjugate(args[2],args[4]);sender.sendMessage("§aNPC 소국을 복속했습니다: §e"+s.nationId()+" §7종주국="+args[4]);}case "annex"->{var r=npcPoliticalService.annex(args[2],args[4]);sender.sendMessage("§aNPC 소국을 합병했습니다: §e"+r.npc().nationId()+" §7합병국="+args[4]+", 이전 거점="+r.transferredPoints()+"개");}default->throw new IllegalArgumentException("unknown npc political action");}} }
+                case "npc-status" -> { requireArgs(args,3,"/danta diplomacy npc-status <npc국가-id>");var s=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled"));sender.sendMessage("§6[NPC 정치 상태] §e"+s.nationId()+" §7"+npcPoliticalKo(s.politicalStatus())+(s.patronNationId()==null?"":" / 상대국="+s.patronNationId())); }
+                                case "npc-register" -> { requireArgs(args,3,"/danta diplomacy npc-register <국가-id>"); var state=npcNationService.register(args[2]); sender.sendMessage("§aNPC 국가로 등록했습니다: §e"+state.nationId()+" §7전략 AI 상태="+npcPhaseKo(state.phase())); }
                 case "npc-unregister" -> { requireArgs(args,3,"/danta diplomacy npc-unregister <국가-id>"); npcNationService.unregister(args[2]); sender.sendMessage("§aNPC 국가 지정을 해제했습니다: §e"+args[2]); }
                 case "npc-step" -> { requireArgs(args,4,"/danta diplomacy npc-step <국가-id> <evaluate|decide|execute|finish|cancel> [결정-key]"); var state=npcNationService.state(args[2]).orElseThrow(()->new IllegalStateException("nation is not npc controlled")); switch(args[3].toLowerCase(Locale.ROOT)){case "evaluate"->state.beginEvaluation();case "decide"->{requireArgs(args,5,"/danta diplomacy npc-step <국가-id> decide <결정-key>");state.decide(args[4]);}case "execute"->state.beginExecution();case "finish"->state.finishExecution();case "cancel"->state.cancel();default->throw new IllegalArgumentException("unknown npc step");} sender.sendMessage("§aNPC 전략 AI 상태를 변경했습니다: §e"+args[2]+" §7"+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
                 case "npc-list" -> { sender.sendMessage("§6[NPC 국가] §7총 "+npcNationService.states().size()+"개"); for(var state:npcNationService.states())sender.sendMessage("§e"+state.nationId()+" §7상태="+npcPhaseKo(state.phase())+(state.decisionKey()==null?"":" / 결정="+state.decisionKey())); }
@@ -1607,11 +1612,12 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "show" -> { requireArgs(args, 4, "/danta diplomacy show <국가1> <국가2>"); sender.sendMessage("§6[외교 관계] §e"+args[2]+" ↔ "+args[3]+" §7"+diplomacyStatusKo(diplomacyService.status(args[2],args[3]))); }
                 case "list" -> { sender.sendMessage("§6[외교 관계 목록] §7총 "+diplomacyService.relations().size()+"개"); for(var r:diplomacyService.relations()) sender.sendMessage("§e"+r.nationAId()+" ↔ "+r.nationBId()+" §7"+diplomacyStatusKo(r.status())); }
-                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars|npc-register|npc-unregister|npc-step|npc-list>");
+                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars|npc-register|npc-unregister|npc-step|npc-list|npc-political|npc-status>");
             }
         } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
         return true;
     }
+    private static String npcPoliticalKo(kr.danta.core.npc.NpcPoliticalStatus s){return switch(s){case INDEPENDENT->"독립";case ALLIED->"동맹";case SUBJUGATED->"복속";case ANNEXED->"합병됨";};}
     private static String npcPhaseKo(kr.danta.core.npc.StrategicAiPhase p) { return switch(p){case IDLE->"대기";case EVALUATING->"상황 평가";case DECIDED->"행동 결정";case EXECUTING->"행동 실행";}; }
     private static String diplomacyStatusKo(DiplomaticStatus s) { return switch(s){case NEUTRAL->"중립";case FRIENDLY->"우호";case ALLIANCE->"혈맹";case WAR->"전쟁";}; }
     private void flushDiplomacyState(String reason) { if(snapshotService!=null && databaseService!=null && databaseService.health().status().name().equals("READY")) snapshotService.flushImportantAsync(reason); }
