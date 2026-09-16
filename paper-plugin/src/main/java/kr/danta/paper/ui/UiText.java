@@ -93,7 +93,13 @@ public final class UiText {
     public static String playerError(Throwable error) {
         if (error instanceof NumberFormatException) return "숫자 입력 형식이 올바르지 않습니다.";
         String message = error == null || error.getMessage() == null ? "" : error.getMessage();
-        if (message.startsWith("army already has an order")) return "해당 군단에는 이미 명령이 등록되어 있습니다.";
+        if (message.startsWith("cannot declare war on alliance")) return "혈맹 관계인 국가에는 전쟁을 선포할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
+        if (message.startsWith("cannot join against alliance")) return "해당 전쟁에 참전하면 현재 혈맹국과 적대하게 되므로 참전할 수 없습니다.";
+        if (message.startsWith("nation already participates")) return "해당 국가는 이미 이 전쟁에 참전 중입니다.";
+        if (message.startsWith("war not found")) return "해당 전쟁을 찾을 수 없습니다.";
+        if (message.startsWith("nation does not exist")) return "해당 국가를 찾을 수 없습니다.";
+        if (message.startsWith("self relation is not allowed")) return "같은 국가끼리는 외교 관계를 설정할 수 없습니다.";
+                if (message.startsWith("army already has an order")) return "해당 군단에는 이미 명령이 등록되어 있습니다.";
         if (message.startsWith("destination is not adjacent")) return "목적지가 군단의 현재 위치와 인접하지 않습니다.";
         if (message.startsWith("army is already at destination")) return "군단이 이미 해당 목적지에 있습니다.";
         if (message.startsWith("army must be stationed before loading expedition supply")) return "군단이 주둔 중일 때만 출정 보급을 적재할 수 있습니다.";
