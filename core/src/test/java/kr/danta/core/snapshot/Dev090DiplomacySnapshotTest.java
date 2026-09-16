@@ -33,9 +33,8 @@ class Dev090DiplomacySnapshotTest {
                 List.of(), List.of(), List.of());
 
         String currentShape = GameSnapshotCodec.encode(v15);
-        int lastSeparator = currentShape.lastIndexOf('|');
-        String withoutVassals = currentShape.substring(0, lastSeparator);
-        String legacyV15 = withoutVassals.substring(0, withoutVassals.lastIndexOf('|'));
+        String[] fields = currentShape.split("\\|", -1);
+        String legacyV15 = String.join("|", java.util.Arrays.copyOf(fields, 20));
 
         GameSnapshot decoded = GameSnapshotCodec.decode(legacyV15);
 
