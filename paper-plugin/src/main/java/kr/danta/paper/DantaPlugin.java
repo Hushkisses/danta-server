@@ -54,6 +54,7 @@ import kr.danta.core.runtime.RuntimeClockState;
 import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
 import kr.danta.core.runtime.RuntimeTaskExecution;
+import kr.danta.core.season.SeasonPhaseService;
 import kr.danta.core.research.ResearchDefinition;
 import kr.danta.core.research.ResearchDefinitionLoader;
 import kr.danta.core.research.ResearchField;
@@ -116,6 +117,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private GameState gameState;
     private DomainEventBus eventBus;
     private RuntimeScheduler runtimeScheduler;
+    private SeasonPhaseService seasonPhaseService;
     private EconomyTickService economyTickService;
     private StrategicPointProductionService strategicPointProductionService;
     private ArmySupplyService armySupplyService;
@@ -184,6 +186,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         runtimeRepository = new PropertiesRuntimeClockRepository(runtimeFile);
         restoreRuntime();
         runtimeClock.start();
+        seasonPhaseService = new SeasonPhaseService(runtimeClock::elapsedMillis);
         economyTickService = new EconomyTickService(runtimeClock.elapsedMillis());
         strategicPointProductionService = null; // initialized after vassal policy wiring
         armySupplyService = new ArmySupplyService(gameState);
@@ -356,6 +359,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (command.getName().equalsIgnoreCase("mapgui")) return handleMapGuiCommand(sender);
         if (!command.getName().equalsIgnoreCase("danta")) return false;
         if (args.length > 0 && args[0].equalsIgnoreCase("runtime")) return handleRuntime(sender, args);
+        if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("db")) return handleDatabase(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("snapshot")) return handleSnapshot(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
@@ -1366,6 +1370,19 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         sender.sendMessage("§f연결 대상: §e" + health.target());
         if (health.lastError() != null) sender.sendMessage("§f최근 오류: §c발생함(자세한 내용은 서버 콘솔 확인)");
         sender.sendMessage("§7설정 파일: plugins/DantaServer/database.properties");
+    }
+
+    private boolean handleSeason(CommandSender sender) {
+        var phase = seasonPhaseService.current();
+        sender.sendMessage("§6[단타 시즌 단계]");
+        sender.sendMessage("§f현재 단계: §e" + phase.displayName() + " §7(" + phase.name() + ")");
+        sender.sendMessage("§f서버 가동 시간: §e" + formatRuntime(seasonPhaseService.runtimeMillis()));
+        if (phase != kr.danta.core.season.SeasonPhase.FINISHED) {
+            sender.sendMessage("§f다음 단계까지: §e" + formatRuntime(seasonPhaseService.remainingMillis()));
+        } else {
+            sender.sendMessage("§7시즌 기준 러닝타임 50시간에 도달했습니다.");
+        }
+        return true;
     }
 
     private boolean handleRuntime(CommandSender sender, String[] args) {
