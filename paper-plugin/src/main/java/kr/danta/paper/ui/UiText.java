@@ -132,7 +132,8 @@ public final class UiText {
         if (message.startsWith("nation is not npc controlled")) return "NPC 국가로 등록되지 않은 국가입니다.";
         if (message.startsWith("npc strategic ai phase must be")) return "현재 NPC 전략 AI 상태에서는 해당 단계로 전환할 수 없습니다.";
         if (message.startsWith("unknown npc step")) return "알 수 없는 NPC 전략 AI 단계 명령입니다.";
-                if (message.startsWith("cannot declare war on alliance")) return "혈맹 관계인 국가에는 전쟁을 선포할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
+                if (message.startsWith("active war already exists between nations")) return "두 국가 사이에 이미 진행 중인 전쟁이 있어 새 전쟁을 선포할 수 없습니다.";
+        if (message.startsWith("cannot declare war on alliance")) return "혈맹 관계인 국가에는 전쟁을 선포할 수 없습니다. 먼저 혈맹 관계를 해제해야 합니다.";
         if (message.startsWith("cannot join against alliance")) return "해당 전쟁에 참전하면 현재 혈맹국과 적대하게 되므로 참전할 수 없습니다.";
         if (message.startsWith("nation already participates")) return "해당 국가는 이미 이 전쟁에 참전 중입니다.";
         if (message.startsWith("war not found")) return "해당 전쟁을 찾을 수 없습니다.";
