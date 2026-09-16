@@ -5,6 +5,8 @@ import kr.danta.core.diplomacy.DiplomacyService;
 import kr.danta.core.diplomacy.DiplomaticStatus;
 import kr.danta.core.diplomacy.WarService;
 import kr.danta.core.diplomacy.WarSide;
+import kr.danta.core.diplomacy.DiplomaticAccessService;
+import kr.danta.core.diplomacy.AccessRight;
 import kr.danta.core.facility.FacilityConstructionService;
 import kr.danta.paper.facility.FacilityAppearanceService;
 import kr.danta.paper.facility.FacilityAppearanceListener;
@@ -121,6 +123,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private ResearchService researchService;
     private DiplomacyService diplomacyService;
     private WarService warService;
+    private DiplomaticAccessService diplomaticAccessService;
     private java.util.Map<String, GeneralDefinition> generalCatalog = java.util.Map.of();
     private long economyTicksProcessed;
     private TerritoryService territoryService;
@@ -176,6 +179,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         generalAcquisitionService = new GeneralAcquisitionService(gameState);
         diplomacyService = new DiplomacyService(gameState);
         warService = new WarService(gameState, diplomacyService);
+        diplomaticAccessService = new DiplomaticAccessService(gameState, diplomacyService);
         pointGeneralAssignmentService = new PointGeneralAssignmentService(gameState);
         armyCommanderService = new ArmyCommanderService(gameState);
         loadGeneralCatalog();
@@ -1583,6 +1587,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         try {
             String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
             switch (sub) {
+                case "access" -> { requireArgs(args, 4, "/danta diplomacy access <이용국> <영토국>"); sender.sendMessage("§6[외교 이용권] §e"+args[2]+" → "+args[3]); sender.sendMessage("§7통행권: "+(diplomaticAccessService.hasRight(args[2],args[3],AccessRight.PASSAGE)?"§a허용":"§c불허")); sender.sendMessage("§7보급권: "+(diplomaticAccessService.hasRight(args[2],args[3],AccessRight.SUPPLY)?"§a허용":"§c불허")); }
                 case "war" -> { requireArgs(args, 4, "/danta diplomacy war <공격국> <방어국>"); var war=warService.declareWar(args[2],args[3]); flushDiplomacyState("war-declare:"+war.warId()); sender.sendMessage("§c전쟁을 선언했습니다: §e"+war.initiatorNationId()+" → "+war.targetNationId()+" §7전쟁 ID="+war.warId()); sender.sendMessage("§7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
                 case "support" -> { requireArgs(args, 5, "/danta diplomacy support <전쟁-id> <국가-id> <attacker|defender>"); var war=warService.supportJoin(java.util.UUID.fromString(args[2]),args[3],WarSide.valueOf(args[4].toUpperCase(Locale.ROOT))); flushDiplomacyState("war-support:"+war.warId()+":"+args[3]); sender.sendMessage("§a공식 지원참전했습니다: §e"+args[3]+" §7"+(war.sideOf(args[3])==WarSide.ATTACKER?"공격측":"방어측")); }
                 case "wars" -> { sender.sendMessage("§6[진행 중 전쟁] §7총 "+warService.wars().size()+"개"); for(var war:warService.wars()) sender.sendMessage("§e"+war.warId()+" §7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
@@ -1595,7 +1600,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "show" -> { requireArgs(args, 4, "/danta diplomacy show <국가1> <국가2>"); sender.sendMessage("§6[외교 관계] §e"+args[2]+" ↔ "+args[3]+" §7"+diplomacyStatusKo(diplomacyService.status(args[2],args[3]))); }
                 case "list" -> { sender.sendMessage("§6[외교 관계 목록] §7총 "+diplomacyService.relations().size()+"개"); for(var r:diplomacyService.relations()) sender.sendMessage("§e"+r.nationAId()+" ↔ "+r.nationBId()+" §7"+diplomacyStatusKo(r.status())); }
-                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|war|support|wars>");
+                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars>");
             }
         } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
         return true;
