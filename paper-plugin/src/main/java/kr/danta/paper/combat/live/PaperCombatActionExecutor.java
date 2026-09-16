@@ -72,7 +72,17 @@ public final class PaperCombatActionExecutor {
 
         face(primary, target.getEyeLocation());
         double distance = primary.getLocation().distance(target.getLocation());
+        if (execution.decision().action() == CombatAiAction.ENGAGE
+                && CombatEngagementPolicy.shouldChase(spec.mode(), distance, spec.range())) {
+            chase(unit, mover, target);
+            return;
+        }
+        if (spec.mode() == CombatAttackPolicy.AttackMode.MELEE && distance <= spec.range()
+                && mover instanceof Mob mob) {
+            mob.getPathfinder().stopPathfinding();
+        }
         if (distance > spec.range()) return;
+
         long now = System.currentTimeMillis();
         if (!runtime.tryAcquireAttack(unit.unitId(), now, spec.cooldownMillis())) return;
 
@@ -80,6 +90,15 @@ public final class PaperCombatActionExecutor {
             case MELEE -> target.damage(spec.damage(), primary);
             case RANGED -> fireArrow(primary, target, spec.damage());
             case SUPPORT_VISUAL -> { /* handled above */ }
+        }
+    }
+
+    private void chase(LiveCombatUnit unit, LivingEntity mover, LivingEntity target) {
+        face(mover, target.getLocation());
+        if (mover instanceof Mob mob) {
+            double pathfinderSpeed = CombatMobNavigationPolicy.pathfinderSpeedMultiplier(
+                    attackPolicy.moveSpeed(unit.troopType()));
+            mob.getPathfinder().moveTo(target.getLocation(), pathfinderSpeed);
         }
     }
 
