@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
 Updated: 2026-09-16
-Checkpoint: DEV-107 COMPLETE; Phase 10 complete
+Checkpoint: DEV-107 COMPLETE; DEV-110 IMPLEMENTED awaiting Windows verification
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -98,6 +98,7 @@ Checkpoint: DEV-107 COMPLETE; Phase 10 complete
 - DEV-097 independence war: COMPLETE. Windows quick-deploy/Paper/restart verification passed. Verified minimum-subordination lock and specific Korean rejection, own-capital prerequisite, explicit player declaration, active-war duplicate rejection, restart persistence of active defense timer/vassal state/capital ownership, successful release to independent nation while preserving territory, immediate failure on capital loss, and provisional 30m redeclare cooldown with specific Korean rejection. Design direction: independence is an optional nation objective/quest unlocked by conditions rather than an automatic war; eligible players choose whether/when to declare. Provisional values remain configurable and are not final balance. DEV-098 third-country independence support remains separate.
 
 ## Implemented tickets awaiting live verification
+- DEV-110 SiegeInstance state machine: IMPLEMENTED. Added Paper-independent siege lifecycle CREATED→SCHEDULED→ACTIVE→RESOLVED with pre-active CANCELLED terminal path, immutable siege/point/attacker/defender identity, invalid-transition rejection, and SiegeService prevention of concurrent non-terminal sieges on one point. No real-time reservation, physical fortress objectives, AI, or snapshot persistence is preimplemented; those remain DEV-111/113/114+/120. Windows quick-deploy verification pending.
 - DEV-098B official third-country independence-war participation: COMPLETE. Windows quick-deploy/Paper live verification passed: pre-declaration join rejected; declaration created a WarService war ID; green joined red's independence side; duplicate and overlord joins were rejected with specific Korean reasons; successful independence removed the active war and restored red↔blue and green↔blue to NEUTRAL.
 - DEV-098A third-country pre-independence material support: COMPLETE. Windows quick-deploy/Paper live verification passed. Verified green -> red treasury GOLD transfer (1000→800 / 382→582), FOOD transfer (500→400 / 100→200), IRON transfer (100→80 / 60→80), vassal relation remained red -> blue, existing failed-war cooldown remained unchanged, and support did not auto-declare or bypass independence. Overlord support, insufficient treasury, insufficient strategic resource, and self-support were all rejected with specific Korean reasons. DEV-098B post-declaration official military support remains to implement using existing DEV-091 WarService participation rules rather than duplicating war logic.
 - DEV-096 tribute/subordination restrictions: COMPLETE. Windows quick-deploy/Paper live verification passed: vassal state recovered, provisional 15% treasury-revenue tribute status displayed with personal wallets excluded, overlord passage/vassal supply denial worked, and vassal alliance + ordinary war against overlord were rejected with specific Korean reasons. DEV-097 independence timing/war remains separate.
@@ -150,10 +151,11 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 7. Execution-plan DEV-105 COMPLETE after Windows quick-deploy success.
 8. DEV-106 COMPLETE after Windows quick-deploy and live `/danta ranking` verification. Current dev data showed 청국/녹국/적국 all at total/fame/hegemony 0 during CONFLICT.
 9. DEV-107 COMPLETE after live ownership-event and restart-persistence verification. Test mutation `red_farm` is currently blue and must be restored to red before continuing normal development.
-10. Phase 10 (DEV-100~107) is complete. Determine the next ticket from the execution plan before implementing further work.
-11. Live verification exposed EconomyTick catch-up when admin season end advances runtime from 25:18:52 to 50:00:00: 50 ticks processed immediately before snapshots. This is the same class of runtime-jump catch-up previously observed with development runtime set and should be addressed before treating admin early-end as production-safe.
-12. Current live baseline restored after admin-end test: runtime 25:18:52, speed x1.0, season CONFLICT, runtime running.\n10. Previous clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
-14. Observed during dev runtime restoration: advancing runtime from the 4h test range back to ~25h16m caused EconomyTick to catch up 42 ticks at once. Treat this as an observation for future runtime manipulation/snapshot/economy scheduler review, not as a DEV-101 defect.
+10. Phase 10 (DEV-100~107) is complete.
+11. Phase 11 begins at DEV-110 per execution plan v1.0. DEV-110 SiegeInstance state machine is IMPLEMENTED and awaits Windows quick-deploy verification; DEV-111 real-time reservation remains separate.
+12. Live verification exposed EconomyTick catch-up when admin season end advances runtime from 25:18:52 to 50:00:00: 50 ticks processed immediately before snapshots. This is the same class of runtime-jump catch-up previously observed with development runtime set and should be addressed before treating admin early-end as production-safe.
+13. Current live baseline restored after admin-end test: runtime 25:18:52, speed x1.0, season CONFLICT, runtime running.\n10. Previous clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
+15. Observed during dev runtime restoration: advancing runtime from the 4h test range back to ~25h16m caused EconomyTick to catch up 42 ticks at once. Treat this as an observation for future runtime manipulation/snapshot/economy scheduler review, not as a DEV-101 defect.
 
 ## Automated verification baseline
 - DEV-TEST-001: `dev-server/quick-deploy.bat` now runs the Gradle `test` task before Paper JAR deployment; failed automated tests block deploy.
