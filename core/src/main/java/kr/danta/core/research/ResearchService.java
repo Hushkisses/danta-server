@@ -2,6 +2,8 @@ package kr.danta.core.research;
 
 import kr.danta.core.runtime.RuntimeScheduledTask;
 import kr.danta.core.runtime.RuntimeScheduler;
+import kr.danta.core.state.GameState;
+import kr.danta.core.territory.StrategicPoint;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -37,6 +39,25 @@ public final class ResearchService {
         ResearchDefinition definition = definition(researchId);
         var completed = state(nationId).completed();
         return definition.prerequisites().stream().filter(id -> !completed.contains(id)).toList();
+    }
+    public synchronized boolean isEffectActive(String nationId, String researchId, GameState gameState) {
+        ResearchDefinition definition = definition(researchId);
+        ResearchState state = state(nationId);
+        if (!state.completed().contains(definition.researchId())) return false;
+        String requiredType = definition.requiredMajorPointType();
+        if (requiredType == null) return true;
+        String normalizedNation = nationId.trim().toLowerCase();
+        return gameState.strategicPoints().stream().anyMatch(point ->
+                point.ownerNationId().map(owner -> owner.equalsIgnoreCase(normalizedNation)).orElse(false)
+                        && matchesRequiredMajorPointType(point, requiredType));
+    }
+    public synchronized List<String> inactiveCompletedResearch(String nationId, GameState gameState) {
+        return state(nationId).completed().stream().filter(id -> !isEffectActive(nationId, id, gameState)).sorted().toList();
+    }
+    private static boolean matchesRequiredMajorPointType(StrategicPoint point, String requiredType) {
+        String key = requiredType.trim().toLowerCase();
+        return point.type().name().equalsIgnoreCase(key)
+                || (key.equals("major") && point.type() == kr.danta.core.territory.StrategicPointType.MAJOR);
     }
     public synchronized List<ResearchDefinition> definitions(ResearchField field) {
         return definitions.values().stream().filter(d -> d.field() == field)
