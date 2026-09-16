@@ -7,7 +7,7 @@ public final class DevTerrainLayouts {
     private DevTerrainLayouts() {}
 
     public static TerrainLayout sample() {
-        return new TerrainLayout("dev-terrain-sample", 32, List.of(
+        return new TerrainLayout("dev-terrain-sample", 48, List.of(
                 new TerrainTileSpec(-2, -1, TerrainTileType.MOUNTAIN, 0),
                 new TerrainTileSpec(-2, 0, TerrainTileType.MOUNTAIN, 0),
                 new TerrainTileSpec(-2, 1, TerrainTileType.MOUNTAIN, 0),
