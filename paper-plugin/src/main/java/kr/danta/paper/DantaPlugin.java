@@ -88,6 +88,7 @@ import kr.danta.paper.map.DevMapDefinition;
 import kr.danta.paper.map.DevMapLoader;
 import kr.danta.paper.map.DevMapService;
 import kr.danta.paper.map.MapStructurePlacer;
+import kr.danta.paper.map.CanyonFortressBuilder;
 import kr.danta.paper.persistence.DatabaseConfig;
 import kr.danta.paper.persistence.DatabaseConfigLoader;
 import kr.danta.paper.persistence.DatabaseHealth;
@@ -165,6 +166,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private DevMapDefinition devMapDefinition;
     private DevMapService devMapService;
     private MapStructurePlacer mapStructurePlacer;
+    private CanyonFortressBuilder canyonFortressBuilder;
     private BukkitTask runtimeSchedulerPump;
 
     private PostgresDatabaseService databaseService;
@@ -188,6 +190,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         armyGuiController = new ArmyGuiController(gameState, armyOperationQueues);
         getServer().getPluginManager().registerEvents(armyGuiController, this);
         initializeDevMap();
+        canyonFortressBuilder = new CanyonFortressBuilder();
         eventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> {
             getLogger().info("[Territory] " + event.pointId() + ": "
                     + event.previousOwner().orElse("none") + " -> " + event.newOwner().orElse("none")
@@ -387,6 +390,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length > 0 && args[0].equalsIgnoreCase("season")) return handleSeason(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("ranking")) return handleRanking(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("chronicle")) return handleChronicle(sender);
+        if (args.length > 1 && args[0].equalsIgnoreCase("map") && args[1].equalsIgnoreCase("build-fortress")) return handleBuildFortress(sender);
         if (args.length > 0 && args[0].equalsIgnoreCase("db")) return handleDatabase(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("snapshot")) return handleSnapshot(sender, args);
         if (args.length > 0 && args[0].equalsIgnoreCase("nation")) return handleNation(sender, args);
@@ -1405,6 +1409,23 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     }
 
 
+
+    private boolean handleBuildFortress(CommandSender sender) {
+        if (!sender.hasPermission("danta.admin.map")) {
+            sender.sendMessage("§c대요새 자동 건축 권한이 없습니다.");
+            return true;
+        }
+        var world = getServer().getWorld(devMapDefinition.worldName());
+        if (world == null) {
+            sender.sendMessage("§c테스트 맵 월드가 로드되어 있지 않습니다.");
+            return true;
+        }
+        sender.sendMessage("§e협곡 대요새를 생성합니다. 주변 테스트 영역의 블록이 변경됩니다.");
+        var result = canyonFortressBuilder.build(world);
+        sender.sendMessage("§a협곡 대요새 생성 완료: 중심 "
+                + result.centerX() + ", " + result.baseY() + ", " + result.centerZ());
+        return true;
+    }
 
     private boolean handleChronicle(CommandSender sender) {
         sender.sendMessage("§6[단타 연대기]");
