@@ -114,3 +114,15 @@ edges:
   - { id: e11, a: blue_farm, b: blue_capital, travel-seconds: 120, tags: [ROAD, PLAIN] }
   - { id: e12, a: blue_mine, b: blue_capital, travel-seconds: 150, tags: [ROAD, PLAIN] }
   - { id: e13, a: canyon_fort, b: blue_farm, travel-seconds: 180, tags: [ROAD] }
+
+# DEV-112 logical siege battlefield metadata.
+# These coordinates reserve the canyon_fort test area; DEV-113 adds objective interaction rules.
+siege-battlefields:
+  - id: canyon_fort_test
+    point: canyon_fort
+    center: { x: 790, y: 78, z: -120 }
+    radius: 64
+    objectives:
+      - { id: outer_gate, type: OUTER_GATE, x: 758, y: 78, z: -120 }
+      - { id: inner_gate, type: INNER_GATE, x: 778, y: 78, z: -120 }
+      - { id: core, type: CORE, x: 790, y: 80, z: -120 }
