@@ -148,7 +148,7 @@ public final class GameSnapshotCodec {
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
-                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]), List.of());
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]), List.of(), List.of());
         }
         if (schema == 15) {
             if (p.length != 20) throw new IllegalArgumentException("invalid schema v15 field count");
@@ -158,7 +158,7 @@ public final class GameSnapshotCodec {
                     decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
-                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]), List.of());
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]), List.of(), List.of());
         }
         if (schema == 16) {
             if (p.length != 21) throw new IllegalArgumentException("invalid schema v16 field count");
