@@ -12,9 +12,10 @@ public record GameSnapshot(
         List<LocalResourceStockpileSnapshot> localResourceStockpiles, List<GeneralSnapshot> generals,
         List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
         List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
-        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars
+        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars,
+        List<FameScoreSnapshot> fameScores
 ) {
-    public static final int CURRENT_SCHEMA = 18;
+    public static final int CURRENT_SCHEMA = 19;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -25,10 +26,26 @@ public record GameSnapshot(
         armies = copy(armies); armyOrders = copy(armyOrders); armyOperationQueues = copy(armyOperationQueues);
         personalWallets = copy(personalWallets); strategicResourceStockpiles = copy(strategicResourceStockpiles);
         localResourceStockpiles = copy(localResourceStockpiles); generals = copy(generals);
-        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions); researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations); vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars);
+        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions); researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations); vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars); fameScores = copy(fameScores);
     }
 
     private static <T> List<T> copy(List<T> value) { return value == null ? List.of() : List.copyOf(value); }
+
+    /** Source-compatible v18-shape constructor; DEV-102 adds fameScores in schema v19. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
+                        double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
+                        List<NationSnapshot> nations, List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies, List<ArmyOrderSnapshot> armyOrders, List<ArmyOperationQueueSnapshot> armyOperationQueues,
+                        List<PersonalWalletSnapshot> personalWallets, List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
+                        List<LocalResourceStockpileSnapshot> localResourceStockpiles, List<GeneralSnapshot> generals,
+                        List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
+                        List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
+                        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
+                personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, List.of());
+    }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
                         boolean runtimePaused, double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
