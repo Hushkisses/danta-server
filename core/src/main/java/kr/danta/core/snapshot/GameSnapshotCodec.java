@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v16; DEV-090 writes v16. */
+/** Dependency-free snapshot codec. Reads schema v1-v17; DEV-095 writes v17. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -38,7 +38,7 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()), encodeVassalRelations(s.vassalRelations()));
     }
 
     public static GameSnapshot decode(String value) {
@@ -169,7 +169,18 @@ public final class GameSnapshotCodec {
                     decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
                     decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStatesV15(p[19]),
-                    decodeDiplomaticRelations(p[20]));
+                    decodeDiplomaticRelations(p[20]), List.of());
+        }
+        if (schema == 17) {
+            if (p.length != 22) throw new IllegalArgumentException("invalid schema v17 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]),
+                    decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]));
         }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
@@ -577,6 +588,16 @@ public final class GameSnapshotCodec {
             result.put(row.substring(0, colon), Long.parseLong(row.substring(colon + 1)));
         }
         return Map.copyOf(result);
+    }
+
+    private static String encodeVassalRelations(List<VassalRelationSnapshot> values) {
+        return values.stream().map(v -> enc(v.vassalNationId()) + "," + enc(v.overlordNationId()) + "," + v.vassalizedAtRuntimeMillis()).collect(java.util.stream.Collectors.joining(";"));
+    }
+    private static List<VassalRelationSnapshot> decodeVassalRelations(String value) {
+        if (value == null || value.isEmpty()) return List.of();
+        List<VassalRelationSnapshot> out = new ArrayList<>();
+        for (String row : value.split(";")) { String[] p=row.split(",",-1); if(p.length!=3) throw new IllegalArgumentException("invalid vassal relation"); out.add(new VassalRelationSnapshot(dec(p[0]),dec(p[1]),Long.parseLong(p[2]))); }
+        return out;
     }
 
     private static String enc(String s) {
