@@ -13,9 +13,10 @@ public record GameSnapshot(
         List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
         List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
         List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars,
-        List<FameScoreSnapshot> fameScores
+        List<FameScoreSnapshot> fameScores,
+        List<ChronicleEntrySnapshot> chronicleEntries
 ) {
-    public static final int CURRENT_SCHEMA = 19;
+    public static final int CURRENT_SCHEMA = 20;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -26,10 +27,27 @@ public record GameSnapshot(
         armies = copy(armies); armyOrders = copy(armyOrders); armyOperationQueues = copy(armyOperationQueues);
         personalWallets = copy(personalWallets); strategicResourceStockpiles = copy(strategicResourceStockpiles);
         localResourceStockpiles = copy(localResourceStockpiles); generals = copy(generals);
-        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions); researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations); vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars); fameScores = copy(fameScores);
+        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions); researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations); vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars); fameScores = copy(fameScores); chronicleEntries = copy(chronicleEntries);
     }
 
     private static <T> List<T> copy(List<T> value) { return value == null ? List.of() : List.copyOf(value); }
+
+    /** Source-compatible v19-shape constructor; DEV-107 adds chronicleEntries in schema v20. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
+                        double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
+                        List<NationSnapshot> nations, List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies, List<ArmyOrderSnapshot> armyOrders, List<ArmyOperationQueueSnapshot> armyOperationQueues,
+                        List<PersonalWalletSnapshot> personalWallets, List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
+                        List<LocalResourceStockpileSnapshot> localResourceStockpiles, List<GeneralSnapshot> generals,
+                        List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
+                        List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
+                        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars,
+                        List<FameScoreSnapshot> fameScores) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
+                personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, List.of());
+    }
 
     /** Source-compatible v18-shape constructor; DEV-102 adds fameScores in schema v19. */
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
@@ -44,7 +62,7 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
                 personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
-                researchStates, diplomaticRelations, vassalRelations, independenceWars, List.of());
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, List.of(), List.of());
     }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
