@@ -64,6 +64,7 @@ import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
 import kr.danta.core.npc.NpcNationService;
 import kr.danta.core.npc.NpcPoliticalService;
 import kr.danta.core.nation.VassalService;
+import kr.danta.core.nation.VassalPolicyService;
 import kr.danta.core.state.GameState;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.PointPosition;
