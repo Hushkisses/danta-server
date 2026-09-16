@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,8 +54,8 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
                 Location spawn = spawnLocation(world, origin, slot);
                 PaperCombatUnitFactory.SpawnedCombatUnit created = unitFactory.spawn(
                         world, spawn, slot.side(), slot.troopType());
-                suppressVanillaAi(created.primary());
-                if (created.mount() != null) suppressVanillaAi(created.mount());
+                prepareControlledMob(created.primary());
+                if (created.mount() != null) prepareControlledMob(created.mount());
                 registry.register(created.unit());
                 spawned.add(created);
             }
@@ -210,9 +211,13 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         return new Location(world, x, origin.getY(), z);
     }
 
-    private static void suppressVanillaAi(LivingEntity entity) {
-        entity.setAI(false);
+    private static void prepareControlledMob(LivingEntity entity) {
+        entity.setAI(true);
         entity.setCollidable(true);
+        if (entity instanceof Mob mob) {
+            mob.setAware(true);
+            mob.setTarget(null);
+        }
     }
 
     private static void removeById(UUID entityId) {
