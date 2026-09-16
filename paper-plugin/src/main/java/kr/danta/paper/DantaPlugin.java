@@ -1726,6 +1726,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 case "war" -> { requireArgs(args, 4, "/danta diplomacy war <공격국> <방어국>"); requireSeasonAction(SeasonAction.PLAYER_WAR); var war=warService.declareWar(args[2],args[3]); flushDiplomacyState("war-declare:"+war.warId()); sender.sendMessage("§c전쟁을 선언했습니다: §e"+war.initiatorNationId()+" → "+war.targetNationId()+" §7전쟁 ID="+war.warId()); sender.sendMessage("§7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
                 case "support" -> { requireArgs(args, 5, "/danta diplomacy support <전쟁-id> <국가-id> <attacker|defender>"); var war=warService.supportJoin(java.util.UUID.fromString(args[2]),args[3],WarSide.valueOf(args[4].toUpperCase(Locale.ROOT))); flushDiplomacyState("war-support:"+war.warId()+":"+args[3]); sender.sendMessage("§a공식 지원참전했습니다: §e"+args[3]+" §7"+(war.sideOf(args[3])==WarSide.ATTACKER?"공격측":"방어측")); }
                 case "wars" -> { sender.sendMessage("§6[진행 중 전쟁] §7총 "+warService.wars().size()+"개"); for(var war:warService.wars()) sender.sendMessage("§e"+war.warId()+" §7공격측="+String.join(", ",war.attackers())+" / 방어측="+String.join(", ",war.defenders())); }
+                case "war-end" -> { requireArgs(args,3,"/danta diplomacy war-end <전쟁-id>"); var warId=java.util.UUID.fromString(args[2]); warService.endWar(warId); flushDiplomacyState("war-end:"+warId); sender.sendMessage("§a전쟁을 종료했습니다: §e"+warId); }
                 case "set" -> {
                     requireArgs(args, 5, "/danta diplomacy set <국가1> <국가2> <neutral|friendly|alliance|war>");
                     DiplomaticStatus status = DiplomaticStatus.valueOf(args[4].toUpperCase(Locale.ROOT));
@@ -1736,7 +1737,7 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 case "show" -> { requireArgs(args, 4, "/danta diplomacy show <국가1> <국가2>"); sender.sendMessage("§6[외교 관계] §e"+args[2]+" ↔ "+args[3]+" §7"+diplomacyStatusKo(diplomacyService.status(args[2],args[3]))); }
                 case "list" -> { sender.sendMessage("§6[외교 관계 목록] §7총 "+diplomacyService.relations().size()+"개"); for(var r:diplomacyService.relations()) sender.sendMessage("§e"+r.nationAId()+" ↔ "+r.nationBId()+" §7"+diplomacyStatusKo(r.status())); }
-                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|support|wars|npc-register|npc-unregister|npc-step|npc-list|npc-political|npc-status|vassalize|vassal-status|tribute-status|independence-declare|independence-status|independence-support-gold|independence-support-resource|independence-support-join>");
+                default -> sender.sendMessage("§e/danta diplomacy <set|show|list|access|war|war-end|support|wars|npc-register|npc-unregister|npc-step|npc-list|npc-political|npc-status|vassalize|vassal-status|tribute-status|independence-declare|independence-status|independence-support-gold|independence-support-resource|independence-support-join>");
             }
         } catch (RuntimeException ex) { sendCommandError(sender, "외교", ex); }
         return true;
