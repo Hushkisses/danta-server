@@ -10,6 +10,8 @@ import kr.danta.core.npc.NpcNationState;
 import kr.danta.core.npc.NpcPoliticalStatus;
 
 import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * DEV-103 current hegemony score.
@@ -39,9 +41,16 @@ public final class HegemonyScoreService {
     public long score(String nationId) {
         requireNation(nationId);
         long total = 0L;
+        Map<String, Integer> majorCountsByKind = new HashMap<>();
         for (StrategicPoint point : gameState.strategicPoints()) {
             if (!point.ownerNationId().filter(nationId::equals).isPresent()) continue;
-            total = Math.addExact(total, policy.strategicPointValue(point.type()));
+            long base = policy.strategicPointValue(point.type());
+            if (point.type() == StrategicPointType.MAJOR) {
+                String kind = policy.majorPointKind(point);
+                int ownedOfKind = majorCountsByKind.merge(kind, 1, Integer::sum);
+                base = applyPercent(base, policy.majorPointMarginalPercent(ownedOfKind));
+            }
+            total = Math.addExact(total, base);
         }
         if (vassals != null) {
             for (VassalRelation relation : vassals.relations()) {
@@ -61,6 +70,11 @@ public final class HegemonyScoreService {
         return total;
     }
 
+    private static long applyPercent(long value, int percent) {
+        if (percent < 0 || percent > 100) throw new IllegalArgumentException("marginal percent must be 0..100");
+        return Math.multiplyExact(value, percent) / 100L;
+    }
+
     private void requireNation(String nationId) {
         if (nationId == null || nationId.isBlank() || !gameState.hasNation(nationId)) {
             throw new IllegalArgumentException("nation not found: " + nationId);
@@ -71,5 +85,22 @@ public final class HegemonyScoreService {
         long strategicPointValue(StrategicPointType type);
         default long vassalValue() { return 0L; }
         default long subjugatedNpcValue() { return 0L; }
+
+        /**
+         * Stable major-point kind key. Current map data has only the broad MAJOR type;
+         * later major-point content may override this without changing score aggregation.
+         */
+        default String majorPointKind(StrategicPoint point) { return point.type().name(); }
+
+        /**
+         * Design v0.3: same-kind major points use 100% -> 75% -> 50% marginal value.
+         * Counts beyond the documented third keep the 50% floor rather than inventing another step.
+         */
+        default int majorPointMarginalPercent(int ownedOfSameKind) {
+            if (ownedOfSameKind <= 0) throw new IllegalArgumentException("ownedOfSameKind must be > 0");
+            if (ownedOfSameKind == 1) return 100;
+            if (ownedOfSameKind == 2) return 75;
+            return 50;
+        }
     }
 }
