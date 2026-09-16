@@ -185,7 +185,7 @@ public final class SnapshotService {
                         .map(q -> new ResearchQueueEntry(q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis()))
                         .toList();
                 researchService.restore(ResearchState.restored(
-                        research.nationId(), research.researchSlots(), research.completed(), queue));
+                        research.nationId(), research.researchSlots(), research.completed(), queue, research.doctrineSlots(), research.doctrines()));
             }
         }
         // Restore assignments after points, armies and generals all exist.
@@ -291,7 +291,7 @@ public final class SnapshotService {
                 researchService.states().stream()
                         .map(state -> new ResearchStateSnapshot(state.nationId(), state.researchSlots(), state.completed(),
                                 state.queue().stream().map(q -> new ResearchQueueSnapshot(
-                                        q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis())).toList()))
+                                        q.entryId(), q.researchId(), q.taskId(), q.dueRuntimeMillis())).toList(), state.doctrineSlots(), state.doctrines()))
                         .toList();
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
