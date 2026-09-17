@@ -1,5 +1,6 @@
 package kr.danta.paper.combat.live;
 
+import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
@@ -17,6 +18,7 @@ import java.util.UUID;
 /** Paper event boundary for DEV-115 temporary combat entities. */
 public final class LiveCombatListener implements Listener {
     private final LiveCombatRuntime runtime;
+    private final CombatKnockbackPolicy knockbackPolicy = CombatKnockbackPolicy.developmentDefaults();
 
     public LiveCombatListener(LiveCombatRuntime runtime) {
         this.runtime = Objects.requireNonNull(runtime, "runtime");
@@ -53,6 +55,15 @@ public final class LiveCombatListener implements Listener {
         }
 
         if (!runtime.mayDamage(attackerId, victim.getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityPushedByAttack(EntityPushedByEntityAttackEvent event) {
+        if (knockbackPolicy.shouldSuppress(
+                isDemoOwned(event.getPushedBy()),
+                isDemoOwned(event.getEntity()))) {
             event.setCancelled(true);
         }
     }
