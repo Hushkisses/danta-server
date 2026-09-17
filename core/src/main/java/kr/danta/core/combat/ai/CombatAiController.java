@@ -61,8 +61,8 @@ public final class CombatAiController {
     }
 
     private CombatAiDecision decideCavalry(CombatAiObservation observation) {
-        if (observation.spearScreenPresent() && !observation.exposedEnemyBackline()) {
-            return decision(CombatAiAction.HOLD);
+        if (observation.spearScreenPresent()) {
+            return decision(CombatAiAction.ENGAGE, TroopType.SPEARMEN);
         }
         if (observation.exposedEnemyBackline()) {
             return decision(CombatAiAction.FLANK, observation.nearestHostileType());
