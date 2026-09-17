@@ -73,8 +73,8 @@ public final class PaperCombatActionExecutor {
 
         face(primary, target.getEyeLocation());
         double distance = primary.getLocation().distance(target.getLocation());
-        if (execution.decision().action() == CombatAiAction.ENGAGE
-                && CombatEngagementPolicy.shouldChase(spec.mode(), distance, spec.range())) {
+        if (CombatEngagementPolicy.shouldChase(
+                spec.mode(), execution.decision().action(), distance, spec.range())) {
             chase(unit, mover, target);
             return;
         }
