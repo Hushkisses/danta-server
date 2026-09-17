@@ -21,12 +21,19 @@ class CombatKnockbackPolicyTest {
     }
 
     @Test
-    void onlyTrackedCombatUnitVsTrackedCombatUnitHitsAreSuppressed() {
+    void trackedDirectCombatHitsAreSuppressed() {
         CombatKnockbackPolicy policy = CombatKnockbackPolicy.developmentDefaults();
 
-        assertTrue(policy.shouldSuppress(true, true));
-        assertFalse(policy.shouldSuppress(true, false));
-        assertFalse(policy.shouldSuppress(false, true));
-        assertFalse(policy.shouldSuppress(false, false));
+        assertTrue(policy.shouldSuppress(true, false, true));
+        assertFalse(policy.shouldSuppress(true, false, false));
+        assertFalse(policy.shouldSuppress(false, false, true));
+    }
+
+    @Test
+    void trackedProjectileShooterAlsoSuppressesKnockback() {
+        CombatKnockbackPolicy policy = CombatKnockbackPolicy.developmentDefaults();
+
+        assertTrue(policy.shouldSuppress(false, true, true));
+        assertFalse(policy.shouldSuppress(false, true, false));
     }
 }
