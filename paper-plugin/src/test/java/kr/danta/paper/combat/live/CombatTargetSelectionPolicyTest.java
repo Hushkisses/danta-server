@@ -27,9 +27,9 @@ class CombatTargetSelectionPolicyTest {
 
         assertEquals(SPEARMEN, policy.select(TroopType.CAVALRY, all, 3.0).orElseThrow());
         assertEquals(ARCHERS, policy.select(TroopType.CAVALRY,
-                all.stream().filter(c -> c.unitId() != SPEARMEN).toList(), 3.0).orElseThrow());
+                all.stream().filter(c -> !c.unitId().equals(SPEARMEN)).toList(), 3.0).orElseThrow());
         assertEquals(MAGIC, policy.select(TroopType.CAVALRY,
-                all.stream().filter(c -> c.unitId() != SPEARMEN && c.unitId() != ARCHERS).toList(), 3.0).orElseThrow());
+                all.stream().filter(c -> !c.unitId().equals(SPEARMEN) && !c.unitId().equals(ARCHERS)).toList(), 3.0).orElseThrow());
     }
 
     @Test
