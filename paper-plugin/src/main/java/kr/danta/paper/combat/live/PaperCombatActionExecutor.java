@@ -92,7 +92,9 @@ public final class PaperCombatActionExecutor {
         boolean backlineClosing = CombatEngagementPolicy.shouldChaseBacklineTarget(
                 spec.mode(), unit.troopType(), targetUnit.troopType(),
                 execution.decision().action(), distance, spec.range());
-        if (generalClosing || flankMatchupClosing || backlineClosing) {
+        boolean rangedClosing = CombatEngagementPolicy.shouldChaseRangedTarget(
+                spec.mode(), execution.decision().action(), distance, spec.range());
+        if (generalClosing || flankMatchupClosing || backlineClosing || rangedClosing) {
             chase(unit, mover, target);
             return;
         }
@@ -155,7 +157,6 @@ public final class PaperCombatActionExecutor {
             return;
         }
 
-        // All current DEV-115 visual bodies are mobs. Keep a safe fallback for future profiles.
         mover.teleport(goal);
     }
 
