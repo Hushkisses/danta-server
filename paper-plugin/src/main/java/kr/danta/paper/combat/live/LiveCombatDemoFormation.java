@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-/** DEV-115 deterministic development demo formation definition. */
+/** DEV-115/116 deterministic development combat formation definition. */
 public final class LiveCombatDemoFormation {
     private final List<Slot> slots;
 
@@ -16,8 +16,19 @@ public final class LiveCombatDemoFormation {
 
     public static LiveCombatDemoFormation developmentDefaults() {
         ArrayList<Slot> slots = new ArrayList<>();
-        addSide(slots, CombatSide.RED);
-        addSide(slots, CombatSide.BLUE);
+        addDefaultSide(slots, CombatSide.RED);
+        addDefaultSide(slots, CombatSide.BLUE);
+        return new LiveCombatDemoFormation(slots);
+    }
+
+    /** Creates an exact, side-balanced benchmark formation while cycling all troop types. */
+    public static LiveCombatDemoFormation benchmark(int totalUnits) {
+        if (totalUnits < 10 || totalUnits % 2 != 0) {
+            throw new IllegalArgumentException("benchmark totalUnits must be even and >= 10");
+        }
+        ArrayList<Slot> slots = new ArrayList<>(totalUnits);
+        addBenchmarkSide(slots, CombatSide.RED, totalUnits / 2);
+        addBenchmarkSide(slots, CombatSide.BLUE, totalUnits / 2);
         return new LiveCombatDemoFormation(slots);
     }
 
@@ -33,10 +44,17 @@ public final class LiveCombatDemoFormation {
         return result;
     }
 
-    private static void addSide(List<Slot> slots, CombatSide side) {
+    private static void addDefaultSide(List<Slot> slots, CombatSide side) {
         int index = 0;
         for (TroopType troopType : TroopType.values()) {
             slots.add(new Slot(side, troopType, index++));
+        }
+    }
+
+    private static void addBenchmarkSide(List<Slot> slots, CombatSide side, int sideUnits) {
+        TroopType[] types = TroopType.values();
+        for (int index = 0; index < sideUnits; index++) {
+            slots.add(new Slot(side, types[index % types.length], index));
         }
     }
 
