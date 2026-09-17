@@ -16,13 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * DEV-115 Paper integration boundary for the live CombatAI demo.
- *
- * <p>This follows the existing world/siege integration pattern: the runtime claims only the exact
- * {@code /danta combat-ai demo ...} namespace before the legacy Danta command executor receives it.
- * Existing DEV-114 {@code profiles}/{@code decide} validation commands remain untouched.</p>
- */
+/** Paper integration boundary for DEV-115 live demo and DEV-116 AI benchmark. */
 public final class DantaCombatAiRuntime implements Listener {
     private static final Set<String> BOOTSTRAPPED = ConcurrentHashMap.newKeySet();
 
@@ -31,12 +25,14 @@ public final class DantaCombatAiRuntime implements Listener {
     private final DantaCombatAiCommandBridge bridge = new DantaCombatAiCommandBridge();
     private final LiveCombatRuntime liveRuntime;
     private final CombatAiDemoCommandHandler demoHandler;
+    private final CombatAiBenchmarkCommandHandler benchmarkHandler;
 
     private DantaCombatAiRuntime(JavaPlugin plugin, String bootstrapKey) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.bootstrapKey = Objects.requireNonNull(bootstrapKey, "bootstrapKey");
         this.liveRuntime = new LiveCombatRuntime(plugin, new PaperCombatAiRuntime());
         this.demoHandler = new CombatAiDemoCommandHandler(liveRuntime);
+        this.benchmarkHandler = new CombatAiBenchmarkCommandHandler(plugin, liveRuntime);
         plugin.getServer().getPluginManager().registerEvents(new LiveCombatListener(liveRuntime), plugin);
     }
 
@@ -44,7 +40,6 @@ public final class DantaCombatAiRuntime implements Listener {
         Objects.requireNonNull(plugin, "plugin");
         String key = plugin.getName() + "@" + System.identityHashCode(plugin);
         if (!BOOTSTRAPPED.add(key)) return;
-
         try {
             DantaCombatAiRuntime runtime = new DantaCombatAiRuntime(plugin, key);
             plugin.getServer().getPluginManager().registerEvents(runtime, plugin);
@@ -57,7 +52,7 @@ public final class DantaCombatAiRuntime implements Listener {
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent event) {
         String raw = event.getMessage();
-        if (!isDemoCommand(raw)) return;
+        if (!isRuntimeCommand(raw)) return;
         event.setCancelled(true);
         handle(event.getPlayer(), stripLeadingSlash(raw));
     }
@@ -65,7 +60,7 @@ public final class DantaCombatAiRuntime implements Listener {
     @EventHandler
     public void onServerCommand(ServerCommandEvent event) {
         String raw = event.getCommand();
-        if (!isDemoCommand(raw)) return;
+        if (!isRuntimeCommand(raw)) return;
         event.setCancelled(true);
         handle(event.getSender(), stripLeadingSlash(raw));
     }
@@ -73,6 +68,7 @@ public final class DantaCombatAiRuntime implements Listener {
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
         if (event.getPlugin() != plugin) return;
+        benchmarkHandler.shutdown();
         liveRuntime.shutdown();
         BOOTSTRAPPED.remove(bootstrapKey);
     }
@@ -84,9 +80,18 @@ public final class DantaCombatAiRuntime implements Listener {
         }
 
         String[] tokens = raw.trim().split("\\s+");
-        String[] dantaArgs = tokens.length <= 1
-                ? new String[0]
-                : Arrays.copyOfRange(tokens, 1, tokens.length);
+        String[] dantaArgs = tokens.length <= 1 ? new String[0] : Arrays.copyOfRange(tokens, 1, tokens.length);
+
+        var benchmarkAction = bridge.parseBenchmarkAction(dantaArgs);
+        if (benchmarkAction.isPresent()) {
+            try {
+                benchmarkHandler.handle(sender, benchmarkAction.orElseThrow());
+            } catch (RuntimeException ex) {
+                plugin.getLogger().warning("[DEV-116] CombatAI benchmark command failed: " + rootMessage(ex));
+                sender.sendMessage("§cCombatAI 벤치마크 요청을 처리하지 못했습니다. 서버 콘솔을 확인해 주세요.");
+            }
+            return;
+        }
 
         bridge.parseDemoAction(dantaArgs).ifPresentOrElse(
                 action -> {
@@ -97,14 +102,16 @@ public final class DantaCombatAiRuntime implements Listener {
                         sender.sendMessage("§cCombatAI 전투 시연 요청을 처리하지 못했습니다. 서버 콘솔을 확인해 주세요.");
                     }
                 },
-                () -> sender.sendMessage("§e/danta combat-ai demo <start|stop|status>"));
+                () -> sender.sendMessage("§e/danta combat-ai demo <start|stop|status> 또는 /danta combat-ai benchmark <start 40|60|80|status|stop>"));
     }
 
-    static boolean isDemoCommand(String raw) {
+    static boolean isRuntimeCommand(String raw) {
         if (raw == null) return false;
         String normalized = stripLeadingSlash(raw).trim().toLowerCase(Locale.ROOT);
         return normalized.equals("danta combat-ai demo")
-                || normalized.startsWith("danta combat-ai demo ");
+                || normalized.startsWith("danta combat-ai demo ")
+                || normalized.equals("danta combat-ai benchmark")
+                || normalized.startsWith("danta combat-ai benchmark ");
     }
 
     private static String stripLeadingSlash(String raw) {
