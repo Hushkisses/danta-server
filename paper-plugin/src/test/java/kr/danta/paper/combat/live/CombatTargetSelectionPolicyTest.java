@@ -77,7 +77,7 @@ class CombatTargetSelectionPolicyTest {
     }
 
     @Test
-    void archersChooseOnlyFromEnemiesInsideAttackRange() {
+    void archersChooseOnlyFromEnemiesInsideAttackRangeWhenAnyAreAvailable() {
         CombatTargetSelectionPolicy policy = new CombatTargetSelectionPolicy(28.0, new Random(2));
         List<CombatTargetSelectionPolicy.Candidate> candidates = List.of(
                 candidate(INFANTRY, TroopType.INFANTRY, 8.0),
@@ -87,6 +87,17 @@ class CombatTargetSelectionPolicyTest {
         UUID selected = policy.select(TroopType.ARCHERS, candidates, 14.0).orElseThrow();
         assertTrue(selected.equals(INFANTRY) || selected.equals(SPEARMEN));
         assertNotEquals(CAVALRY, selected);
+    }
+
+    @Test
+    void archersAcquireNearestEnemyWithinSearchRadiusWhenNothingIsInAttackRange() {
+        CombatTargetSelectionPolicy policy = new CombatTargetSelectionPolicy(28.0, new Random(2));
+        List<CombatTargetSelectionPolicy.Candidate> candidates = List.of(
+                candidate(MAGIC, TroopType.MAGIC, 20.0),
+                candidate(CAVALRY, TroopType.CAVALRY, 24.0),
+                candidate(INFANTRY, TroopType.INFANTRY, 31.0));
+
+        assertEquals(MAGIC, policy.select(TroopType.ARCHERS, candidates, 14.0).orElseThrow());
     }
 
     @Test
