@@ -24,7 +24,6 @@ public final class CombatEngagementPolicy {
         validate(mode, action, distance, attackRange);
         if (mode != CombatAttackPolicy.AttackMode.MELEE || distance <= attackRange) return false;
 
-        // General melee units only replace authored movement while directly closing.
         return action == CombatAiAction.ADVANCE || action == CombatAiAction.ENGAGE;
     }
 
@@ -45,8 +44,6 @@ public final class CombatEngagementPolicy {
                 || (attackerType == TroopType.SPEARMEN && targetType == TroopType.CAVALRY);
         if (!cavalrySpearPair) return false;
 
-        // Their flank-screen duel is allowed to override those tactical routes so the two
-        // counter-units actually form a side front instead of passing each other at range.
         return action != CombatAiAction.HOLD
                 && action != CombatAiAction.RETREAT
                 && action != CombatAiAction.SUPPORT;
@@ -61,10 +58,22 @@ public final class CombatEngagementPolicy {
     ) {
         if (attackerType == null) throw new NullPointerException("attackerType");
         validate(mode, action, distance, attackRange);
-        return attackerType == TroopType.ARCHERS
+        return (attackerType == TroopType.ARCHERS || attackerType == TroopType.MAGIC)
                 && mode == CombatAttackPolicy.AttackMode.RANGED
                 && action == CombatAiAction.ENGAGE
                 && distance <= attackRange;
+    }
+
+    public static boolean shouldChaseRangedTarget(
+            CombatAttackPolicy.AttackMode mode,
+            CombatAiAction action,
+            double distance,
+            double attackRange
+    ) {
+        validate(mode, action, distance, attackRange);
+        return mode == CombatAttackPolicy.AttackMode.RANGED
+                && action == CombatAiAction.ENGAGE
+                && distance > attackRange;
     }
 
     public static boolean shouldChaseBacklineTarget(
@@ -82,8 +91,6 @@ public final class CombatEngagementPolicy {
         if (attackerType != TroopType.CAVALRY) return false;
         if (targetType != TroopType.ARCHERS && targetType != TroopType.MAGIC) return false;
 
-        // Once the spear screen is gone, cavalry should penetrate into the rear instead of
-        // stopping at the end of its authored flank route.
         return action == CombatAiAction.FLANK || action == CombatAiAction.PURSUE || action == CombatAiAction.ENGAGE;
     }
 
