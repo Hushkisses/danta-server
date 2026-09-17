@@ -61,9 +61,15 @@ public final class LiveCombatListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityPushedByAttack(EntityPushedByEntityAttackEvent event) {
+        Entity pushedBy = event.getPushedBy();
+        boolean directAttackerOwned = isDemoOwned(pushedBy);
+        boolean projectileShooterOwned = isDemoOwnedProjectileShooter(pushedBy);
+        boolean victimOwned = isDemoOwned(event.getEntity());
+
         if (knockbackPolicy.shouldSuppress(
-                isDemoOwned(event.getPushedBy()),
-                isDemoOwned(event.getEntity()))) {
+                directAttackerOwned,
+                projectileShooterOwned,
+                victimOwned)) {
             event.setCancelled(true);
         }
     }
@@ -79,7 +85,13 @@ public final class LiveCombatListener implements Listener {
         return isDemoOwned(damager) ? damager.getUniqueId() : null;
     }
 
+    private static boolean isDemoOwnedProjectileShooter(Entity entity) {
+        if (!(entity instanceof Projectile projectile)) return false;
+        ProjectileSource shooter = projectile.getShooter();
+        return shooter instanceof Entity shooterEntity && isDemoOwned(shooterEntity);
+    }
+
     private static boolean isDemoOwned(Entity entity) {
-        return entity.getScoreboardTags().contains("danta_combat_demo");
+        return entity != null && entity.getScoreboardTags().contains("danta_combat_demo");
     }
 }
