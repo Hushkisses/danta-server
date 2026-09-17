@@ -9,10 +9,10 @@ class Dev114CombatAiControllerTest {
     private final CombatAiController controller = new CombatAiController();
 
     @Test
-    void infantryRetreatsWhenSurvivalIsThreatened() {
+    void lowHealthDoesNotAutomaticallyRetreatInCurrentCombatModel() {
         CombatAiDecision decision = controller.decide(CombatAiProfile.INFANTRY,
                 obs(2.0, TroopType.SPEARMEN, true, false, false, false, false, true, true));
-        assertEquals(CombatAiAction.RETREAT, decision.action());
+        assertEquals(CombatAiAction.ENGAGE, decision.action());
     }
 
     @Test
@@ -46,13 +46,13 @@ class Dev114CombatAiControllerTest {
     }
 
     @Test
-    void archersRetreatFromUnsafeCloseThreatAndEngageAtSafeRange() {
+    void archersDoNotAutoRetreatFromCloseThreatAndEngageWithFrontlineSupport() {
         CombatAiDecision close = controller.decide(CombatAiProfile.ARCHERS,
                 obs(3.0, TroopType.INFANTRY, true, true, false, false, false, false, true));
         CombatAiDecision safe = controller.decide(CombatAiProfile.ARCHERS,
                 obs(10.0, TroopType.INFANTRY, true, false, false, false, false, false, true));
 
-        assertEquals(CombatAiAction.RETREAT, close.action());
+        assertEquals(CombatAiAction.ENGAGE, close.action());
         assertEquals(CombatAiAction.ENGAGE, safe.action());
     }
 
@@ -77,16 +77,16 @@ class Dev114CombatAiControllerTest {
     }
 
     @Test
-    void magicSupportsAlliedGroupAndRetreatsWhenThreatened() {
+    void magicKeepsSupportingInsteadOfAutoRetreatingWhenThreatened() {
         CombatAiDecision support = controller.decide(CombatAiProfile.MAGIC,
                 obs(10.0, TroopType.INFANTRY, true, false, false, false, false, false, true));
-        CombatAiDecision retreat = controller.decide(CombatAiProfile.MAGIC,
+        CombatAiDecision threatened = controller.decide(CombatAiProfile.MAGIC,
                 obs(3.0, TroopType.CAVALRY, true, true, false, false, false, false, true));
         CombatAiDecision hold = controller.decide(CombatAiProfile.MAGIC,
                 obs(12.0, TroopType.INFANTRY, false, false, false, false, false, false, false));
 
         assertEquals(CombatAiAction.SUPPORT, support.action());
-        assertEquals(CombatAiAction.RETREAT, retreat.action());
+        assertEquals(CombatAiAction.SUPPORT, threatened.action());
         assertEquals(CombatAiAction.HOLD, hold.action());
     }
 
