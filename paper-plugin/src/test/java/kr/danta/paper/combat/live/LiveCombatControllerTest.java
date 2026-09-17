@@ -24,7 +24,7 @@ class LiveCombatControllerTest {
                 CombatAiAction.SCREEN,
                 controller.decide(redSpearman, LiveCombatController.BattlefieldView.cavalryThreat(), layout).decision().action());
         assertEquals(
-                CombatAiAction.ADVANCE,
+                CombatAiAction.ENGAGE,
                 controller.decide(redArcher, LiveCombatController.BattlefieldView.closeThreat(), layout).decision().action());
         assertEquals(
                 CombatAiAction.FLANK,
