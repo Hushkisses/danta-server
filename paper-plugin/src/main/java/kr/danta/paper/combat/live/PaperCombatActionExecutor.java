@@ -19,6 +19,8 @@ import java.util.UUID;
  */
 public final class PaperCombatActionExecutor {
     private static final double WAYPOINT_REACHED_DISTANCE = 1.25;
+    private static final double ARROW_SPEED = 1.6;
+    private static final double ARROW_GRAVITY_PER_TICK_SQUARED = 0.05;
 
     private final CombatEntityResolver resolver;
     private final CombatAttackPolicy attackPolicy;
@@ -184,8 +186,17 @@ public final class PaperCombatActionExecutor {
     private static void fireArrow(LivingEntity attacker, LivingEntity target, double damage) {
         World world = attacker.getWorld();
         Location origin = attacker.getEyeLocation();
-        Vector direction = target.getEyeLocation().toVector().subtract(origin.toVector()).normalize();
-        Arrow arrow = world.spawnArrow(origin, direction, 1.6f, 2.0f);
+        Location targetEye = target.getEyeLocation();
+        double dx = targetEye.getX() - origin.getX();
+        double dz = targetEye.getZ() - origin.getZ();
+        double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+        CombatProjectileAim.AimOffset aim = CombatProjectileAim.compensatedOffset(
+                horizontalDistance,
+                targetEye.getY() - origin.getY(),
+                ARROW_SPEED,
+                ARROW_GRAVITY_PER_TICK_SQUARED);
+        Vector direction = new Vector(dx, aim.vertical(), dz).normalize();
+        Arrow arrow = world.spawnArrow(origin, direction, (float) ARROW_SPEED, 2.0f);
         arrow.setShooter(attacker);
         arrow.setDamage(damage);
         arrow.setPickupStatus(Arrow.PickupStatus.DISALLOWED);
