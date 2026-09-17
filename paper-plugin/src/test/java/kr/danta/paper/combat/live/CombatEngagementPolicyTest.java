@@ -69,25 +69,49 @@ class CombatEngagementPolicyTest {
     }
 
     @Test
-    void archersHoldPositionOnceASelectedTargetIsInsideBowRange() {
+    void rangedUnitsHoldPositionOnceSelectedTargetIsInsideTheirRange() {
         assertTrue(CombatEngagementPolicy.shouldHoldRangedPosition(
                 TroopType.ARCHERS,
                 CombatAttackPolicy.AttackMode.RANGED,
                 CombatAiAction.ENGAGE,
                 12.0,
                 14.0));
+        assertTrue(CombatEngagementPolicy.shouldHoldRangedPosition(
+                TroopType.MAGIC,
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.ENGAGE,
+                8.0,
+                9.0));
         assertFalse(CombatEngagementPolicy.shouldHoldRangedPosition(
                 TroopType.ARCHERS,
                 CombatAttackPolicy.AttackMode.RANGED,
                 CombatAiAction.ENGAGE,
                 15.0,
                 14.0));
-        assertFalse(CombatEngagementPolicy.shouldHoldRangedPosition(
-                TroopType.INFANTRY,
-                CombatAttackPolicy.AttackMode.MELEE,
+    }
+
+    @Test
+    void rangedUnitsCloseOnSelectedTargetUntilInsideTheirOwnFiringRange() {
+        assertTrue(CombatEngagementPolicy.shouldChaseRangedTarget(
+                CombatAttackPolicy.AttackMode.RANGED,
                 CombatAiAction.ENGAGE,
-                2.0,
-                2.8));
+                20.0,
+                14.0));
+        assertTrue(CombatEngagementPolicy.shouldChaseRangedTarget(
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.ENGAGE,
+                12.0,
+                9.0));
+        assertFalse(CombatEngagementPolicy.shouldChaseRangedTarget(
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.ENGAGE,
+                8.0,
+                9.0));
+        assertFalse(CombatEngagementPolicy.shouldChaseRangedTarget(
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.SUPPORT,
+                20.0,
+                9.0));
     }
 
     @Test
