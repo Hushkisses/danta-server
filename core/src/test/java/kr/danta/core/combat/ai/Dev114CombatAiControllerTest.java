@@ -68,11 +68,12 @@ class Dev114CombatAiControllerTest {
     }
 
     @Test
-    void cavalryDoesNotChargeSpearScreenWithoutAlternateTarget() {
+    void cavalryEngagesBlockingSpearScreen() {
         CombatAiDecision decision = controller.decide(CombatAiProfile.CAVALRY,
                 obs(5.0, TroopType.SPEARMEN, true, false, false, false, true, false, true));
 
-        assertEquals(CombatAiAction.HOLD, decision.action());
+        assertEquals(CombatAiAction.ENGAGE, decision.action());
+        assertEquals(TroopType.SPEARMEN, decision.preferredTargetType());
     }
 
     @Test
