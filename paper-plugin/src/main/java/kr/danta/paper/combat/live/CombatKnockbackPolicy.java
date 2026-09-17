@@ -17,6 +17,10 @@ public final class CombatKnockbackPolicy {
         return new CombatKnockbackPolicy();
     }
 
+    public boolean shouldSuppress(boolean attackerTrackedCombatUnit, boolean victimTrackedCombatUnit) {
+        return attackerTrackedCombatUnit && victimTrackedCombatUnit;
+    }
+
     public double multiplier(TroopType attackerType, TroopType victimType) {
         Objects.requireNonNull(attackerType, "attackerType");
         Objects.requireNonNull(victimType, "victimType");
