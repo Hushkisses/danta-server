@@ -82,6 +82,12 @@ class CombatEngagementPolicyTest {
                 CombatAiAction.ENGAGE,
                 8.0,
                 9.0));
+        assertTrue(CombatEngagementPolicy.shouldHoldRangedPosition(
+                TroopType.MAGIC,
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.SUPPORT,
+                8.0,
+                9.0));
         assertFalse(CombatEngagementPolicy.shouldHoldRangedPosition(
                 TroopType.ARCHERS,
                 CombatAttackPolicy.AttackMode.RANGED,
@@ -107,7 +113,7 @@ class CombatEngagementPolicyTest {
                 CombatAiAction.ENGAGE,
                 8.0,
                 9.0));
-        assertFalse(CombatEngagementPolicy.shouldChaseRangedTarget(
+        assertTrue(CombatEngagementPolicy.shouldChaseRangedTarget(
                 CombatAttackPolicy.AttackMode.RANGED,
                 CombatAiAction.SUPPORT,
                 20.0,
