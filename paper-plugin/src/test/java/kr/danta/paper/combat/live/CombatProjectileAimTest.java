@@ -10,21 +10,20 @@ class CombatProjectileAimTest {
     @Test
     void raisesAimPointForLongerShotsToCompensateArrowDrop() {
         CombatProjectileAim.AimOffset shortShot = CombatProjectileAim.compensatedOffset(
-                4.0, 0.0, 1.6, 0.05);
+                4.0, 0.0, 0.20);
         CombatProjectileAim.AimOffset longShot = CombatProjectileAim.compensatedOffset(
-                14.0, 0.0, 1.6, 0.05);
+                14.0, 0.0, 0.20);
 
-        assertTrue(shortShot.vertical() > 0.0);
+        assertEquals(0.8, shortShot.vertical(), 1.0e-9);
+        assertEquals(2.8, longShot.vertical(), 1.0e-9);
         assertTrue(longShot.vertical() > shortShot.vertical());
-        assertEquals(0.0, shortShot.horizontal(), 1.0e-9);
-        assertEquals(0.0, longShot.horizontal(), 1.0e-9);
     }
 
     @Test
-    void preservesExistingVerticalDifferenceWhileAddingDropCompensation() {
+    void preservesExistingVerticalDifferenceWhileAddingTrajectoryLift() {
         CombatProjectileAim.AimOffset offset = CombatProjectileAim.compensatedOffset(
-                10.0, 2.0, 1.6, 0.05);
+                10.0, 2.0, 0.20);
 
-        assertTrue(offset.vertical() > 2.0);
+        assertEquals(4.0, offset.vertical(), 1.0e-9);
     }
 }
