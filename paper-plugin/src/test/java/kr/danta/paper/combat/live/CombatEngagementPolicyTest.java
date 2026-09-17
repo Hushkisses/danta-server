@@ -1,5 +1,6 @@
 package kr.danta.paper.combat.live;
 
+import kr.danta.core.combat.ai.CombatAiAction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,6 +13,24 @@ class CombatEngagementPolicyTest {
                 CombatAttackPolicy.AttackMode.MELEE, 4.0, 2.8));
         assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, 2.7, 2.8));
+    }
+
+    @Test
+    void offensiveMeleeActionsCanCloseOnSelectedPriorityTarget() {
+        assertTrue(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.ADVANCE, 8.0, 3.0));
+        assertTrue(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.ENGAGE, 8.0, 3.0));
+        assertTrue(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.SCREEN, 8.0, 3.0));
+        assertTrue(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.FLANK, 8.0, 3.0));
+        assertTrue(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.PURSUE, 8.0, 3.0));
+        assertFalse(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.HOLD, 8.0, 3.0));
+        assertFalse(CombatEngagementPolicy.shouldChase(
+                CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.RETREAT, 8.0, 3.0));
     }
 
     @Test
