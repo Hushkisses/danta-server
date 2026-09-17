@@ -25,6 +25,9 @@ public final class CombatEngagementPolicy {
         if (!Double.isFinite(distance) || distance < 0.0) throw new IllegalArgumentException("invalid distance");
         if (!Double.isFinite(attackRange) || attackRange < 0.0) throw new IllegalArgumentException("invalid attackRange");
         if (mode != CombatAttackPolicy.AttackMode.MELEE || distance <= attackRange) return false;
-        return action == CombatAiAction.ADVANCE || action == CombatAiAction.ENGAGE;
+        return switch (action) {
+            case ADVANCE, ENGAGE, SCREEN, FLANK, PURSUE -> true;
+            case HOLD, RETREAT, SUPPORT -> false;
+        };
     }
 }
