@@ -7,19 +7,16 @@ import java.util.Objects;
 /**
  * DEV-114 deterministic tactical decision layer.
  *
- * Distance thresholds are implementation fixtures for live AI behavior and are not final balance values.
+ * <p>The current DEV-115 live-combat model does not automatically retreat from low health or
+ * close pressure. Retreat is reserved for a later explicit morale/order/skill system so formations
+ * remain stable while the live combat runtime is being validated.</p>
  */
 public final class CombatAiController {
     private static final double MELEE_RANGE = 3.0;
-    private static final double ARCHER_UNSAFE_RANGE = 4.0;
 
     public CombatAiDecision decide(CombatAiProfile profile, CombatAiObservation observation) {
         Objects.requireNonNull(profile, "profile");
         Objects.requireNonNull(observation, "observation");
-
-        if (observation.survivalThreatened()) {
-            return decision(CombatAiAction.RETREAT);
-        }
 
         return switch (profile) {
             case INFANTRY -> decideInfantry(observation);
@@ -51,9 +48,6 @@ public final class CombatAiController {
     }
 
     private CombatAiDecision decideArchers(CombatAiObservation observation) {
-        if (observation.backlineThreatened() || observation.nearestHostileDistance() <= ARCHER_UNSAFE_RANGE) {
-            return decision(CombatAiAction.RETREAT);
-        }
         if (observation.frontlineSupportPresent()) {
             return decision(CombatAiAction.ENGAGE, observation.nearestHostileType());
         }
@@ -74,9 +68,6 @@ public final class CombatAiController {
     }
 
     private CombatAiDecision decideMagic(CombatAiObservation observation) {
-        if (observation.backlineThreatened()) {
-            return decision(CombatAiAction.RETREAT);
-        }
         if (observation.alliedCombatGroupPresent()) {
             return decision(CombatAiAction.SUPPORT);
         }
