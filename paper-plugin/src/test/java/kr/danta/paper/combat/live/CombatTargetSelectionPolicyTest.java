@@ -54,6 +54,29 @@ class CombatTargetSelectionPolicyTest {
     }
 
     @Test
+    void cavalryAndSpearmenDetectEachOtherAcrossExtendedFlankRadius() {
+        CombatTargetSelectionPolicy policy = new CombatTargetSelectionPolicy(28.0, 40.0, new Random(1));
+
+        assertEquals(SPEARMEN, policy.select(TroopType.CAVALRY, List.of(
+                candidate(INFANTRY, TroopType.INFANTRY, 5.0),
+                candidate(SPEARMEN, TroopType.SPEARMEN, 36.0)), 3.0).orElseThrow());
+
+        assertEquals(CAVALRY, policy.select(TroopType.SPEARMEN, List.of(
+                candidate(INFANTRY, TroopType.INFANTRY, 2.0),
+                candidate(CAVALRY, TroopType.CAVALRY, 36.0)), 3.2).orElseThrow());
+    }
+
+    @Test
+    void extendedFlankRadiusDoesNotPullOtherTargetsFromTooFarAway() {
+        CombatTargetSelectionPolicy policy = new CombatTargetSelectionPolicy(28.0, 40.0, new Random(1));
+        List<CombatTargetSelectionPolicy.Candidate> candidates = List.of(
+                candidate(SPEARMEN, TroopType.SPEARMEN, 41.0),
+                candidate(ARCHERS, TroopType.ARCHERS, 10.0));
+
+        assertEquals(ARCHERS, policy.select(TroopType.CAVALRY, candidates, 3.0).orElseThrow());
+    }
+
+    @Test
     void archersChooseOnlyFromEnemiesInsideAttackRange() {
         CombatTargetSelectionPolicy policy = new CombatTargetSelectionPolicy(28.0, new Random(2));
         List<CombatTargetSelectionPolicy.Candidate> candidates = List.of(
