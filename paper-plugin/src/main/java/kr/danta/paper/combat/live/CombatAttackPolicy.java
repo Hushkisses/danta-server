@@ -24,7 +24,8 @@ public final class CombatAttackPolicy {
         specs.put(TroopType.SPEARMEN, new AttackSpec(AttackMode.MELEE, 3.2, 3.0, 0.22, 1000L));
         specs.put(TroopType.ARCHERS, new AttackSpec(AttackMode.RANGED, 14.0, 2.0, 0.20, 1400L));
         specs.put(TroopType.CAVALRY, new AttackSpec(AttackMode.MELEE, 3.0, 4.0, 0.32, 900L));
-        specs.put(TroopType.MAGIC, new AttackSpec(AttackMode.SUPPORT_VISUAL, 9.0, 0.0, 0.20, 1200L));
+        // Temporary DEV-115 endgame attack only. Real player/troop magic mechanics remain Phase 12 work.
+        specs.put(TroopType.MAGIC, new AttackSpec(AttackMode.RANGED, 9.0, 1.5, 0.20, 1200L));
         return new CombatAttackPolicy(specs);
     }
 
