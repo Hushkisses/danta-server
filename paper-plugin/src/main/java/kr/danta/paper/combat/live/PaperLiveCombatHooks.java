@@ -57,6 +57,7 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
                 prepareControlledMob(created.primary());
                 if (created.mount() != null) prepareControlledMob(created.mount());
                 registry.register(created.unit());
+                CombatHealthBarDisplay.sync(created.unit(), created.primary());
                 spawned.add(created);
             }
             reevaluateAll();
@@ -83,6 +84,7 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         }
         if (schedule.movementDue()) {
             executeAll();
+            syncHealthBars();
         }
     }
 
@@ -127,6 +129,12 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
             if (execution != null) {
                 executor.apply(unit, execution, runtimeAccess);
             }
+        }
+    }
+
+    private void syncHealthBars() {
+        for (LiveCombatUnit unit : registry.units()) {
+            resolver.primary(unit).ifPresent(entity -> CombatHealthBarDisplay.sync(unit, entity));
         }
     }
 
