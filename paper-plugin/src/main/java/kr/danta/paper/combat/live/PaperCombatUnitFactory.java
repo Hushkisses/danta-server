@@ -61,9 +61,12 @@ public final class PaperCombatUnitFactory {
 
             configureEntity(primary, unitId, side, profile.displayName());
             equip(primary, profile.mainHandMaterialKey());
+            primary.customName(Component.text(CombatHealthBarFormatter.format(
+                    side, troopType, primary.getHealth(), primary.getMaxHealth())));
 
             if (mount != null) {
                 configureEntity(mount, unitId, side, profile.displayName() + " 탈것");
+                mount.setCustomNameVisible(false);
                 if (mount instanceof Horse horse) {
                     horse.setTamed(true);
                     horse.setAdult();
