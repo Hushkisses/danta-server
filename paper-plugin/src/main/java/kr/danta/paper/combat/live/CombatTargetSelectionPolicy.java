@@ -59,15 +59,32 @@ public final class CombatTargetSelectionPolicy {
             throw new IllegalArgumentException("attackRange must be finite and >= 0");
         }
 
-        List<Candidate> eligible = candidates.stream()
+        List<Candidate> nonNullCandidates = candidates.stream()
                 .filter(Objects::nonNull)
-                .filter(candidate -> candidate.distance() <= detectionRadius(attackerType, candidate.troopType(), attackRange))
                 .toList();
-        if (eligible.isEmpty()) return Optional.empty();
 
         if (attackerType == TroopType.ARCHERS) {
-            return Optional.of(eligible.get(random.nextInt(eligible.size())).unitId());
+            List<Candidate> inRange = nonNullCandidates.stream()
+                    .filter(candidate -> candidate.distance() <= attackRange)
+                    .toList();
+            if (!inRange.isEmpty()) {
+                return Optional.of(inRange.get(random.nextInt(inRange.size())).unitId());
+            }
+
+            // Preserve random target choice while firing, but when nothing is yet in bow range,
+            // acquire the nearest enemy inside the wider combat search radius so archers can
+            // advance only until they can shoot instead of deadlocking at their rear position.
+            return nonNullCandidates.stream()
+                    .filter(candidate -> candidate.distance() <= searchRadius)
+                    .min(Comparator.comparingDouble(Candidate::distance)
+                            .thenComparing(candidate -> candidate.unitId().toString()))
+                    .map(Candidate::unitId);
         }
+
+        List<Candidate> eligible = nonNullCandidates.stream()
+                .filter(candidate -> candidate.distance() <= detectionRadius(attackerType, candidate.troopType()))
+                .toList();
+        if (eligible.isEmpty()) return Optional.empty();
 
         ArrayList<Candidate> ordered = new ArrayList<>(eligible);
         ordered.sort(Comparator
@@ -77,8 +94,7 @@ public final class CombatTargetSelectionPolicy {
         return Optional.of(ordered.getFirst().unitId());
     }
 
-    private double detectionRadius(TroopType attackerType, TroopType targetType, double attackRange) {
-        if (attackerType == TroopType.ARCHERS) return attackRange;
+    private double detectionRadius(TroopType attackerType, TroopType targetType) {
         boolean cavalrySpearPair = (attackerType == TroopType.CAVALRY && targetType == TroopType.SPEARMEN)
                 || (attackerType == TroopType.SPEARMEN && targetType == TroopType.CAVALRY);
         return cavalrySpearPair ? flankMatchupRadius : searchRadius;
