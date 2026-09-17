@@ -3,7 +3,7 @@ package kr.danta.paper.combat.live;
 import kr.danta.core.combat.TroopType;
 import kr.danta.core.combat.ai.CombatAiAction;
 
-/** Small Paper-independent rule for closing melee distance after authored route movement. */
+/** Small Paper-independent rule for closing or holding combat distance after authored route movement. */
 public final class CombatEngagementPolicy {
     private CombatEngagementPolicy() {}
 
@@ -50,6 +50,41 @@ public final class CombatEngagementPolicy {
         return action != CombatAiAction.HOLD
                 && action != CombatAiAction.RETREAT
                 && action != CombatAiAction.SUPPORT;
+    }
+
+    public static boolean shouldHoldRangedPosition(
+            TroopType attackerType,
+            CombatAttackPolicy.AttackMode mode,
+            CombatAiAction action,
+            double distance,
+            double attackRange
+    ) {
+        if (attackerType == null) throw new NullPointerException("attackerType");
+        validate(mode, action, distance, attackRange);
+        return attackerType == TroopType.ARCHERS
+                && mode == CombatAttackPolicy.AttackMode.RANGED
+                && action == CombatAiAction.ENGAGE
+                && distance <= attackRange;
+    }
+
+    public static boolean shouldChaseBacklineTarget(
+            CombatAttackPolicy.AttackMode mode,
+            TroopType attackerType,
+            TroopType targetType,
+            CombatAiAction action,
+            double distance,
+            double attackRange
+    ) {
+        if (attackerType == null) throw new NullPointerException("attackerType");
+        if (targetType == null) throw new NullPointerException("targetType");
+        validate(mode, action, distance, attackRange);
+        if (mode != CombatAttackPolicy.AttackMode.MELEE || distance <= attackRange) return false;
+        if (attackerType != TroopType.CAVALRY) return false;
+        if (targetType != TroopType.ARCHERS && targetType != TroopType.MAGIC) return false;
+
+        // Once the spear screen is gone, cavalry should penetrate into the rear instead of
+        // stopping at the end of its authored flank route.
+        return action == CombatAiAction.FLANK || action == CombatAiAction.PURSUE || action == CombatAiAction.ENGAGE;
     }
 
     private static void validate(
