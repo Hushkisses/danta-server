@@ -13,14 +13,12 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Applies one DEV-115 live execution intent to Bukkit entities.
- * Uses Paper native mob pathfinding so movement keeps normal walking animation and facing.
- */
+/** Applies one DEV-115 live execution intent to Bukkit entities. */
 public final class PaperCombatActionExecutor {
     private static final double WAYPOINT_REACHED_DISTANCE = 1.25;
     private static final double ARROW_SPEED = 1.6;
-    private static final double ARROW_GRAVITY_PER_TICK_SQUARED = 0.05;
+    private static final double ARROW_LIFT_PER_HORIZONTAL_BLOCK = 0.20;
+    private static final float ARROW_SPREAD = 0.0f;
 
     private final CombatEntityResolver resolver;
     private final CombatAttackPolicy attackPolicy;
@@ -137,11 +135,7 @@ public final class PaperCombatActionExecutor {
         TacticalRoute route = execution.movementIntent().route();
         Location current = mover.getLocation();
         Optional<TacticalWaypoint> waypointOpt = waypointProgress.target(
-                unit.unitId(),
-                route,
-                current.getX(),
-                current.getY(),
-                current.getZ());
+                unit.unitId(), route, current.getX(), current.getY(), current.getZ());
         if (waypointOpt.isEmpty()) {
             stopMovement(mover);
             return;
@@ -158,7 +152,6 @@ public final class PaperCombatActionExecutor {
             mob.getPathfinder().moveTo(goal, pathfinderSpeed);
             return;
         }
-
         mover.teleport(goal);
     }
 
@@ -193,20 +186,17 @@ public final class PaperCombatActionExecutor {
         CombatProjectileAim.AimOffset aim = CombatProjectileAim.compensatedOffset(
                 horizontalDistance,
                 targetEye.getY() - origin.getY(),
-                ARROW_SPEED,
-                ARROW_GRAVITY_PER_TICK_SQUARED);
+                ARROW_LIFT_PER_HORIZONTAL_BLOCK);
         Vector direction = new Vector(dx, aim.vertical(), dz).normalize();
-        Arrow arrow = world.spawnArrow(origin, direction, (float) ARROW_SPEED, 2.0f);
+        Arrow arrow = world.spawnArrow(origin, direction, (float) ARROW_SPEED, ARROW_SPREAD);
         arrow.setShooter(attacker);
         arrow.setDamage(damage);
         arrow.setPickupStatus(Arrow.PickupStatus.DISALLOWED);
         arrow.addScoreboardTag("danta_combat_demo_projectile");
     }
 
-    /** Runtime-owned mutable state needed by the executor without coupling it to scheduler implementation. */
     public interface RuntimeAccess {
         Collection<LiveCombatUnit> units();
-
         boolean tryAcquireAttack(UUID unitId, long nowMillis, long cooldownMillis);
     }
 }
