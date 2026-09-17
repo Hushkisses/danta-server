@@ -4,6 +4,8 @@ import kr.danta.core.combat.TroopType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CombatKnockbackPolicyTest {
 
@@ -16,5 +18,15 @@ class CombatKnockbackPolicyTest {
                 assertEquals(0.0, policy.multiplier(attacker, victim));
             }
         }
+    }
+
+    @Test
+    void onlyTrackedCombatUnitVsTrackedCombatUnitHitsAreSuppressed() {
+        CombatKnockbackPolicy policy = CombatKnockbackPolicy.developmentDefaults();
+
+        assertTrue(policy.shouldSuppress(true, true));
+        assertFalse(policy.shouldSuppress(true, false));
+        assertFalse(policy.shouldSuppress(false, true));
+        assertFalse(policy.shouldSuppress(false, false));
     }
 }
