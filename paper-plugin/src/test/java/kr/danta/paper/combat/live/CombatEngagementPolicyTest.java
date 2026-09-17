@@ -69,6 +69,60 @@ class CombatEngagementPolicyTest {
     }
 
     @Test
+    void archersHoldPositionOnceASelectedTargetIsInsideBowRange() {
+        assertTrue(CombatEngagementPolicy.shouldHoldRangedPosition(
+                TroopType.ARCHERS,
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.ENGAGE,
+                12.0,
+                14.0));
+        assertFalse(CombatEngagementPolicy.shouldHoldRangedPosition(
+                TroopType.ARCHERS,
+                CombatAttackPolicy.AttackMode.RANGED,
+                CombatAiAction.ENGAGE,
+                15.0,
+                14.0));
+        assertFalse(CombatEngagementPolicy.shouldHoldRangedPosition(
+                TroopType.INFANTRY,
+                CombatAttackPolicy.AttackMode.MELEE,
+                CombatAiAction.ENGAGE,
+                2.0,
+                2.8));
+    }
+
+    @Test
+    void cavalryDirectlyChasesArchersAndMagicAfterBreakingTheSpearScreen() {
+        assertTrue(CombatEngagementPolicy.shouldChaseBacklineTarget(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.CAVALRY,
+                TroopType.ARCHERS,
+                CombatAiAction.FLANK,
+                18.0,
+                3.0));
+        assertTrue(CombatEngagementPolicy.shouldChaseBacklineTarget(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.CAVALRY,
+                TroopType.MAGIC,
+                CombatAiAction.FLANK,
+                18.0,
+                3.0));
+        assertFalse(CombatEngagementPolicy.shouldChaseBacklineTarget(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.CAVALRY,
+                TroopType.INFANTRY,
+                CombatAiAction.FLANK,
+                18.0,
+                3.0));
+        assertFalse(CombatEngagementPolicy.shouldChaseBacklineTarget(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.INFANTRY,
+                TroopType.ARCHERS,
+                CombatAiAction.ADVANCE,
+                18.0,
+                2.8));
+    }
+
+    @Test
     void rangedAndSupportUnitsDoNotUseMeleeChaseOverride() {
         assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.RANGED, 20.0, 14.0));
