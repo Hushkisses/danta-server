@@ -66,7 +66,8 @@ public final class PaperCombatActionExecutor {
         }
 
         if (targetUnitOpt.isEmpty()) return;
-        Optional<LivingEntity> targetOpt = resolver.primary(targetUnitOpt.orElseThrow());
+        LiveCombatUnit targetUnit = targetUnitOpt.orElseThrow();
+        Optional<LivingEntity> targetOpt = resolver.primary(targetUnit);
         if (targetOpt.isEmpty()) return;
         LivingEntity target = targetOpt.orElseThrow();
 
@@ -87,7 +88,11 @@ public final class PaperCombatActionExecutor {
         if (!runtime.tryAcquireAttack(unit.unitId(), now, spec.cooldownMillis())) return;
 
         switch (spec.mode()) {
-            case MELEE -> target.damage(spec.damage(), primary);
+            case MELEE -> {
+                primary.swingMainHand();
+                target.damage(spec.damage(), primary);
+                CombatHealthBarDisplay.sync(targetUnit, target);
+            }
             case RANGED -> fireArrow(primary, target, spec.damage());
             case SUPPORT_VISUAL -> { /* handled above */ }
         }
