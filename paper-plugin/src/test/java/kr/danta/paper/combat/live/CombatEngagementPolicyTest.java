@@ -1,5 +1,6 @@
 package kr.danta.paper.combat.live;
 
+import kr.danta.core.combat.TroopType;
 import kr.danta.core.combat.ai.CombatAiAction;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,39 @@ class CombatEngagementPolicyTest {
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.HOLD, 8.0, 3.0));
         assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.RETREAT, 8.0, 3.0));
+    }
+
+    @Test
+    void cavalryAndSpearmenMayCloseOnEachOtherDuringFlankScreenActions() {
+        assertTrue(CombatEngagementPolicy.shouldChasePriorityMatchup(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.CAVALRY,
+                TroopType.SPEARMEN,
+                CombatAiAction.FLANK,
+                18.0,
+                3.0));
+        assertTrue(CombatEngagementPolicy.shouldChasePriorityMatchup(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.SPEARMEN,
+                TroopType.CAVALRY,
+                CombatAiAction.SCREEN,
+                18.0,
+                3.2));
+
+        assertFalse(CombatEngagementPolicy.shouldChasePriorityMatchup(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.INFANTRY,
+                TroopType.SPEARMEN,
+                CombatAiAction.SCREEN,
+                18.0,
+                2.8));
+        assertFalse(CombatEngagementPolicy.shouldChasePriorityMatchup(
+                CombatAttackPolicy.AttackMode.MELEE,
+                TroopType.CAVALRY,
+                TroopType.SPEARMEN,
+                CombatAiAction.RETREAT,
+                18.0,
+                3.0));
     }
 
     @Test
