@@ -146,10 +146,11 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         Optional<LiveCombatUnit> nearestHostile = hostileUnits.stream()
                 .min(Comparator.comparingDouble(candidate -> distanceSquared(self, candidate)));
 
+        boolean alliedCombatGroupPresent = CombatAlliedSupportPolicy.hasCombatGroup(unit, registry.units());
         if (nearestHostile.isEmpty()) {
             return Optional.of(new LiveCombatController.BattlefieldView(
                     999.0, null, false, false, false, false, false, false,
-                    alliedCount(unit) >= 2, null));
+                    alliedCombatGroupPresent, null));
         }
 
         LiveCombatUnit hostile = nearestHostile.orElseThrow();
@@ -178,15 +179,7 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         return Optional.of(new LiveCombatController.BattlefieldView(
                 distance, hostile.troopType(), frontlineSupportPresent, backlineThreatened,
                 exposedEnemyBackline, false, spearScreenPresent, survivalThreatened,
-                alliedCount(unit) >= 2, selectedTargetId));
-    }
-
-    private int alliedCount(LiveCombatUnit unit) {
-        int count = 0;
-        for (LiveCombatUnit candidate : registry.units()) {
-            if (candidate.side() == unit.side() && !candidate.unitId().equals(unit.unitId())) count++;
-        }
-        return count;
+                alliedCombatGroupPresent, selectedTargetId));
     }
 
     private double distanceSquared(LivingEntity self, LiveCombatUnit candidate) {
