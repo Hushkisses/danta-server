@@ -16,16 +16,17 @@ class CombatEngagementPolicyTest {
     }
 
     @Test
-    void offensiveMeleeActionsCanCloseOnSelectedPriorityTarget() {
+    void onlyDirectClosingActionsOverrideAuthoredRoute() {
         assertTrue(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.ADVANCE, 8.0, 3.0));
         assertTrue(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.ENGAGE, 8.0, 3.0));
-        assertTrue(CombatEngagementPolicy.shouldChase(
+
+        assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.SCREEN, 8.0, 3.0));
-        assertTrue(CombatEngagementPolicy.shouldChase(
+        assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.FLANK, 8.0, 3.0));
-        assertTrue(CombatEngagementPolicy.shouldChase(
+        assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.PURSUE, 8.0, 3.0));
         assertFalse(CombatEngagementPolicy.shouldChase(
                 CombatAttackPolicy.AttackMode.MELEE, CombatAiAction.HOLD, 8.0, 3.0));
