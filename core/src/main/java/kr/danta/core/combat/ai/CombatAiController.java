@@ -48,10 +48,9 @@ public final class CombatAiController {
     }
 
     private CombatAiDecision decideArchers(CombatAiObservation observation) {
-        if (observation.frontlineSupportPresent()) {
-            return decision(CombatAiAction.ENGAGE, observation.nearestHostileType());
-        }
-        return decision(CombatAiAction.HOLD);
+        // Archers keep engaging even after the frontline disappears. The Paper execution layer
+        // controls their standoff distance so ENGAGE does not mean walking into melee range.
+        return decision(CombatAiAction.ENGAGE, observation.nearestHostileType());
     }
 
     private CombatAiDecision decideCavalry(CombatAiObservation observation) {
@@ -71,7 +70,9 @@ public final class CombatAiController {
         if (observation.alliedCombatGroupPresent()) {
             return decision(CombatAiAction.SUPPORT);
         }
-        return decision(CombatAiAction.HOLD);
+        // DEV-115 temporary endgame behavior: when no allied combat group remains, magic units
+        // become a ranged combat line so rear-only battles cannot deadlock.
+        return decision(CombatAiAction.ENGAGE, observation.nearestHostileType());
     }
 
     private static CombatAiDecision decision(CombatAiAction action) {
