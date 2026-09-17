@@ -52,7 +52,12 @@ public final class PaperCombatActionExecutor {
 
         LivingEntity primary = primaryOpt.orElseThrow();
         LivingEntity mover = moverOpt.orElseThrow();
-        move(unit, execution, primary, mover);
+        if (CombatMovementFallbackPolicy.shouldHoldCurrentPosition(
+                execution.decision().action(), execution.selectedHostileUnitId())) {
+            stopMovement(mover);
+        } else {
+            move(unit, execution, primary, mover);
+        }
 
         Optional<LiveCombatUnit> targetUnitOpt = selectedTrackedHostile(unit, execution, runtime.units());
         CombatAttackPolicy.AttackSpec spec = attackPolicy.forType(unit.troopType());
@@ -82,9 +87,8 @@ public final class PaperCombatActionExecutor {
             chase(unit, mover, target);
             return;
         }
-        if (spec.mode() == CombatAttackPolicy.AttackMode.MELEE && distance <= spec.range()
-                && mover instanceof Mob mob) {
-            mob.getPathfinder().stopPathfinding();
+        if (spec.mode() == CombatAttackPolicy.AttackMode.MELEE && distance <= spec.range()) {
+            stopMovement(mover);
         }
         if (distance > spec.range()) return;
 
@@ -126,7 +130,7 @@ public final class PaperCombatActionExecutor {
                 current.getY(),
                 current.getZ());
         if (waypointOpt.isEmpty()) {
-            if (mover instanceof Mob mob) mob.getPathfinder().stopPathfinding();
+            stopMovement(mover);
             return;
         }
 
@@ -157,6 +161,10 @@ public final class PaperCombatActionExecutor {
                 .filter(candidate -> selectedId.equals(candidate.unitId()))
                 .filter(candidate -> targetPolicy.mayTarget(attacker, candidate))
                 .findFirst();
+    }
+
+    private static void stopMovement(LivingEntity mover) {
+        if (mover instanceof Mob mob) mob.getPathfinder().stopPathfinding();
     }
 
     private static void face(LivingEntity entity, Location target) {
