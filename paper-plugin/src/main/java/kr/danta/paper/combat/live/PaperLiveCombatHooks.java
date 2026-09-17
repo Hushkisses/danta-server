@@ -17,10 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Paper implementation behind the DEV-115 live combat runtime.
- * Owns only temporary demo entities and never mutates strategic army state.
- */
+/** Paper implementation behind the DEV-115/116 live combat runtime. */
 final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
     private static final double SPAWN_X_OFFSET = 12.0;
     private static final double SPAWN_Z_SPACING = 2.5;
@@ -45,17 +42,24 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
     @Override
     public void start(World world, Location origin) {
-        if (!registry.units().isEmpty()) {
-            throw new IllegalStateException("live combat demo already owns units");
-        }
+        startFormation(world, origin, LiveCombatDemoFormation.developmentDefaults());
+    }
+
+    @Override
+    public void start(World world, Location origin, int unitCount) {
+        startFormation(world, origin, LiveCombatDemoFormation.benchmark(unitCount));
+    }
+
+    private void startFormation(World world, Location origin, LiveCombatDemoFormation formation) {
+        if (!registry.units().isEmpty()) throw new IllegalStateException("live combat demo already owns units");
 
         layout = DemoBattlefieldLayout.around(origin.getX(), origin.getY(), origin.getZ());
-        LiveCombatDemoFormation formation = LiveCombatDemoFormation.developmentDefaults();
         ArrayList<PaperCombatUnitFactory.SpawnedCombatUnit> spawned = new ArrayList<>();
+        int sideUnits = formation.slots().size() / 2;
 
         try {
             for (LiveCombatDemoFormation.Slot slot : formation.slots()) {
-                Location spawn = spawnLocation(world, origin, slot);
+                Location spawn = spawnLocation(world, origin, slot, sideUnits);
                 PaperCombatUnitFactory.SpawnedCombatUnit created = unitFactory.spawn(
                         world, spawn, slot.side(), slot.troopType());
                 prepareControlledMob(created.primary());
@@ -81,11 +85,8 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
     public void tick() {
         cleanupDeadUnits();
         if (registry.units().isEmpty()) return;
-
         LiveCombatLoopCadence.TickSchedule schedule = cadence.advance();
-        if (schedule.decisionDue()) {
-            reevaluateAll();
-        }
+        if (schedule.decisionDue()) reevaluateAll();
         if (schedule.movementDue()) {
             executeAll();
             syncHealthBars();
@@ -94,9 +95,7 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
     @Override
     public void stop() {
-        for (LiveCombatUnit unit : java.util.List.copyOf(registry.units())) {
-            retire(unit);
-        }
+        for (LiveCombatUnit unit : java.util.List.copyOf(registry.units())) retire(unit);
         registry.clear();
         executions.clear();
         layout = null;
@@ -107,32 +106,25 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         registry.byEntity(entityId).ifPresent(this::retire);
     }
 
-    Collection<LiveCombatUnit> units() {
-        return registry.units();
-    }
+    Collection<LiveCombatUnit> units() { return registry.units(); }
 
     boolean mayDamage(UUID attackerEntityId, UUID victimEntityId) {
         Optional<LiveCombatUnit> attacker = registry.byEntity(attackerEntityId);
         Optional<LiveCombatUnit> victim = registry.byEntity(victimEntityId);
-        return attacker.isPresent()
-                && victim.isPresent()
-                && attacker.get().side() != victim.get().side();
+        return attacker.isPresent() && victim.isPresent() && attacker.get().side() != victim.get().side();
     }
 
     private void reevaluateAll() {
         if (layout == null) return;
         for (LiveCombatUnit unit : registry.units()) {
-            controllerView(unit).ifPresent(view ->
-                    executions.put(unit.unitId(), controller.decide(unit, view, layout)));
+            controllerView(unit).ifPresent(view -> executions.put(unit.unitId(), controller.decide(unit, view, layout)));
         }
     }
 
     private void executeAll() {
         for (LiveCombatUnit unit : registry.units()) {
             LiveCombatExecution execution = executions.get(unit.unitId());
-            if (execution != null) {
-                executor.apply(unit, execution, runtimeAccess);
-            }
+            if (execution != null) executor.apply(unit, execution, runtimeAccess);
         }
     }
 
@@ -151,7 +143,6 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
                 .filter(candidate -> candidate.side() != unit.side())
                 .filter(candidate -> resolver.primary(candidate).isPresent())
                 .toList();
-
         Optional<LiveCombatUnit> nearestHostile = hostileUnits.stream()
                 .min(Comparator.comparingDouble(candidate -> distanceSquared(self, candidate)));
 
@@ -164,15 +155,12 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         LiveCombatUnit hostile = nearestHostile.orElseThrow();
         LivingEntity hostileEntity = resolver.primary(hostile).orElseThrow();
         double distance = self.getLocation().distance(hostileEntity.getLocation());
-
         List<CombatTargetSelectionPolicy.Candidate> targetCandidates = hostileUnits.stream()
                 .map(candidate -> new CombatTargetSelectionPolicy.Candidate(
-                        candidate.unitId(), candidate.troopType(),
-                        Math.sqrt(distanceSquared(self, candidate))))
+                        candidate.unitId(), candidate.troopType(), Math.sqrt(distanceSquared(self, candidate))))
                 .toList();
         UUID selectedTargetId = targetSelectionPolicy.select(
-                unit.troopType(), targetCandidates, attackPolicy.forType(unit.troopType()).range())
-                .orElse(null);
+                unit.troopType(), targetCandidates, attackPolicy.forType(unit.troopType()).range()).orElse(null);
 
         boolean backlineThreatened = (unit.troopType() == TroopType.ARCHERS || unit.troopType() == TroopType.MAGIC)
                 && distance <= 4.0;
@@ -188,16 +176,9 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         boolean survivalThreatened = self.getHealth() <= Math.max(1.0, self.getMaxHealth() * 0.25);
 
         return Optional.of(new LiveCombatController.BattlefieldView(
-                distance,
-                hostile.troopType(),
-                frontlineSupportPresent,
-                backlineThreatened,
-                exposedEnemyBackline,
-                false,
-                spearScreenPresent,
-                survivalThreatened,
-                alliedCount(unit) >= 2,
-                selectedTargetId));
+                distance, hostile.troopType(), frontlineSupportPresent, backlineThreatened,
+                exposedEnemyBackline, false, spearScreenPresent, survivalThreatened,
+                alliedCount(unit) >= 2, selectedTargetId));
     }
 
     private int alliedCount(LiveCombatUnit unit) {
@@ -229,9 +210,10 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         registry.remove(unit.unitId());
     }
 
-    private static Location spawnLocation(World world, Location origin, LiveCombatDemoFormation.Slot slot) {
+    private static Location spawnLocation(
+            World world, Location origin, LiveCombatDemoFormation.Slot slot, int sideUnits) {
         double x = origin.getX() + (slot.side() == CombatSide.RED ? -SPAWN_X_OFFSET : SPAWN_X_OFFSET);
-        double zIndex = slot.formationIndex() - 2.0;
+        double zIndex = slot.formationIndex() - (sideUnits - 1) / 2.0;
         double z = origin.getZ() + zIndex * SPAWN_Z_SPACING;
         return new Location(world, x, origin.getY(), z);
     }
