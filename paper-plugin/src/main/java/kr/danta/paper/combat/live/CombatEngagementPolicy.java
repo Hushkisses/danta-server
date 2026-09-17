@@ -58,10 +58,13 @@ public final class CombatEngagementPolicy {
     ) {
         if (attackerType == null) throw new NullPointerException("attackerType");
         validate(mode, action, distance, attackRange);
-        return (attackerType == TroopType.ARCHERS || attackerType == TroopType.MAGIC)
-                && mode == CombatAttackPolicy.AttackMode.RANGED
-                && action == CombatAiAction.ENGAGE
-                && distance <= attackRange;
+        if ((attackerType != TroopType.ARCHERS && attackerType != TroopType.MAGIC)
+                || mode != CombatAttackPolicy.AttackMode.RANGED
+                || distance > attackRange) {
+            return false;
+        }
+        return action == CombatAiAction.ENGAGE
+                || (attackerType == TroopType.MAGIC && action == CombatAiAction.SUPPORT);
     }
 
     public static boolean shouldChaseRangedTarget(
@@ -72,7 +75,7 @@ public final class CombatEngagementPolicy {
     ) {
         validate(mode, action, distance, attackRange);
         return mode == CombatAttackPolicy.AttackMode.RANGED
-                && action == CombatAiAction.ENGAGE
+                && (action == CombatAiAction.ENGAGE || action == CombatAiAction.SUPPORT)
                 && distance > attackRange;
     }
 
