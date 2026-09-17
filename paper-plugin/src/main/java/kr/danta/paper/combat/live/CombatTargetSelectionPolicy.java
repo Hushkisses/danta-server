@@ -14,23 +14,37 @@ import java.util.random.RandomGenerator;
 /**
  * DEV-115 development target-selection policy.
  *
- * <p>The search radius is a temporary live-combat fixture, not a final season balance value.</p>
+ * <p>Search radii are temporary live-combat fixtures, not final season balance values.</p>
  */
 public final class CombatTargetSelectionPolicy {
     public static final double DEVELOPMENT_SEARCH_RADIUS = 28.0;
+    public static final double DEVELOPMENT_FLANK_MATCHUP_RADIUS = 40.0;
 
     private final double searchRadius;
+    private final double flankMatchupRadius;
     private final RandomGenerator random;
 
     public CombatTargetSelectionPolicy() {
-        this(DEVELOPMENT_SEARCH_RADIUS, RandomGenerator.getDefault());
+        this(DEVELOPMENT_SEARCH_RADIUS, DEVELOPMENT_FLANK_MATCHUP_RADIUS, RandomGenerator.getDefault());
     }
 
     public CombatTargetSelectionPolicy(double searchRadius, RandomGenerator random) {
+        this(searchRadius, searchRadius, random);
+    }
+
+    public CombatTargetSelectionPolicy(
+            double searchRadius,
+            double flankMatchupRadius,
+            RandomGenerator random
+    ) {
         if (!Double.isFinite(searchRadius) || searchRadius <= 0.0) {
             throw new IllegalArgumentException("searchRadius must be finite and > 0");
         }
+        if (!Double.isFinite(flankMatchupRadius) || flankMatchupRadius <= 0.0) {
+            throw new IllegalArgumentException("flankMatchupRadius must be finite and > 0");
+        }
         this.searchRadius = searchRadius;
+        this.flankMatchupRadius = flankMatchupRadius;
         this.random = Objects.requireNonNull(random, "random");
     }
 
@@ -45,10 +59,9 @@ public final class CombatTargetSelectionPolicy {
             throw new IllegalArgumentException("attackRange must be finite and >= 0");
         }
 
-        double limit = attackerType == TroopType.ARCHERS ? attackRange : searchRadius;
         List<Candidate> eligible = candidates.stream()
                 .filter(Objects::nonNull)
-                .filter(candidate -> candidate.distance() <= limit)
+                .filter(candidate -> candidate.distance() <= detectionRadius(attackerType, candidate.troopType(), attackRange))
                 .toList();
         if (eligible.isEmpty()) return Optional.empty();
 
@@ -62,6 +75,13 @@ public final class CombatTargetSelectionPolicy {
                 .thenComparingDouble(Candidate::distance)
                 .thenComparing(candidate -> candidate.unitId().toString()));
         return Optional.of(ordered.getFirst().unitId());
+    }
+
+    private double detectionRadius(TroopType attackerType, TroopType targetType, double attackRange) {
+        if (attackerType == TroopType.ARCHERS) return attackRange;
+        boolean cavalrySpearPair = (attackerType == TroopType.CAVALRY && targetType == TroopType.SPEARMEN)
+                || (attackerType == TroopType.SPEARMEN && targetType == TroopType.CAVALRY);
+        return cavalrySpearPair ? flankMatchupRadius : searchRadius;
     }
 
     private static int priority(TroopType attackerType, TroopType targetType) {
