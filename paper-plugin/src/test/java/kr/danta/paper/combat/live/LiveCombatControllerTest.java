@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class LiveCombatControllerTest {
 
     @Test
-    void exposesDistinctDev114ActionsThroughLiveExecutionIntent() {
+    void exposesCurrentDev115ActionsThroughLiveExecutionIntent() {
         LiveCombatController controller = new LiveCombatController();
         DemoBattlefieldLayout layout = DemoBattlefieldLayout.around(100, 64, 100);
 
@@ -24,7 +24,7 @@ class LiveCombatControllerTest {
                 CombatAiAction.SCREEN,
                 controller.decide(redSpearman, LiveCombatController.BattlefieldView.cavalryThreat(), layout).decision().action());
         assertEquals(
-                CombatAiAction.RETREAT,
+                CombatAiAction.HOLD,
                 controller.decide(redArcher, LiveCombatController.BattlefieldView.closeThreat(), layout).decision().action());
         assertEquals(
                 CombatAiAction.FLANK,
