@@ -8,14 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DantaCombatAiRuntimeCommandTest {
 
     @Test
-    void claimsOnlyCombatAiDemoNamespace() {
-        assertTrue(DantaCombatAiRuntime.isDemoCommand("/danta combat-ai demo"));
-        assertTrue(DantaCombatAiRuntime.isDemoCommand("/danta combat-ai demo start"));
-        assertTrue(DantaCombatAiRuntime.isDemoCommand("danta combat-ai demo status"));
+    void claimsOnlyCombatAiLiveRuntimeNamespaces() {
+        assertTrue(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai demo"));
+        assertTrue(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai demo start"));
+        assertTrue(DantaCombatAiRuntime.isRuntimeCommand("danta combat-ai demo status"));
+        assertTrue(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai benchmark start 40"));
+        assertTrue(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai benchmark status"));
 
-        assertFalse(DantaCombatAiRuntime.isDemoCommand("/danta combat-ai profiles"));
-        assertFalse(DantaCombatAiRuntime.isDemoCommand("/danta combat-ai decide cavalry exposed-backline"));
-        assertFalse(DantaCombatAiRuntime.isDemoCommand("/danta siege status red_capital"));
-        assertFalse(DantaCombatAiRuntime.isDemoCommand(null));
+        assertFalse(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai profiles"));
+        assertFalse(DantaCombatAiRuntime.isRuntimeCommand("/danta combat-ai decide cavalry exposed-backline"));
+        assertFalse(DantaCombatAiRuntime.isRuntimeCommand("/danta siege status red_capital"));
+        assertFalse(DantaCombatAiRuntime.isRuntimeCommand(null));
     }
 }
