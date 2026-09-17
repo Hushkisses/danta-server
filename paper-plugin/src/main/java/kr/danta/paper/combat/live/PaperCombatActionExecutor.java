@@ -78,12 +78,21 @@ public final class PaperCombatActionExecutor {
 
         face(primary, target.getEyeLocation());
         double distance = primary.getLocation().distance(target.getLocation());
+
+        if (CombatEngagementPolicy.shouldHoldRangedPosition(
+                unit.troopType(), spec.mode(), execution.decision().action(), distance, spec.range())) {
+            stopMovement(mover);
+        }
+
         boolean generalClosing = CombatEngagementPolicy.shouldChase(
                 spec.mode(), execution.decision().action(), distance, spec.range());
         boolean flankMatchupClosing = CombatEngagementPolicy.shouldChasePriorityMatchup(
                 spec.mode(), unit.troopType(), targetUnit.troopType(),
                 execution.decision().action(), distance, spec.range());
-        if (generalClosing || flankMatchupClosing) {
+        boolean backlineClosing = CombatEngagementPolicy.shouldChaseBacklineTarget(
+                spec.mode(), unit.troopType(), targetUnit.troopType(),
+                execution.decision().action(), distance, spec.range());
+        if (generalClosing || flankMatchupClosing || backlineClosing) {
             chase(unit, mover, target);
             return;
         }
