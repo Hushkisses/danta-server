@@ -18,7 +18,16 @@ public final class CombatKnockbackPolicy {
     }
 
     public boolean shouldSuppress(boolean attackerTrackedCombatUnit, boolean victimTrackedCombatUnit) {
-        return attackerTrackedCombatUnit && victimTrackedCombatUnit;
+        return shouldSuppress(attackerTrackedCombatUnit, false, victimTrackedCombatUnit);
+    }
+
+    public boolean shouldSuppress(
+            boolean directAttackerTrackedCombatUnit,
+            boolean projectileShooterTrackedCombatUnit,
+            boolean victimTrackedCombatUnit
+    ) {
+        return victimTrackedCombatUnit
+                && (directAttackerTrackedCombatUnit || projectileShooterTrackedCombatUnit);
     }
 
     public double multiplier(TroopType attackerType, TroopType victimType) {
