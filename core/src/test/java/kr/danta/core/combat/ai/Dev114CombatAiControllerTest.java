@@ -46,14 +46,14 @@ class Dev114CombatAiControllerTest {
     }
 
     @Test
-    void archersDoNotAutoRetreatFromCloseThreatAndEngageWithFrontlineSupport() {
-        CombatAiDecision close = controller.decide(CombatAiProfile.ARCHERS,
-                obs(3.0, TroopType.INFANTRY, true, true, false, false, false, false, true));
-        CombatAiDecision safe = controller.decide(CombatAiProfile.ARCHERS,
+    void archersEngageEvenWithoutFrontlineSoRangedEndgameCanResolve() {
+        CombatAiDecision withFrontline = controller.decide(CombatAiProfile.ARCHERS,
                 obs(10.0, TroopType.INFANTRY, true, false, false, false, false, false, true));
+        CombatAiDecision withoutFrontline = controller.decide(CombatAiProfile.ARCHERS,
+                obs(20.0, TroopType.MAGIC, false, false, false, false, false, false, false));
 
-        assertEquals(CombatAiAction.ENGAGE, close.action());
-        assertEquals(CombatAiAction.ENGAGE, safe.action());
+        assertEquals(CombatAiAction.ENGAGE, withFrontline.action());
+        assertEquals(CombatAiAction.ENGAGE, withoutFrontline.action());
     }
 
     @Test
@@ -77,17 +77,17 @@ class Dev114CombatAiControllerTest {
     }
 
     @Test
-    void magicKeepsSupportingInsteadOfAutoRetreatingWhenThreatened() {
+    void magicSupportsAlliesButEngagesWhenItIsTheRemainingCombatLine() {
         CombatAiDecision support = controller.decide(CombatAiProfile.MAGIC,
                 obs(10.0, TroopType.INFANTRY, true, false, false, false, false, false, true));
         CombatAiDecision threatened = controller.decide(CombatAiProfile.MAGIC,
                 obs(3.0, TroopType.CAVALRY, true, true, false, false, false, false, true));
-        CombatAiDecision hold = controller.decide(CombatAiProfile.MAGIC,
-                obs(12.0, TroopType.INFANTRY, false, false, false, false, false, false, false));
+        CombatAiDecision endgame = controller.decide(CombatAiProfile.MAGIC,
+                obs(12.0, TroopType.ARCHERS, false, false, false, false, false, false, false));
 
         assertEquals(CombatAiAction.SUPPORT, support.action());
         assertEquals(CombatAiAction.SUPPORT, threatened.action());
-        assertEquals(CombatAiAction.HOLD, hold.action());
+        assertEquals(CombatAiAction.ENGAGE, endgame.action());
     }
 
     @Test
