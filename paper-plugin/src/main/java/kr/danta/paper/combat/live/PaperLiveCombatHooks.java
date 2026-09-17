@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,7 +28,10 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
     private final LiveCombatUnitRegistry registry = new LiveCombatUnitRegistry();
     private final PaperCombatUnitFactory unitFactory = new PaperCombatUnitFactory();
     private final CombatEntityResolver resolver = new CombatEntityResolver();
-    private final PaperCombatActionExecutor executor = new PaperCombatActionExecutor();
+    private final CombatAttackPolicy attackPolicy = CombatAttackPolicy.developmentDefaults();
+    private final CombatTargetPolicy targetPolicy = new CombatTargetPolicy();
+    private final CombatTargetSelectionPolicy targetSelectionPolicy = new CombatTargetSelectionPolicy();
+    private final PaperCombatActionExecutor executor = new PaperCombatActionExecutor(resolver, attackPolicy, targetPolicy);
     private final LiveCombatController controller = new LiveCombatController();
     private final LiveCombatLoopCadence cadence = new LiveCombatLoopCadence(2, 10);
     private final PaperCombatActionExecutor.RuntimeAccess runtimeAccess;
@@ -143,9 +147,12 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         if (selfOpt.isEmpty()) return Optional.empty();
         LivingEntity self = selfOpt.orElseThrow();
 
-        Optional<LiveCombatUnit> nearestHostile = registry.units().stream()
+        List<LiveCombatUnit> hostileUnits = registry.units().stream()
                 .filter(candidate -> candidate.side() != unit.side())
                 .filter(candidate -> resolver.primary(candidate).isPresent())
+                .toList();
+
+        Optional<LiveCombatUnit> nearestHostile = hostileUnits.stream()
                 .min(Comparator.comparingDouble(candidate -> distanceSquared(self, candidate)));
 
         if (nearestHostile.isEmpty()) {
@@ -157,6 +164,16 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
         LiveCombatUnit hostile = nearestHostile.orElseThrow();
         LivingEntity hostileEntity = resolver.primary(hostile).orElseThrow();
         double distance = self.getLocation().distance(hostileEntity.getLocation());
+
+        List<CombatTargetSelectionPolicy.Candidate> targetCandidates = hostileUnits.stream()
+                .map(candidate -> new CombatTargetSelectionPolicy.Candidate(
+                        candidate.unitId(), candidate.troopType(),
+                        Math.sqrt(distanceSquared(self, candidate))))
+                .toList();
+        UUID selectedTargetId = targetSelectionPolicy.select(
+                unit.troopType(), targetCandidates, attackPolicy.forType(unit.troopType()).range())
+                .orElse(null);
+
         boolean backlineThreatened = (unit.troopType() == TroopType.ARCHERS || unit.troopType() == TroopType.MAGIC)
                 && distance <= 4.0;
         boolean exposedEnemyBackline = unit.troopType() == TroopType.CAVALRY
@@ -180,7 +197,7 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
                 spearScreenPresent,
                 survivalThreatened,
                 alliedCount(unit) >= 2,
-                hostile.unitId()));
+                selectedTargetId));
     }
 
     private int alliedCount(LiveCombatUnit unit) {
