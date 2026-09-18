@@ -1,6 +1,6 @@
 package kr.danta.paper.world;
 
-import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.entity.EntityType;\nimport org.bukkit.event.entity.CreatureSpawnEvent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,5 +25,14 @@ class StrategicMobSpawnPolicyTest {
     void doesNotChangeWildernessSpawnBehavior() {
         assertFalse(policy.shouldBlock("danta_wild", CreatureSpawnEvent.SpawnReason.NATURAL));
         assertFalse(policy.shouldBlock("danta_wild", CreatureSpawnEvent.SpawnReason.CHUNK_GEN));
+    }
+
+    @Test
+    void startupCleanupTargetsHostileMobsAndSlimesButNotPassiveAnimals() {
+        assertTrue(policy.shouldRemoveExisting(EntityType.ZOMBIE));
+        assertTrue(policy.shouldRemoveExisting(EntityType.SKELETON));
+        assertTrue(policy.shouldRemoveExisting(EntityType.SLIME));
+        assertFalse(policy.shouldRemoveExisting(EntityType.COW));
+        assertFalse(policy.shouldRemoveExisting(EntityType.VILLAGER));
     }
 }
