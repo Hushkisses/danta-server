@@ -1,10 +1,10 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.TroopType;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.List;\nimport java.util.Map;
 
 /** DEV-115/116 deterministic development combat formation definition. */
 public final class LiveCombatDemoFormation {
@@ -18,6 +18,23 @@ public final class LiveCombatDemoFormation {
         ArrayList<Slot> slots = new ArrayList<>();
         addDefaultSide(slots, CombatSide.RED);
         addDefaultSide(slots, CombatSide.BLUE);
+        return new LiveCombatDemoFormation(slots);
+    }
+
+    public static LiveCombatDemoFormation fromLogicalForces(
+            Map<TroopType, Long> redLogicalForce,
+            Map<TroopType, Long> blueLogicalForce,
+            LogicalForceAiMappingPolicy mappingPolicy
+    ) {
+        if (redLogicalForce == null) throw new NullPointerException("redLogicalForce");
+        if (blueLogicalForce == null) throw new NullPointerException("blueLogicalForce");
+        if (mappingPolicy == null) throw new NullPointerException("mappingPolicy");
+
+        LogicalForceAiMappingPolicy.Mapping red = mappingPolicy.map(redLogicalForce);
+        LogicalForceAiMappingPolicy.Mapping blue = mappingPolicy.map(blueLogicalForce);
+        ArrayList<Slot> slots = new ArrayList<>(red.totalAiUnits() + blue.totalAiUnits());
+        addMappedSide(slots, CombatSide.RED, red);
+        addMappedSide(slots, CombatSide.BLUE, blue);
         return new LiveCombatDemoFormation(slots);
     }
 
@@ -44,6 +61,14 @@ public final class LiveCombatDemoFormation {
         return result;
     }
 
+    public int count(CombatSide side, TroopType troopType) {
+        int count = 0;
+        for (Slot slot : slots) {
+            if (slot.side() == side && slot.troopType() == troopType) count++;
+        }
+        return count;
+    }
+
     private static void addDefaultSide(List<Slot> slots, CombatSide side) {
         int index = 0;
         for (TroopType troopType : TroopType.values()) {
@@ -55,6 +80,20 @@ public final class LiveCombatDemoFormation {
         TroopType[] types = TroopType.values();
         for (int index = 0; index < sideUnits; index++) {
             slots.add(new Slot(side, types[index % types.length], index));
+        }
+    }
+
+    private static void addMappedSide(
+            List<Slot> slots,
+            CombatSide side,
+            LogicalForceAiMappingPolicy.Mapping mapping
+    ) {
+        int index = 0;
+        for (TroopType troopType : TroopType.values()) {
+            int representatives = mapping.aiUnits(troopType);
+            for (int i = 0; i < representatives; i++) {
+                slots.add(new Slot(side, troopType, index++));
+            }
         }
     }
 
