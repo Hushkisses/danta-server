@@ -1,6 +1,6 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.TroopType;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -48,6 +48,23 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
     @Override
     public void start(World world, Location origin, int unitCount) {
         startFormation(world, origin, LiveCombatDemoFormation.benchmark(unitCount));
+    }
+
+    @Override
+    public void startMapped(
+            World world,
+            Location origin,
+            Map<TroopType, Long> redLogicalForce,
+            Map<TroopType, Long> blueLogicalForce,
+            LogicalForceAiMappingPolicy mappingPolicy
+    ) {
+        startFormation(
+                world,
+                origin,
+                LiveCombatDemoFormation.fromLogicalForces(
+                        redLogicalForce,
+                        blueLogicalForce,
+                        mappingPolicy));
     }
 
     private void startFormation(World world, Location origin, LiveCombatDemoFormation formation) {
