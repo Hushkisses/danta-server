@@ -1,6 +1,6 @@
 # Danta Server — PROJECT STATE
-Updated: 2026-09-16
-Checkpoint: DEV-112 automated build verification passed; DEV-112A physical fortress IMPLEMENTED awaiting live visual verification
+Updated: 2026-09-18
+Checkpoint: DEV-116 40-AI benchmark COMPLETE; DEV-115 live combat AI COMPLETE
 
 ## Source of truth
 - Game design: Minecraft 단타 서버 기획서 v0.3
@@ -16,6 +16,9 @@ Checkpoint: DEV-112 automated build verification passed; DEV-112A physical fortr
 - Local workflow: preserve the existing dev-server runtime folder; use dev-server/quick-deploy.bat for normal code changes.
 
 ## Verified tickets
+- DEV-116 concurrent AI 40 benchmark: COMPLETE. Windows quick-deploy passed and live Paper benchmark completed with 40 AI units. Representative live result: duration 104.1s, survivors 9, minimum TPS 19.86, average MSPT 2.77, maximum MSPT 6.88, 104 samples. Benchmark commands support 40/60/80 for later scaling checks; 40 is the verified baseline.
+- DEV-115 waypoint/live combat runtime: COMPLETE. Windows automated tests/build and repeated Paper live combat verification passed. Verified native pathfinder movement, melee/ranged combat, health bars, zero baseline knockback for tracked combat units/projectiles, stable frontline behavior, cavalry backline pursuit, ranged standoff, magic endgame engagement, and corrected projectile trajectory/body-center aiming. DEV-115 values remain development fixtures rather than final balance.
+- DEV-114 CombatAI: COMPLETE. Windows automated tests/build and Paper live command/demo verification passed. Role-specific Infantry/Spearmen/Archers/Cavalry/Magic tactical decisions are wired into the live runtime; later balance/content changes should preserve the current separation between tactical AI and strategic AI.
 - DEV-112 logical large-fortress battlefield: COMPLETE for automated build verification. Coordinates/objective anchors compile and tests pass; physical realization is tracked separately as DEV-112A.
 - DEV-111 real-time siege reservation: COMPLETE. Windows quick-deploy automated tests/build passed. Wall-clock reservation remains separated from server runtime; exact lead/confirmation windows remain configurable/unfixed.
 - DEV-110 SiegeInstance state machine: COMPLETE. Windows quick-deploy automated tests/build passed. Core lifecycle and duplicate-point siege invariant verified without Paper coupling.
@@ -157,7 +160,12 @@ Known examples include nation red, nation blue, strategic point farm_a, strategi
 10. Phase 10 (DEV-100~107) is complete.
 11. Phase 11 DEV-110 COMPLETE after Windows quick-deploy success.
 12. DEV-111 COMPLETE after Windows quick-deploy success. Exact lead/confirmation windows remain unresolved balance/config values.
-13. DEV-112 automated build verification passed. DEV-112A physical canyon fortress generator is IMPLEMENTED and awaits live Minecraft visual verification via `/danta map build-fortress`.
+13. DEV-112 automated build verification passed. DEV-112A physical canyon fortress generator remains an accepted development battlefield with polish deferred.
+14. DEV-113 objective sequence: COMPLETE after automated and live capital-sequence verification.
+15. DEV-114 CombatAI: COMPLETE.
+16. DEV-115 waypoint/live combat runtime: COMPLETE after repeated live combat validation, including endgame resolution and projectile fixes.
+17. DEV-116 40-AI benchmark: COMPLETE. Verified live baseline: 19.86 min TPS / 2.77 avg MSPT / 6.88 max MSPT over 104 samples.
+18. Next execution target: DEV-117 logical-force ↔ live-AI mapping, unless a higher-priority integration correction is found in current source.
 14. Live verification exposed EconomyTick catch-up when admin season end advances runtime from 25:18:52 to 50:00:00: 50 ticks processed immediately before snapshots. This is the same class of runtime-jump catch-up previously observed with development runtime set and should be addressed before treating admin early-end as production-safe.
 15. Current live baseline restored after admin-end test: runtime 25:18:52, speed x1.0, season CONFLICT, runtime running.\n10. Previous clean live baseline after DEV-101 verification: active wars 0, runtime 25:16:29, speed x1.0, season CONFLICT.
 17. Observed during dev runtime restoration: advancing runtime from the 4h test range back to ~25h16m caused EconomyTick to catch up 42 ticks at once. Treat this as an observation for future runtime manipulation/snapshot/economy scheduler review, not as a DEV-101 defect.
