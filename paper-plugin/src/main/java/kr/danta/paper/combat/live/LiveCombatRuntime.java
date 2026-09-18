@@ -1,13 +1,16 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;\nimport kr.danta.paper.combat.ai.PaperCombatAiRuntime;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;
+import kr.danta.core.combat.TroopType;
+import kr.danta.paper.combat.ai.PaperCombatAiRuntime;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Collection;
-import java.util.List;\nimport java.util.Map;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
