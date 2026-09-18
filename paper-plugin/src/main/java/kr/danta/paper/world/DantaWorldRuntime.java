@@ -35,6 +35,12 @@ public final class DantaWorldRuntime implements Listener {
         try {
             worlds = new DantaWorldService(plugin, config);
             worlds.initialize();
+            StrategicMobSpawnListener spawnListener =
+                    new StrategicMobSpawnListener(new StrategicMobSpawnPolicy(config.strategicWorldName()));
+            plugin.getServer().getPluginManager().registerEvents(spawnListener, plugin);
+            worlds.world(WorldRole.STRATEGIC_MAIN)
+                    .ifPresent(world -> spawnListener.cleanupExisting(world, plugin.getLogger()));
+
             ExplorerGuildTravelService travel = new ExplorerGuildTravelService(
                     worlds, config, new ExplorerGuildTravelPolicy());
             builder = new ExplorerGuildBuilder(worlds, config);
@@ -151,6 +157,7 @@ public final class DantaWorldRuntime implements Listener {
         sender.sendMessage("§f야생: §e" + config.wildernessWorldName() + " §7- "
                 + (worlds.world(WorldRole.WILDERNESS).isPresent() ? "로드됨" : "로드 실패"));
         sender.sendMessage("§f자원경제: §a야생 아이템과 국가 전략자원은 분리됨");
+        sender.sendMessage("§f전략 본토 자연 몹: §a차단 §7(플러그인 CUSTOM 소환은 허용)");
         sender.sendMessage("§7야생 월드보더·초기화 주기는 아직 최종 확정되지 않았습니다.");
     }
 
