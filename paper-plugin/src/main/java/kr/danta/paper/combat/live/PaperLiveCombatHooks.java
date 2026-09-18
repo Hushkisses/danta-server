@@ -36,6 +36,9 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
     private final Map<UUID, LiveCombatExecution> executions = new HashMap<>();
 
     private DemoBattlefieldLayout layout;
+    private LogicalForceAiMappingPolicy.Mapping redMapping;
+    private LogicalForceAiMappingPolicy.Mapping blueMapping;
+    private LiveMappedBattleResult lastMappedResult;
 
     PaperLiveCombatHooks(PaperCombatActionExecutor.RuntimeAccess runtimeAccess) {
         this.runtimeAccess = java.util.Objects.requireNonNull(runtimeAccess, "runtimeAccess");
@@ -43,11 +46,13 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
     @Override
     public void start(World world, Location origin) {
+        clearMappedSession();
         startFormation(world, origin, LiveCombatDemoFormation.developmentDefaults());
     }
 
     @Override
     public void start(World world, Location origin, int unitCount) {
+        clearMappedSession();
         startFormation(world, origin, LiveCombatDemoFormation.benchmark(unitCount));
     }
 
@@ -59,13 +64,10 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
             Map<TroopType, Long> blueLogicalForce,
             LogicalForceAiMappingPolicy mappingPolicy
     ) {
-        startFormation(
-                world,
-                origin,
-                LiveCombatDemoFormation.fromLogicalForces(
-                        redLogicalForce,
-                        blueLogicalForce,
-                        mappingPolicy));
+        redMapping = mappingPolicy.map(redLogicalForce);
+        blueMapping = mappingPolicy.map(blueLogicalForce);
+        lastMappedResult = null;
+        startFormation(world, origin, LiveCombatDemoFormation.fromMappings(redMapping, blueMapping));
     }
 
     private void startFormation(World world, Location origin, LiveCombatDemoFormation formation) {
@@ -112,10 +114,15 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
     @Override
     public void stop() {
+        if (redMapping != null && blueMapping != null) {
+            lastMappedResult = LiveMappedBattleResult.capture(redMapping, blueMapping, registry.units());
+        }
         for (LiveCombatUnit unit : java.util.List.copyOf(registry.units())) retire(unit);
         registry.clear();
         executions.clear();
         layout = null;
+        redMapping = null;
+        blueMapping = null;
     }
 
     @Override
@@ -125,10 +132,24 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
     Collection<LiveCombatUnit> units() { return registry.units(); }
 
+    @Override
+    public Optional<LiveMappedBattleResult> mappedBattleResult() {
+        if (redMapping != null && blueMapping != null) {
+            return Optional.of(LiveMappedBattleResult.capture(redMapping, blueMapping, registry.units()));
+        }
+        return Optional.ofNullable(lastMappedResult);
+    }
+
     boolean mayDamage(UUID attackerEntityId, UUID victimEntityId) {
         Optional<LiveCombatUnit> attacker = registry.byEntity(attackerEntityId);
         Optional<LiveCombatUnit> victim = registry.byEntity(victimEntityId);
         return attacker.isPresent() && victim.isPresent() && attacker.get().side() != victim.get().side();
+    }
+
+    private void clearMappedSession() {
+        redMapping = null;
+        blueMapping = null;
+        lastMappedResult = null;
     }
 
     private void reevaluateAll() {
