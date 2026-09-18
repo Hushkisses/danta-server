@@ -8,22 +8,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CombatProjectileAimTest {
 
     @Test
-    void raisesAimPointForLongerShotsToCompensateArrowDrop() {
-        CombatProjectileAim.AimOffset shortShot = CombatProjectileAim.compensatedOffset(
-                4.0, 0.0, 0.20);
-        CombatProjectileAim.AimOffset longShot = CombatProjectileAim.compensatedOffset(
-                14.0, 0.0, 0.20);
+    void solvesFlatShotSoProjectileCrossesTargetHeightAtFourteenBlocks() {
+        CombatProjectileAim.AimOffset aim = CombatProjectileAim.compensatedOffset(
+                14.0, 0.0, 1.6, 0.05, 0.99);
 
-        assertEquals(0.8, shortShot.vertical(), 1.0e-9);
-        assertEquals(2.8, longShot.vertical(), 1.0e-9);
-        assertTrue(longShot.vertical() > shortShot.vertical());
+        double angle = Math.atan2(aim.vertical(), 14.0);
+        double height = CombatProjectileAim.simulatedHeightAtDistance(
+                14.0, 1.6, angle, 0.05, 0.99);
+
+        assertEquals(0.0, height, 0.08);
+        assertTrue(aim.vertical() > 0.0);
+        assertTrue(aim.vertical() < 2.8);
     }
 
     @Test
-    void preservesExistingVerticalDifferenceWhileAddingTrajectoryLift() {
-        CombatProjectileAim.AimOffset offset = CombatProjectileAim.compensatedOffset(
-                10.0, 2.0, 0.20);
+    void solvesElevatedTargetWithoutUsingFixedLinearLift() {
+        CombatProjectileAim.AimOffset aim = CombatProjectileAim.compensatedOffset(
+                10.0, 1.0, 1.6, 0.05, 0.99);
 
-        assertEquals(4.0, offset.vertical(), 1.0e-9);
+        double angle = Math.atan2(aim.vertical(), 10.0);
+        double height = CombatProjectileAim.simulatedHeightAtDistance(
+                10.0, 1.6, angle, 0.05, 0.99);
+
+        assertEquals(1.0, height, 0.08);
     }
 }
