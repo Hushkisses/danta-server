@@ -1,8 +1,10 @@
 package kr.danta.paper.world;
 
-import org.bukkit.entity.EntityType;\nimport org.bukkit.event.entity.CreatureSpawnEvent;\n\nimport java.util.Set;
+import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Strategic mainland spawn policy: only Danta/plugin-managed CUSTOM creature spawns are allowed.
@@ -18,6 +20,7 @@ public final class StrategicMobSpawnPolicy {
             "WARDEN", "WITCH", "WITHER", "WITHER_SKELETON", "ZOGLIN",
             "ZOMBIE", "ZOMBIE_VILLAGER", "ZOMBIFIED_PIGLIN"
     );
+
     private final String strategicWorldName;
 
     public StrategicMobSpawnPolicy(String strategicWorldName) {
