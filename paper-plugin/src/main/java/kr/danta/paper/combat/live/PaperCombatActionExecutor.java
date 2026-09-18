@@ -179,14 +179,21 @@ public final class PaperCombatActionExecutor {
     private static void fireArrow(LivingEntity attacker, LivingEntity target, double damage) {
         World world = attacker.getWorld();
         Location origin = attacker.getEyeLocation();
-        Location targetEye = target.getEyeLocation();
-        double dx = targetEye.getX() - origin.getX();
-        double dz = targetEye.getZ() - origin.getZ();
+        var bounds = target.getBoundingBox();
+        Location targetCenter = new Location(
+                world,
+                (bounds.getMinX() + bounds.getMaxX()) * 0.5,
+                (bounds.getMinY() + bounds.getMaxY()) * 0.5,
+                (bounds.getMinZ() + bounds.getMaxZ()) * 0.5);
+        double dx = targetCenter.getX() - origin.getX();
+        double dz = targetCenter.getZ() - origin.getZ();
         double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
         CombatProjectileAim.AimOffset aim = CombatProjectileAim.compensatedOffset(
                 horizontalDistance,
-                targetEye.getY() - origin.getY(),
-                ARROW_LIFT_PER_HORIZONTAL_BLOCK);
+                targetCenter.getY() - origin.getY(),
+                ARROW_SPEED,
+                ARROW_GRAVITY_PER_TICK,
+                ARROW_DRAG);
         Vector direction = new Vector(dx, aim.vertical(), dz).normalize();
         Arrow arrow = world.spawnArrow(origin, direction, (float) ARROW_SPEED, ARROW_SPREAD);
         arrow.setShooter(attacker);
