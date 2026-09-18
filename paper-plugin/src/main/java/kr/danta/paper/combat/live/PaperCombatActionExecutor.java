@@ -17,7 +17,8 @@ import java.util.UUID;
 public final class PaperCombatActionExecutor {
     private static final double WAYPOINT_REACHED_DISTANCE = 1.25;
     private static final double ARROW_SPEED = 1.6;
-    private static final double ARROW_LIFT_PER_HORIZONTAL_BLOCK = 0.20;
+    private static final double ARROW_GRAVITY_PER_TICK = 0.05;
+    private static final double ARROW_DRAG = 0.99;
     private static final float ARROW_SPREAD = 0.0f;
 
     private final CombatEntityResolver resolver;
