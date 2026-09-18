@@ -56,4 +56,18 @@ class Dev118SiegeCommanderCasualtyTest {
 
         assertFalse(registry.eliminated("canyon_fort", player));
     }
+
+    @Test
+    void participantCannotSwitchSidesInsideSameSiege() {
+        SiegeParticipantRegistry registry = new SiegeParticipantRegistry(new SiegeCommanderCasualtyPolicy(20));
+        UUID player = UUID.randomUUID();
+
+        registry.join("red_capital", player, SiegeSide.ATTACKER);
+
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> registry.join("red_capital", player, SiegeSide.DEFENDER));
+        assertTrue(error.getMessage().contains("공성 중에는 진영을 변경할 수 없습니다"));
+        assertEquals(SiegeSide.ATTACKER, registry.side("red_capital", player));
+    }
 }
