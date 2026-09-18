@@ -1,12 +1,14 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;
+import kr.danta.core.combat.TroopType;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;\nimport java.util.Map;
+import java.util.List;
+import java.util.Map;
 
-/** DEV-115/116 deterministic development combat formation definition. */
+/** DEV-115/116/117 deterministic development combat formation definition. */
 public final class LiveCombatDemoFormation {
     private final List<Slot> slots;
 
@@ -65,6 +67,14 @@ public final class LiveCombatDemoFormation {
         int count = 0;
         for (Slot slot : slots) {
             if (slot.side() == side && slot.troopType() == troopType) count++;
+        }
+        return count;
+    }
+
+    public int sideUnitCount(CombatSide side) {
+        int count = 0;
+        for (Slot slot : slots) {
+            if (slot.side() == side) count++;
         }
         return count;
     }
