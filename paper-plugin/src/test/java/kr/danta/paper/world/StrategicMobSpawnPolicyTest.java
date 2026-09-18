@@ -1,6 +1,7 @@
 package kr.danta.paper.world;
 
-import org.bukkit.entity.EntityType;\nimport org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
