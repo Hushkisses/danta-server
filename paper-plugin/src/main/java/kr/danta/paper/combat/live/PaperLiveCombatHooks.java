@@ -1,6 +1,7 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;
+import kr.danta.core.combat.TroopType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -72,10 +73,9 @@ final class PaperLiveCombatHooks implements LiveCombatRuntime.Hooks {
 
         layout = DemoBattlefieldLayout.around(origin.getX(), origin.getY(), origin.getZ());
         ArrayList<PaperCombatUnitFactory.SpawnedCombatUnit> spawned = new ArrayList<>();
-        int sideUnits = formation.slots().size() / 2;
-
         try {
             for (LiveCombatDemoFormation.Slot slot : formation.slots()) {
+                int sideUnits = formation.sideUnitCount(slot.side());
                 Location spawn = spawnLocation(world, origin, slot, sideUnits);
                 PaperCombatUnitFactory.SpawnedCombatUnit created = unitFactory.spawn(
                         world, spawn, slot.side(), slot.troopType());
