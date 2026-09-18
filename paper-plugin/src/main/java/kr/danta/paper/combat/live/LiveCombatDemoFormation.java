@@ -32,8 +32,15 @@ public final class LiveCombatDemoFormation {
         if (blueLogicalForce == null) throw new NullPointerException("blueLogicalForce");
         if (mappingPolicy == null) throw new NullPointerException("mappingPolicy");
 
-        LogicalForceAiMappingPolicy.Mapping red = mappingPolicy.map(redLogicalForce);
-        LogicalForceAiMappingPolicy.Mapping blue = mappingPolicy.map(blueLogicalForce);
+        return fromMappings(mappingPolicy.map(redLogicalForce), mappingPolicy.map(blueLogicalForce));
+    }
+
+    public static LiveCombatDemoFormation fromMappings(
+            LogicalForceAiMappingPolicy.Mapping red,
+            LogicalForceAiMappingPolicy.Mapping blue
+    ) {
+        if (red == null) throw new NullPointerException("red");
+        if (blue == null) throw new NullPointerException("blue");
         ArrayList<Slot> slots = new ArrayList<>(red.totalAiUnits() + blue.totalAiUnits());
         addMappedSide(slots, CombatSide.RED, red);
         addMappedSide(slots, CombatSide.BLUE, blue);
