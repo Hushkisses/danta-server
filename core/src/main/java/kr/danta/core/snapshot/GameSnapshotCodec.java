@@ -13,7 +13,8 @@ import kr.danta.core.facility.FacilityTier;
 import kr.danta.core.research.DoctrineSelection;
 import kr.danta.core.research.ResearchField;
 import kr.danta.core.territory.BattlefieldTag;
-import kr.danta.core.territory.StrategicPointType;\nimport kr.danta.core.combat.TroopType;
+import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.combat.TroopType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
