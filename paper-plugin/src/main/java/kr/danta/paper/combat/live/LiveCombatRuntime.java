@@ -11,7 +11,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Objects;\nimport java.util.Optional;
 import java.util.UUID;
 
 /** DEV-115/116 live combat runtime lifecycle boundary. */
@@ -118,6 +118,10 @@ public final class LiveCombatRuntime implements PaperCombatActionExecutor.Runtim
         return List.of();
     }
 
+    public Optional<LiveMappedBattleResult> mappedBattleResult() {
+        return hooks.mappedBattleResult();
+    }
+
     @Override
     public boolean tryAcquireAttack(UUID unitId, long nowMillis, long cooldownMillis) {
         return state.tryAcquireAttack(unitId, nowMillis, cooldownMillis);
@@ -145,6 +149,7 @@ public final class LiveCombatRuntime implements PaperCombatActionExecutor.Runtim
         void tick();
         void stop();
         void onTrackedEntityDeath(UUID entityId);
+        default Optional<LiveMappedBattleResult> mappedBattleResult() { return Optional.empty(); }
 
         static Hooks noop() {
             return new Hooks() {
