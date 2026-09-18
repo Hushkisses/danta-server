@@ -13,7 +13,7 @@ import kr.danta.core.facility.FacilityTier;
 import kr.danta.core.research.DoctrineSelection;
 import kr.danta.core.research.ResearchField;
 import kr.danta.core.territory.BattlefieldTag;
-import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.territory.StrategicPointType;\nimport kr.danta.core.combat.TroopType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Dependency-free snapshot codec. Reads schema v1-v20; DEV-107 writes v20. */
+/** Dependency-free snapshot codec. Reads schema v1-v21; DEV-119 writes v21. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
@@ -529,7 +529,8 @@ public final class GameSnapshotCodec {
         for (ArmySnapshot army : armies) {
             rows.add(String.join(",", enc(army.armyId()), enc(army.ownerNationId()),
                     enc(army.locationPointId()), army.status().name(), Long.toString(army.baseTroops()),
-                    army.expeditionSupplyLevel() == null ? "-" : army.expeditionSupplyLevel().name(), Long.toString(army.carriedFood())));
+                    army.expeditionSupplyLevel() == null ? "-" : army.expeditionSupplyLevel().name(),
+                    Long.toString(army.carriedFood()), encodeTroopComposition(army.troopComposition())));
         }
         return String.join(";", rows);
     }
@@ -539,13 +540,47 @@ public final class GameSnapshotCodec {
         List<ArmySnapshot> result = new ArrayList<>();
         for (String row : payload.split(";", -1)) {
             String[] f = row.split(",", -1);
-            if (f.length != 5 && f.length != 7) throw new IllegalArgumentException("invalid army snapshot row");
-            ExpeditionSupplyLevel supply = f.length == 7 && !f[5].equals("-") ? ExpeditionSupplyLevel.valueOf(f[5]) : null;
-            long carriedFood = f.length == 7 ? Long.parseLong(f[6]) : 0L;
-            result.add(new ArmySnapshot(dec(f[0]), dec(f[1]), dec(f[2]),
-                    ArmyStatus.valueOf(f[3]), Long.parseLong(f[4]), supply, carriedFood));
+            if (f.length != 5 && f.length != 7 && f.length != 8) {
+                throw new IllegalArgumentException("invalid army snapshot row");
+            }
+            ExpeditionSupplyLevel supply = f.length >= 7 && !f[5].equals("-")
+                    ? ExpeditionSupplyLevel.valueOf(f[5]) : null;
+            long carriedFood = f.length >= 7 ? Long.parseLong(f[6]) : 0L;
+            long baseTroops = Long.parseLong(f[4]);
+            if (f.length == 8) {
+                result.add(new ArmySnapshot(dec(f[0]), dec(f[1]), dec(f[2]),
+                        ArmyStatus.valueOf(f[3]), baseTroops, supply, carriedFood,
+                        decodeTroopComposition(f[7])));
+            } else {
+                result.add(new ArmySnapshot(dec(f[0]), dec(f[1]), dec(f[2]),
+                        ArmyStatus.valueOf(f[3]), baseTroops, supply, carriedFood));
+            }
         }
         return List.copyOf(result);
+    }
+
+    private static String encodeTroopComposition(Map<TroopType, Long> composition) {
+        if (composition == null || composition.isEmpty()) return "-";
+        List<String> parts = new ArrayList<>();
+        for (TroopType type : TroopType.values()) {
+            long count = composition.getOrDefault(type, 0L);
+            parts.add(type.name() + "~" + count);
+        }
+        return String.join("+", parts);
+    }
+
+    private static Map<TroopType, Long> decodeTroopComposition(String payload) {
+        if (payload.equals("-") || payload.isEmpty()) return Map.of();
+        Map<TroopType, Long> result = new LinkedHashMap<>();
+        for (String part : payload.split("\\+", -1)) {
+            String[] fields = part.split("~", -1);
+            if (fields.length != 2) throw new IllegalArgumentException("invalid troop composition row");
+            TroopType type = TroopType.valueOf(fields[0]);
+            long count = Long.parseLong(fields[1]);
+            if (count < 0L) throw new IllegalArgumentException("negative troop composition count");
+            result.put(type, count);
+        }
+        return Map.copyOf(result);
     }
 
     private static String encodeOperationQueues(List<ArmyOperationQueueSnapshot> queues) {
