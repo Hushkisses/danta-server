@@ -14,7 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerJoinEvent;\nimport org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -104,12 +104,33 @@ public final class DantaSiegeRuntime implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         String pointId = pointByPlayer.get(player.getUniqueId());
-        if (pointId == null || !progress.active(pointId)) return;
-        if (participants.eliminated(pointId, player.getUniqueId())) {
+        if (pointId == null) {
+            GameMode pendingRestore = originalGameMode.remove(player.getUniqueId());
+            if (pendingRestore != null) {
+                player.setGameMode(pendingRestore);
+                player.sendMessage("§a공성전 종료 상태가 반영되어 원래 게임모드로 복구되었습니다.");
+            }
+            return;
+        }
+        boolean active = progress.active(pointId);
+        boolean eliminated = participants.eliminated(pointId, player.getUniqueId());
+        if (SiegePlayerCommandPolicy.spectatorRequired(active, eliminated)) {
             originalGameMode.putIfAbsent(player.getUniqueId(), player.getGameMode());
             player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage("§e진행 중인 공성전에서 이미 탈락한 상태입니다. 공성 종료까지 재참전할 수 없습니다.");
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        String pointId = pointByPlayer.get(player.getUniqueId());
+        if (pointId == null) return;
+        boolean active = progress.active(pointId);
+        boolean eliminated = participants.eliminated(pointId, player.getUniqueId());
+        if (!SiegePlayerCommandPolicy.spectatorRequired(active, eliminated)) return;
+        GameMode previous = originalGameMode.get(player.getUniqueId());
+        if (previous != null) player.setGameMode(previous);
     }
 
     private void handle(CommandSender sender, String raw) {
@@ -238,9 +259,10 @@ public final class DantaSiegeRuntime implements Listener {
             if (!entry.getValue().equals(pointId)) continue;
             UUID playerId = entry.getKey();
             Player player = plugin.getServer().getPlayer(playerId);
-            GameMode previous = originalGameMode.remove(playerId);
+            GameMode previous = originalGameMode.get(playerId);
             if (player != null && previous != null) {
                 player.setGameMode(previous);
+                originalGameMode.remove(playerId);
                 player.sendMessage("§a공성전이 종료되어 참가 제한이 해제되었습니다.");
             }
             pointByPlayer.remove(playerId);
