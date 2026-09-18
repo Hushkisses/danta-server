@@ -63,4 +63,20 @@ class Dev113PaperSiegeBridgeTest {
             assertTrue(cause.getMessage().contains("현재 단계에서는 성문을 파괴할 수 없습니다"));
         });
     }
+
+    @Test
+    void dev118ExposesWhetherPointSiegeIsActive() {
+        PaperSiegeProgressRuntime runtime = new PaperSiegeProgressRuntime();
+        assertFalse(runtime.active("red_capital"));
+
+        runtime.start("red_capital", StrategicPointType.CAPITAL);
+        assertTrue(runtime.active("red_capital"));
+
+        runtime.recordBattleWin("red_capital");
+        runtime.recordGateBreach("red_capital");
+        runtime.recordBattleWin("red_capital");
+        runtime.recordGateBreach("red_capital");
+        runtime.recordBattleWin("red_capital");
+        assertFalse(runtime.active("red_capital"));
+    }
 }
