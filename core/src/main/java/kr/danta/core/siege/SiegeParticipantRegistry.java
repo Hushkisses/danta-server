@@ -26,6 +26,9 @@ public final class SiegeParticipantRegistry {
         if (existing != null && existing.eliminated()) {
             throw new IllegalStateException("해당 공성전에서는 다시 참전할 수 없습니다.");
         }
+        if (existing != null && existing.side() != side) {
+            throw new IllegalStateException("공성 중에는 진영을 변경할 수 없습니다.");
+        }
         participants.put(key, new Participant(side, false));
     }
 
