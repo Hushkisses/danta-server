@@ -206,8 +206,8 @@ public final class GameSnapshotCodec {
                     decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]), decodeIndependenceWars(p[22]),
                     decodeFameScores(p[23]));
         }
-        if (schema == 20) {
-            if (p.length != 25) throw new IllegalArgumentException("invalid schema v20 field count");
+        if (schema == 20 || schema == 21) {
+            if (p.length != 25) throw new IllegalArgumentException("invalid schema v" + schema + " field count");
             return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
                     Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
                     Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
