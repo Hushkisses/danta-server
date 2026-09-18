@@ -2,7 +2,7 @@ package kr.danta.core.snapshot;
 
 import java.util.List;
 
-/** Restart-recovery snapshot. DEV-086 schema v15 adds national doctrine slot/selection state. */
+/** Restart-recovery snapshot. DEV-119 schema v21 adds army troop-type composition. */
 public record GameSnapshot(
         int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
         double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
@@ -16,7 +16,7 @@ public record GameSnapshot(
         List<FameScoreSnapshot> fameScores,
         List<ChronicleEntrySnapshot> chronicleEntries
 ) {
-    public static final int CURRENT_SCHEMA = 20;
+    public static final int CURRENT_SCHEMA = 21;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
