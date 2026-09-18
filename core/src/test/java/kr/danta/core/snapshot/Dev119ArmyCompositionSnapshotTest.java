@@ -50,6 +50,8 @@ class Dev119ArmyCompositionSnapshotTest {
         fields[3] = "false";
         fields[4] = "1.0";
         fields[10] = armyRow;
+        // v20 encodeVassalRelations(List.of()) serialized an empty list as an empty field, not "-".
+        fields[21] = "";
 
         GameSnapshot decoded = GameSnapshotCodec.decode(String.join("|", fields));
         ArmySnapshot restored = decoded.armies().getFirst();
