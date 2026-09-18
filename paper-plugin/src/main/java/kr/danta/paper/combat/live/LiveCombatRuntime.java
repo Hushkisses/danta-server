@@ -11,7 +11,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;\nimport java.util.Optional;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /** DEV-115/116 live combat runtime lifecycle boundary. */
