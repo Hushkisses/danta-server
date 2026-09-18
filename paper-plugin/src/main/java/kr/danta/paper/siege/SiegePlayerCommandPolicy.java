@@ -23,6 +23,10 @@ public final class SiegePlayerCommandPolicy {
         return side == SiegeSide.ATTACKER ? "공격" : "방어";
     }
 
+    public static boolean spectatorRequired(boolean activeSiege, boolean eliminated) {
+        return activeSiege && eliminated;
+    }
+
     public static boolean lethal(double currentHealth, double finalDamage) {
         if (!Double.isFinite(currentHealth) || currentHealth < 0.0) {
             throw new IllegalArgumentException("currentHealth must be finite and >= 0");
