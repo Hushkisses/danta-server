@@ -205,7 +205,7 @@ public final class SnapshotService {
         gameState.clearArmies();
         for (ArmySnapshot army : snapshot.armies()) {
             gameState.addArmy(new ArmyState(army.armyId(), army.ownerNationId(), army.locationPointId(),
-                    army.status(), army.baseTroops(), army.expeditionSupplyLevel(), army.carriedFood()));
+                    army.status(), army.troopComposition(), army.expeditionSupplyLevel(), army.carriedFood()));
         }
         gameState.clearGenerals();
         for (GeneralSnapshot general : snapshot.generals()) {
@@ -311,7 +311,8 @@ public final class SnapshotService {
                 .toList();
         List<ArmySnapshot> armies = gameState.armies().stream()
                 .map(army -> new ArmySnapshot(army.armyId(), army.ownerNationId(), army.locationPointId(),
-                        army.status(), army.baseTroops(), army.expeditionSupplyLevel(), army.carriedFood()))
+                        army.status(), army.baseTroops(), army.expeditionSupplyLevel(), army.carriedFood(),
+                        army.troopComposition()))
                 .toList();
         java.util.Map<String, Long> dueByArmy = restoredArmyOrders.stream()
                 .collect(java.util.stream.Collectors.toMap(ArmyOrderSnapshot::armyId, ArmyOrderSnapshot::dueRuntimeMillis, (a, b) -> b));
