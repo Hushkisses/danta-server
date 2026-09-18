@@ -1,6 +1,8 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;\nimport org.bukkit.Location;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;
+import kr.danta.core.combat.TroopType;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.junit.jupiter.api.Test;
 
