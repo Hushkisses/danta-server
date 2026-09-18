@@ -70,6 +70,12 @@ public final class PaperSiegeProgressRuntime {
         return requireProgress(pointId).complete();
     }
 
+    public boolean active(String pointId) {
+        String id = requirePointId(pointId);
+        SiegeProgress progress = progressByPointId.get(id);
+        return progress != null && !progress.complete();
+    }
+
     public void clear(String pointId) {
         progressByPointId.remove(requirePointId(pointId));
     }
