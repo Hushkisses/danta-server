@@ -29,4 +29,11 @@ class Dev118SiegePlayerCommandPolicyTest {
         assertTrue(SiegePlayerCommandPolicy.lethal(20.0, 20.0));
         assertTrue(SiegePlayerCommandPolicy.lethal(4.0, 10.0));
     }
+
+    @Test
+    void spectatorRestrictionExistsOnlyWhileTheSiegeIsActiveAndCommanderIsEliminated() {
+        assertTrue(SiegePlayerCommandPolicy.spectatorRequired(true, true));
+        assertFalse(SiegePlayerCommandPolicy.spectatorRequired(true, false));
+        assertFalse(SiegePlayerCommandPolicy.spectatorRequired(false, true));
+    }
 }
