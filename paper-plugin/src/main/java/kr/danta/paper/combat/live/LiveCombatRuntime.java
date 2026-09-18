@@ -1,13 +1,13 @@
 package kr.danta.paper.combat.live;
 
-import kr.danta.paper.combat.ai.PaperCombatAiRuntime;
+import kr.danta.core.combat.LogicalForceAiMappingPolicy;\nimport kr.danta.core.combat.TroopType;\nimport kr.danta.paper.combat.ai.PaperCombatAiRuntime;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.List;\nimport java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -39,6 +39,32 @@ public final class LiveCombatRuntime implements PaperCombatActionExecutor.Runtim
 
     public boolean startBenchmark(World world, Location origin, int unitCount) {
         return start(world, origin, unitCount);
+    }
+
+    public boolean startMappedBattle(
+            World world,
+            Location origin,
+            Map<TroopType, Long> redLogicalForce,
+            Map<TroopType, Long> blueLogicalForce,
+            LogicalForceAiMappingPolicy mappingPolicy
+    ) {
+        Objects.requireNonNull(world, "world");
+        Objects.requireNonNull(origin, "origin");
+        Objects.requireNonNull(redLogicalForce, "redLogicalForce");
+        Objects.requireNonNull(blueLogicalForce, "blueLogicalForce");
+        Objects.requireNonNull(mappingPolicy, "mappingPolicy");
+        if (!state.begin()) return false;
+        try {
+            hooks.startMapped(world, origin, redLogicalForce, blueLogicalForce, mappingPolicy);
+            if (plugin != null) {
+                loopTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
+            }
+            return true;
+        } catch (RuntimeException ex) {
+            cancelLoop();
+            try { hooks.stop(); } finally { state.finish(); }
+            throw ex;
+        }
     }
 
     private boolean start(World world, Location origin, Integer unitCount) {
@@ -104,6 +130,15 @@ public final class LiveCombatRuntime implements PaperCombatActionExecutor.Runtim
     public interface Hooks {
         void start(World world, Location origin);
         default void start(World world, Location origin, int unitCount) { start(world, origin); }
+        default void startMapped(
+                World world,
+                Location origin,
+                Map<TroopType, Long> redLogicalForce,
+                Map<TroopType, Long> blueLogicalForce,
+                LogicalForceAiMappingPolicy mappingPolicy
+        ) {
+            start(world, origin);
+        }
         void tick();
         void stop();
         void onTrackedEntityDeath(UUID entityId);
