@@ -172,6 +172,9 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
     private PostgresDatabaseService databaseService;
     private AsyncKeyValueRepository devRepository;
     private SnapshotService snapshotService;
+    private kr.danta.core.siege.SiegeService siegeService;
+    private kr.danta.core.siege.SiegeReservationService siegeReservationService;
+    private kr.danta.paper.siege.DantaSiegeRuntime siegeRuntime;
     private final java.util.Map<String, ArmyOrderSnapshot> pendingMovementSnapshots = new java.util.LinkedHashMap<>();
     private BukkitTask snapshotTask;
 
@@ -190,6 +193,15 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
         armyGuiController = new ArmyGuiController(gameState, armyOperationQueues);
         getServer().getPluginManager().registerEvents(armyGuiController, this);
         initializeDevMap();
+        siegeService = new kr.danta.core.siege.SiegeService(gameState);
+        kr.danta.core.siege.SiegeReservationService.Policy provisionalSiegePolicy =
+                new kr.danta.core.siege.SiegeReservationService.Policy() {
+                    public java.time.Duration minimumLeadTime() { return java.time.Duration.ofHours(2); }
+                    public java.time.Duration confirmationDeadlineBeforeStart() { return java.time.Duration.ofMinutes(30); }
+                };
+        siegeReservationService = new kr.danta.core.siege.SiegeReservationService(
+                siegeService, java.time.Clock.systemUTC(), provisionalSiegePolicy);
+        siegeRuntime = kr.danta.paper.siege.DantaSiegeRuntime.bootstrap(this);
         canyonFortressBuilder = new CanyonFortressBuilder();
         eventBus.subscribe(StrategicPointOwnershipChangedEvent.class, event -> {
             getLogger().info("[Territory] " + event.pointId() + ": "
@@ -322,6 +334,8 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
             snapshotService.bindVassals(vassalService);
             snapshotService.bindIndependenceWars(independenceWarService);
             snapshotService.bindChronicle(chronicleService);
+            snapshotService.bindSieges(siegeService, siegeReservationService, siegeRuntime);
+            siegeRuntime.setImportantFlush(this::flushSiegeState);
             if (config.enabled()) {
                 databaseService.initializeAsync().thenAccept(ready -> {
                     if (!ready) {
@@ -1987,4 +2001,12 @@ public final class DantaPlugin extends JavaPlugin implements CommandExecutor {
                 || !databaseService.health().status().name().equals("READY")) return;
         snapshotService.flushImportantAsync(reason);
     }
+    private void flushSiegeState(String reason) {
+        if (snapshotService == null || databaseService == null
+                || !databaseService.health().status().name().equals("READY")) return;
+        snapshotService.flushImportantAsync(reason).whenComplete((ignored, error) -> {
+            if (error != null) getLogger().warning("DEV-120 siege snapshot flush failed: " + rootMessage(error));
+        });
+    }
+
 }
