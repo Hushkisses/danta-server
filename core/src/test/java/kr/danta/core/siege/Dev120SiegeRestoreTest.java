@@ -47,7 +47,7 @@ class Dev120SiegeRestoreTest {
     @Test
     void clearRemovesRestoredSiegesAndReservations() {
         SiegeService sieges = service();
-        sieges.restore("s1", "fort", "red", "blue", SiegePhase.CREATED, null);
+        sieges.restore("s1", "fort", "red", "blue", SiegePhase.SCHEDULED, null);
         SiegeReservationService reservations = reservations(sieges);
         reservations.restore(new SiegeReservation(
                 "s1", Instant.parse("2026-09-20T12:00:00Z"), null));
