@@ -66,6 +66,40 @@ public final class SiegeParticipantRegistry {
         return moraleDeltaBySide.getOrDefault(new SideKey(requirePoint(pointId), Objects.requireNonNull(side, "side")), 0);
     }
 
+    public synchronized void restoreParticipant(String pointId, UUID playerId, SiegeSide side, boolean eliminated) {
+        String point = requirePoint(pointId);
+        Objects.requireNonNull(playerId, "playerId");
+        Objects.requireNonNull(side, "side");
+        participants.put(new Key(point, playerId), new Participant(side, eliminated));
+    }
+
+    public synchronized void restoreMorale(String pointId, SiegeSide side, int moraleDelta) {
+        String point = requirePoint(pointId);
+        Objects.requireNonNull(side, "side");
+        if (moraleDelta > 0) throw new IllegalArgumentException("siege morale delta must be <= 0");
+        moraleDeltaBySide.put(new SideKey(point, side), moraleDelta);
+    }
+
+    public synchronized java.util.List<ParticipantState> participantStates() {
+        return participants.entrySet().stream()
+                .map(entry -> new ParticipantState(
+                        entry.getKey().pointId(), entry.getKey().playerId(),
+                        entry.getValue().side(), entry.getValue().eliminated()))
+                .toList();
+    }
+
+    public synchronized java.util.List<MoraleState> moraleStates() {
+        return moraleDeltaBySide.entrySet().stream()
+                .map(entry -> new MoraleState(
+                        entry.getKey().pointId(), entry.getKey().side(), entry.getValue()))
+                .toList();
+    }
+
+    public synchronized void clearAll() {
+        participants.clear();
+        moraleDeltaBySide.clear();
+    }
+
     public synchronized void clear(String pointId) {
         String point = requirePoint(pointId);
         participants.keySet().removeIf(key -> key.pointId().equals(point));
@@ -78,6 +112,9 @@ public final class SiegeParticipantRegistry {
         if (normalized.isEmpty()) throw new IllegalArgumentException("pointId must not be blank");
         return normalized;
     }
+
+    public record ParticipantState(String pointId, UUID playerId, SiegeSide side, boolean eliminated) {}
+    public record MoraleState(String pointId, SiegeSide side, int moraleDelta) {}
 
     private record Key(String pointId, UUID playerId) {}
     private record SideKey(String pointId, SiegeSide side) {}
