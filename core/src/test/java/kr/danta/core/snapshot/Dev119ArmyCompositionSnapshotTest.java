@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class Dev119ArmyCompositionSnapshotTest {
 
     @Test
-    void schema21RoundTripPreservesTroopComposition() {
+    void currentSchemaRoundTripPreservesTroopComposition() {
         ArmySnapshot army = new ArmySnapshot(
                 "army_a", "red", "red_capital", ArmyStatus.STATIONED,
                 170L, null, 0L,
@@ -30,7 +30,7 @@ class Dev119ArmyCompositionSnapshotTest {
         GameSnapshot decoded = GameSnapshotCodec.decode(GameSnapshotCodec.encode(snapshot));
         ArmySnapshot restored = decoded.armies().getFirst();
 
-        assertEquals(21, GameSnapshot.CURRENT_SCHEMA);
+        assertEquals(22, GameSnapshot.CURRENT_SCHEMA);
         assertEquals(100L, restored.troopComposition().get(TroopType.INFANTRY));
         assertEquals(50L, restored.troopComposition().get(TroopType.ARCHERS));
         assertEquals(20L, restored.troopComposition().get(TroopType.CAVALRY));
