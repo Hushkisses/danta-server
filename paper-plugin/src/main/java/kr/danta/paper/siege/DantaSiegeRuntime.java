@@ -5,6 +5,10 @@ import kr.danta.core.siege.SiegeCommanderCasualtyPolicy;
 import kr.danta.core.siege.SiegeParticipantRegistry;
 import kr.danta.core.siege.SiegeSide;
 import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.snapshot.SiegeMoraleSnapshot;
+import kr.danta.core.snapshot.SiegeParticipantSnapshot;
+import kr.danta.core.snapshot.SiegeProgressSnapshot;
+import kr.danta.core.snapshot.SiegeRuntimeSnapshot;
 import kr.danta.paper.map.DevMapDefinition;
 import kr.danta.paper.map.DevMapLoader;
 import org.bukkit.GameMode;
@@ -26,6 +30,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * DEV-113 staged siege validation bridge, extended by DEV-118 for commander elimination.
@@ -33,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class DantaSiegeRuntime implements Listener {
     private static final Set<String> BOOTSTRAPPED = ConcurrentHashMap.newKeySet();
+    private static final Map<String, DantaSiegeRuntime> INSTANCES = new ConcurrentHashMap<>();
 
     private final JavaPlugin plugin;
     private final PaperSiegeProgressRuntime progress = new PaperSiegeProgressRuntime();
@@ -43,6 +49,7 @@ public final class DantaSiegeRuntime implements Listener {
 
     private DevMapDefinition devMap;
     private String initializationError;
+    private Consumer<String> importantFlush = reason -> {};
 
     private DantaSiegeRuntime(JavaPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
@@ -54,11 +61,64 @@ public final class DantaSiegeRuntime implements Listener {
         }
     }
 
-    public static void bootstrap(JavaPlugin plugin) {
+    public static DantaSiegeRuntime bootstrap(JavaPlugin plugin) {
         String key = plugin.getName() + "@" + System.identityHashCode(plugin);
-        if (!BOOTSTRAPPED.add(key)) return;
+        DantaSiegeRuntime existing = INSTANCES.get(key);
+        if (existing != null) return existing;
         DantaSiegeRuntime runtime = new DantaSiegeRuntime(plugin);
-        plugin.getServer().getPluginManager().registerEvents(runtime, plugin);
+        if (BOOTSTRAPPED.add(key)) {
+            plugin.getServer().getPluginManager().registerEvents(runtime, plugin);
+            INSTANCES.put(key, runtime);
+            return runtime;
+        }
+        return INSTANCES.get(key);
+    }
+
+    public void setImportantFlush(Consumer<String> importantFlush) {
+        this.importantFlush = Objects.requireNonNull(importantFlush, "importantFlush");
+    }
+
+    public SiegeRuntimeSnapshot snapshotState() {
+        var participantSnapshots = participants.participantStates().stream()
+                .map(state -> new SiegeParticipantSnapshot(
+                        state.pointId(), state.playerId(), state.side(), state.eliminated(),
+                        originalGameMode.containsKey(state.playerId()) ? originalGameMode.get(state.playerId()).name() : null))
+                .toList();
+        var moraleSnapshots = participants.moraleStates().stream()
+                .map(state -> new SiegeMoraleSnapshot(state.pointId(), state.side(), state.moraleDelta()))
+                .toList();
+        return new SiegeRuntimeSnapshot(
+                java.util.List.of(), java.util.List.of(), progress.snapshots(), participantSnapshots, moraleSnapshots);
+    }
+
+    public void restoreState(SiegeRuntimeSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "snapshot");
+        progress.clearAll();
+        participants.clearAll();
+        pointByPlayer.clear();
+        originalGameMode.clear();
+        for (SiegeProgressSnapshot state : snapshot.progress()) {
+            boolean resume = state.stage() != kr.danta.core.siege.SiegeStage.COMPLETE;
+            progress.restore(new SiegeProgressSnapshot(state.pointId(), state.profile(), state.stage(), resume));
+        }
+        for (SiegeParticipantSnapshot state : snapshot.participants()) {
+            participants.restoreParticipant(state.pointId(), state.playerId(), state.side(), state.eliminated());
+            pointByPlayer.put(state.playerId(), state.pointId());
+            if (state.previousGameMode() != null) {
+                try {
+                    originalGameMode.put(state.playerId(), GameMode.valueOf(state.previousGameMode()));
+                } catch (IllegalArgumentException ignored) {
+                    originalGameMode.put(state.playerId(), GameMode.SURVIVAL);
+                }
+            }
+        }
+        for (SiegeMoraleSnapshot state : snapshot.morale()) {
+            participants.restoreMorale(state.pointId(), state.side(), state.moraleDelta());
+        }
+    }
+
+    private void flushImportant(String reason) {
+        importantFlush.accept("siege:" + reason);
     }
 
     @EventHandler
@@ -92,6 +152,7 @@ public final class DantaSiegeRuntime implements Listener {
         originalGameMode.putIfAbsent(player.getUniqueId(), player.getGameMode());
         SiegeCommanderCasualty casualty = participants.eliminate(pointId, player.getUniqueId());
         player.setGameMode(GameMode.SPECTATOR);
+        flushImportant("commander-eliminated:" + pointId + ":" + player.getUniqueId());
         player.sendMessage("§c[공성] 지휘관이 전투에서 탈락했습니다.");
         player.sendMessage("§e이 공성전이 끝날 때까지 다시 참전할 수 없습니다.");
         player.sendMessage("§7지휘관 보너스 비활성 / 아군 사기 " + casualty.moraleDelta());
@@ -155,6 +216,7 @@ public final class DantaSiegeRuntime implements Listener {
                     sender.sendMessage("§a공성 개발 검증을 시작했습니다: §e" + args[3]
                             + " §7(" + pointTypeText(type) + ")");
                     sendPointStatus(sender, args[3]);
+                    flushImportant("start:" + args[3]);
                 }
                 case "status" -> {
                     requirePointArg(args, "/danta siege status <거점-id>");
@@ -166,12 +228,14 @@ public final class DantaSiegeRuntime implements Listener {
                     sender.sendMessage("§a전투 승리 결과를 반영했습니다.");
                     sendPointStatus(sender, args[3]);
                     releaseIfComplete(args[3]);
+                    flushImportant("battle-win:" + args[3]);
                 }
                 case "gate-breach" -> {
                     requirePointArg(args, "/danta siege gate-breach <거점-id>");
                     progress.recordGateBreach(args[3]);
                     sender.sendMessage("§a성문 파괴 결과를 반영했습니다.");
                     sendPointStatus(sender, args[3]);
+                    flushImportant("gate-breach:" + args[3]);
                 }
                 case "quick-resolve" -> {
                     requirePointArg(args, "/danta siege quick-resolve <거점-id>");
@@ -179,6 +243,7 @@ public final class DantaSiegeRuntime implements Listener {
                     sender.sendMessage("§a일반 거점의 빠른 점령 결과를 반영했습니다.");
                     sendPointStatus(sender, args[3]);
                     releaseIfComplete(args[3]);
+                    flushImportant("quick-resolve:" + args[3]);
                 }
                 case "player" -> handlePlayerCommand(sender, args);
                 case "clear" -> {
@@ -186,6 +251,7 @@ public final class DantaSiegeRuntime implements Listener {
                     releaseParticipants(args[3]);
                     progress.clear(args[3]);
                     sender.sendMessage("§a공성 개발 검증 상태를 초기화했습니다: §e" + args[3]);
+                    flushImportant("clear:" + args[3]);
                 }
                 default -> sendUsage(sender);
             }
@@ -219,6 +285,7 @@ public final class DantaSiegeRuntime implements Listener {
                 sender.sendMessage("§a공성전에 지휘관으로 참가했습니다: §e" + pointId
                         + " §7(" + SiegePlayerCommandPolicy.sideText(side) + "측)");
                 sender.sendMessage("§7치명상을 입으면 이 공성전에서는 즉시 탈락하며 재참전할 수 없습니다.");
+                flushImportant("player-join:" + pointId + ":" + player.getUniqueId());
             }
             case "status" -> {
                 if (args.length < 5) {
