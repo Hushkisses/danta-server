@@ -41,6 +41,7 @@ public final class PaperSiegeProgressRuntime {
         SiegeProgress progress = requireProgress(pointId);
         try {
             progress.apply(SiegeProgressEvent.BATTLE_WON);
+            resumeRequiredByPointId.put(requirePointId(pointId), false);
         } catch (IllegalStateException ex) {
             throw new IllegalStateException("현재 단계에서는 전투 승리를 처리할 수 없습니다. " + status(pointId), ex);
         }
@@ -50,6 +51,7 @@ public final class PaperSiegeProgressRuntime {
         SiegeProgress progress = requireProgress(pointId);
         try {
             progress.apply(SiegeProgressEvent.GATE_BREACHED);
+            resumeRequiredByPointId.put(requirePointId(pointId), false);
         } catch (IllegalStateException ex) {
             throw new IllegalStateException("현재 단계에서는 성문을 파괴할 수 없습니다. " + status(pointId), ex);
         }
@@ -59,6 +61,7 @@ public final class PaperSiegeProgressRuntime {
         SiegeProgress progress = requireProgress(pointId);
         try {
             progress.apply(SiegeProgressEvent.QUICK_RESOLVED);
+            resumeRequiredByPointId.put(requirePointId(pointId), false);
         } catch (IllegalStateException ex) {
             throw new IllegalStateException("현재 단계에서는 일반 거점의 빠른 점령을 처리할 수 없습니다. " + status(pointId), ex);
         }
