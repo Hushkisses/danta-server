@@ -5,6 +5,7 @@ import kr.danta.core.siege.SiegeProgress;
 import kr.danta.core.siege.SiegeProgressEvent;
 import kr.danta.core.siege.SiegeStage;
 import kr.danta.core.territory.StrategicPointType;
+import kr.danta.core.snapshot.SiegeProgressSnapshot;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Objects;
  */
 public final class PaperSiegeProgressRuntime {
     private final Map<String, SiegeProgress> progressByPointId = new LinkedHashMap<>();
+    private final Map<String, Boolean> resumeRequiredByPointId = new LinkedHashMap<>();
 
     public SiegeEngagementProfile profileFor(StrategicPointType pointType) {
         Objects.requireNonNull(pointType, "pointType");
@@ -32,6 +34,7 @@ public final class PaperSiegeProgressRuntime {
             throw new IllegalStateException("해당 거점에는 이미 진행 중인 공성이 있습니다.");
         }
         progressByPointId.put(id, new SiegeProgress(profileFor(pointType)));
+        resumeRequiredByPointId.put(id, false);
     }
 
     public void recordBattleWin(String pointId) {
@@ -63,7 +66,8 @@ public final class PaperSiegeProgressRuntime {
 
     public String status(String pointId) {
         SiegeProgress progress = requireProgress(pointId);
-        return "[공성 진행] " + stageText(progress.stage());
+        return "[공성 진행] " + stageText(progress.stage())
+                + (resumeRequired(pointId) ? " §6[재개 대기]" : "");
     }
 
     public boolean complete(String pointId) {
@@ -76,8 +80,36 @@ public final class PaperSiegeProgressRuntime {
         return progress != null && !progress.complete();
     }
 
+    public boolean resumeRequired(String pointId) {
+        return resumeRequiredByPointId.getOrDefault(requirePointId(pointId), false);
+    }
+
+    public java.util.List<SiegeProgressSnapshot> snapshots() {
+        return progressByPointId.entrySet().stream()
+                .map(entry -> new SiegeProgressSnapshot(
+                        entry.getKey(),
+                        entry.getValue().profile(),
+                        entry.getValue().stage(),
+                        resumeRequiredByPointId.getOrDefault(entry.getKey(), false)))
+                .toList();
+    }
+
+    public void restore(SiegeProgressSnapshot snapshot) {
+        Objects.requireNonNull(snapshot, "snapshot");
+        String id = requirePointId(snapshot.pointId());
+        progressByPointId.put(id, SiegeProgress.restored(snapshot.profile(), snapshot.stage()));
+        resumeRequiredByPointId.put(id, snapshot.resumeRequired());
+    }
+
+    public void clearAll() {
+        progressByPointId.clear();
+        resumeRequiredByPointId.clear();
+    }
+
     public void clear(String pointId) {
-        progressByPointId.remove(requirePointId(pointId));
+        String id = requirePointId(pointId);
+        progressByPointId.remove(id);
+        resumeRequiredByPointId.remove(id);
     }
 
     private SiegeProgress requireProgress(String pointId) {
