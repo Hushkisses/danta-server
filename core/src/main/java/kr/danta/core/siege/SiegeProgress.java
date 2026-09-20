@@ -11,12 +11,39 @@ public final class SiegeProgress {
     private SiegeStage stage;
 
     public SiegeProgress(SiegeEngagementProfile profile) {
+        this(profile, initialStage(Objects.requireNonNull(profile, "profile")));
+    }
+
+    private SiegeProgress(SiegeEngagementProfile profile, SiegeStage stage) {
         this.profile = Objects.requireNonNull(profile, "profile");
-        this.stage = switch (profile) {
+        this.stage = Objects.requireNonNull(stage, "stage");
+        validateStage(profile, stage);
+    }
+
+    public static SiegeProgress restored(SiegeEngagementProfile profile, SiegeStage stage) {
+        return new SiegeProgress(profile, stage);
+    }
+
+    private static SiegeStage initialStage(SiegeEngagementProfile profile) {
+        return switch (profile) {
             case NORMAL_QUICK -> SiegeStage.QUICK_RESOLUTION;
             case MAJOR_SINGLE_BATTLE -> SiegeStage.SINGLE_BATTLE;
             case CAPITAL_THREE_BATTLE -> SiegeStage.OUTER_BATTLE;
         };
+    }
+
+    private static void validateStage(SiegeEngagementProfile profile, SiegeStage stage) {
+        boolean valid = switch (profile) {
+            case NORMAL_QUICK -> stage == SiegeStage.QUICK_RESOLUTION || stage == SiegeStage.COMPLETE;
+            case MAJOR_SINGLE_BATTLE -> stage == SiegeStage.SINGLE_BATTLE || stage == SiegeStage.COMPLETE;
+            case CAPITAL_THREE_BATTLE -> stage == SiegeStage.OUTER_BATTLE
+                    || stage == SiegeStage.OUTER_GATE
+                    || stage == SiegeStage.PLAZA_BATTLE
+                    || stage == SiegeStage.INNER_GATE
+                    || stage == SiegeStage.CORE_BATTLE
+                    || stage == SiegeStage.COMPLETE;
+        };
+        if (!valid) throw new IllegalArgumentException("stage " + stage + " is invalid for profile " + profile);
     }
 
     public SiegeEngagementProfile profile() {
