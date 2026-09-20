@@ -25,6 +25,13 @@ import kr.danta.core.persistence.AsyncKeyValueRepository;
 import kr.danta.core.runtime.RuntimeClockService;
 import kr.danta.core.snapshot.GameSnapshot;
 import kr.danta.core.snapshot.GameSnapshotCodec;
+import kr.danta.core.snapshot.SiegeInstanceSnapshot;
+import kr.danta.core.snapshot.SiegeReservationSnapshot;
+import kr.danta.core.snapshot.SiegeRuntimeSnapshot;
+import kr.danta.core.siege.SiegeService;
+import kr.danta.core.siege.SiegeReservation;
+import kr.danta.core.siege.SiegeReservationService;
+import kr.danta.paper.siege.DantaSiegeRuntime;
 import kr.danta.core.snapshot.ArmySnapshot;
 import kr.danta.core.snapshot.ArmyOrderSnapshot;
 import kr.danta.core.snapshot.ArmyOperationQueueSnapshot;
@@ -60,6 +67,7 @@ import kr.danta.core.territory.StrategicPoint;
 import kr.danta.core.territory.StrategicEdge;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Objects;
@@ -85,6 +93,9 @@ public final class SnapshotService {
     private volatile VassalService vassalService;
     private volatile IndependenceWarService independenceWarService;
     private volatile ChronicleService chronicleService;
+    private volatile SiegeService siegeService;
+    private volatile SiegeReservationService siegeReservationService;
+    private volatile DantaSiegeRuntime siegeRuntime;
     private volatile List<ArmyOrderSnapshot> restoredArmyOrders = List.of();
     private volatile List<ArmyOperationQueueSnapshot> armyOperationQueues = List.of();
 
@@ -99,6 +110,14 @@ public final class SnapshotService {
     public void bindVassals(VassalService vassalService) { this.vassalService = Objects.requireNonNull(vassalService, "vassalService"); }
     public void bindIndependenceWars(IndependenceWarService service) { this.independenceWarService = Objects.requireNonNull(service, "independenceWarService"); }
     public void bindChronicle(ChronicleService service) { this.chronicleService = Objects.requireNonNull(service, "chronicleService"); }
+
+    public void bindSieges(SiegeService siegeService,
+                           SiegeReservationService siegeReservationService,
+                           DantaSiegeRuntime siegeRuntime) {
+        this.siegeService = Objects.requireNonNull(siegeService, "siegeService");
+        this.siegeReservationService = Objects.requireNonNull(siegeReservationService, "siegeReservationService");
+        this.siegeRuntime = Objects.requireNonNull(siegeRuntime, "siegeRuntime");
+    }
 
     public void bindDiplomacy(DiplomacyService diplomacyService) { this.diplomacyService = Objects.requireNonNull(diplomacyService, "diplomacyService"); }
 
@@ -174,6 +193,23 @@ public final class SnapshotService {
                     point.pointId(), point.displayName(), point.type(), point.ownerNationId(),
                     new PointPosition(point.worldName(), point.x(), point.y(), point.z()),
                     point.facilitySlots(), point.baseProductionPerHour()));
+        }
+        if (siegeService != null && siegeReservationService != null && siegeRuntime != null) {
+            siegeReservationService.clear();
+            siegeService.clear();
+            for (SiegeInstanceSnapshot siege : snapshot.siegeRuntime().instances()) {
+                siegeService.restore(
+                        siege.siegeId(), siege.pointId(), siege.attackerNationId(), siege.defenderNationId(),
+                        siege.phase(), siege.result());
+            }
+            for (SiegeReservationSnapshot reservation : snapshot.siegeRuntime().reservations()) {
+                siegeReservationService.restore(new SiegeReservation(
+                        reservation.siegeId(),
+                        Instant.ofEpochMilli(reservation.scheduledAtEpochMillis()),
+                        reservation.confirmedAtEpochMillis() == null
+                                ? null : Instant.ofEpochMilli(reservation.confirmedAtEpochMillis())));
+            }
+            siegeRuntime.restoreState(snapshot.siegeRuntime());
         }
         // Relations reference restored nations (and vassalization also depends on nation state), so restore them only after nations/points exist.
         if (diplomacyService != null) {
@@ -370,10 +406,25 @@ public final class SnapshotService {
         List<ChronicleEntrySnapshot> chronicleEntries = chronicleService == null ? List.of()
                 : chronicleService.entries().stream()
                 .map(e -> new ChronicleEntrySnapshot(e.runtimeMillis(), e.type().name(), e.summary())).toList();
+        SiegeRuntimeSnapshot paperSiege = siegeRuntime == null ? SiegeRuntimeSnapshot.empty() : siegeRuntime.snapshotState();
+        List<SiegeInstanceSnapshot> siegeInstances = siegeService == null ? List.of()
+                : siegeService.instances().stream()
+                .map(x -> new SiegeInstanceSnapshot(
+                        x.siegeId(), x.pointId(), x.attackerNationId(), x.defenderNationId(), x.phase(), x.result()))
+                .toList();
+        List<SiegeReservationSnapshot> siegeReservations = siegeReservationService == null ? List.of()
+                : siegeReservationService.reservations().stream()
+                .map(x -> new SiegeReservationSnapshot(
+                        x.siegeId(), x.scheduledAt().toEpochMilli(),
+                        x.confirmedAt() == null ? null : x.confirmedAt().toEpochMilli()))
+                .toList();
+        SiegeRuntimeSnapshot siegeState = new SiegeRuntimeSnapshot(
+                siegeInstances, siegeReservations, paperSiege.progress(), paperSiege.participants(), paperSiege.morale());
         return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA, System.currentTimeMillis(),
                 runtimeClock.elapsedMillis(), runtimeClock.isPaused(), runtimeClock.speedMultiplier(),
                 season.map(SeasonState::seasonId).orElse(null), season.map(SeasonState::displayName).orElse(null),
                 nations, points, edges, armies, armyOrders, armyOperationQueues, wallets, resources, localResources, generals,
-                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, chronicleEntries);
+                facilities, facilityConstructions, researchStates, diplomaticRelations, vassalRelations, independenceWars,
+                fameScores, chronicleEntries, siegeState);
     }
 }
