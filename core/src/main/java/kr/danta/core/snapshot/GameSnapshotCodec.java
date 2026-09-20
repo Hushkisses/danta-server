@@ -15,6 +15,10 @@ import kr.danta.core.research.ResearchField;
 import kr.danta.core.territory.BattlefieldTag;
 import kr.danta.core.territory.StrategicPointType;
 import kr.danta.core.combat.TroopType;
+import kr.danta.core.siege.SiegeEngagementProfile;
+import kr.danta.core.siege.SiegePhase;
+import kr.danta.core.siege.SiegeSide;
+import kr.danta.core.siege.SiegeStage;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,13 +28,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-/** Dependency-free snapshot codec. Reads schema v1-v21; DEV-119 writes v21. */
+/** Dependency-free snapshot codec. Reads schema v1-v22; DEV-120 writes v22. */
 public final class GameSnapshotCodec {
     private GameSnapshotCodec() {}
 
     public static String encode(GameSnapshot s) {
-        return String.join("|",
+        List<String> fields = new ArrayList<>(List.of(
                 Integer.toString(s.schemaVersion()),
                 Long.toString(s.createdAtEpochMillis()),
                 Long.toString(s.runtimeElapsedMillis()),
@@ -39,7 +44,14 @@ public final class GameSnapshotCodec {
                 enc(s.seasonId()), enc(s.seasonDisplayName()),
                 encodeNations(s.nations()), encodeStrategicPoints(s.strategicPoints()),
                 encodeStrategicEdges(s.strategicEdges()), encodeArmies(s.armies()), encodeArmyOrders(s.armyOrders()),
-                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()), encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()), encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()), encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()), encodeVassalRelations(s.vassalRelations()), encodeIndependenceWars(s.independenceWars()), encodeFameScores(s.fameScores()), encodeChronicleEntries(s.chronicleEntries()));
+                encodeOperationQueues(s.armyOperationQueues()), encodePersonalWallets(s.personalWallets()),
+                encodeStrategicResources(s.strategicResourceStockpiles()), encodeLocalResources(s.localResourceStockpiles()),
+                encodeGenerals(s.generals()), encodeFacilities(s.facilities()), encodeFacilityConstructions(s.facilityConstructions()),
+                encodeResearchStates(s.researchStates()), encodeDiplomaticRelations(s.diplomaticRelations()),
+                encodeVassalRelations(s.vassalRelations()), encodeIndependenceWars(s.independenceWars()),
+                encodeFameScores(s.fameScores()), encodeChronicleEntries(s.chronicleEntries())));
+        if (s.schemaVersion() >= 22) fields.add(encodeSiegeRuntime(s.siegeRuntime()));
+        return String.join("|", fields);
     }
 
     public static GameSnapshot decode(String value) {
@@ -217,6 +229,18 @@ public final class GameSnapshotCodec {
                     decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]),
                     decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]), decodeIndependenceWars(p[22]),
                     decodeFameScores(p[23]), decodeChronicleEntries(p[24]));
+        }
+        if (schema == 22) {
+            if (p.length != 26) throw new IllegalArgumentException("invalid schema v22 field count");
+            return new GameSnapshot(GameSnapshot.CURRENT_SCHEMA,
+                    Long.parseLong(p[1]), Long.parseLong(p[2]), Boolean.parseBoolean(p[3]),
+                    Double.parseDouble(p[4]), dec(p[5]), dec(p[6]), decodeNations(p[7]),
+                    decodeStrategicPoints(p[8]), decodeStrategicEdges(p[9]), decodeArmies(p[10]),
+                    decodeArmyOrders(p[11]), decodeOperationQueues(p[12]), decodePersonalWallets(p[13]),
+                    decodeStrategicResources(p[14]), decodeLocalResources(p[15]), decodeGenerals(p[16]),
+                    decodeFacilities(p[17]), decodeFacilityConstructions(p[18]), decodeResearchStates(p[19]),
+                    decodeDiplomaticRelations(p[20]), decodeVassalRelations(p[21]), decodeIndependenceWars(p[22]),
+                    decodeFameScores(p[23]), decodeChronicleEntries(p[24]), decodeSiegeRuntime(p[25]));
         }
         throw new IllegalArgumentException("unsupported snapshot schema: " + schema);
     }
@@ -715,6 +739,87 @@ public final class GameSnapshotCodec {
         List<VassalRelationSnapshot> out = new ArrayList<>();
         for (String row : value.split(";")) { String[] p=row.split(",",-1); if(p.length!=3) throw new IllegalArgumentException("invalid vassal relation"); out.add(new VassalRelationSnapshot(dec(p[0]),dec(p[1]),Long.parseLong(p[2]))); }
         return out;
+    }
+
+    private static String encodeSiegeRuntime(SiegeRuntimeSnapshot snapshot) {
+        if (snapshot == null || snapshot.isEmpty()) return enc("-#-#-#-#-");
+        String instances = snapshot.instances().isEmpty() ? "-" : snapshot.instances().stream()
+                .map(x -> String.join(",", enc(x.siegeId()), enc(x.pointId()), enc(x.attackerNationId()),
+                        enc(x.defenderNationId()), x.phase().name(), enc(x.result())))
+                .reduce((a,b)->a+";"+b).orElse("-");
+        String reservations = snapshot.reservations().isEmpty() ? "-" : snapshot.reservations().stream()
+                .map(x -> enc(x.siegeId()) + "," + x.scheduledAtEpochMillis() + ","
+                        + (x.confirmedAtEpochMillis() == null ? "-" : x.confirmedAtEpochMillis()))
+                .reduce((a,b)->a+";"+b).orElse("-");
+        String progress = snapshot.progress().isEmpty() ? "-" : snapshot.progress().stream()
+                .map(x -> String.join(",", enc(x.pointId()), x.profile().name(), x.stage().name(),
+                        Boolean.toString(x.resumeRequired())))
+                .reduce((a,b)->a+";"+b).orElse("-");
+        String participants = snapshot.participants().isEmpty() ? "-" : snapshot.participants().stream()
+                .map(x -> String.join(",", enc(x.pointId()), x.playerId().toString(), x.side().name(),
+                        Boolean.toString(x.eliminated()), enc(x.previousGameMode())))
+                .reduce((a,b)->a+";"+b).orElse("-");
+        String morale = snapshot.morale().isEmpty() ? "-" : snapshot.morale().stream()
+                .map(x -> String.join(",", enc(x.pointId()), x.side().name(), Integer.toString(x.moraleDelta())))
+                .reduce((a,b)->a+";"+b).orElse("-");
+        return enc(String.join("#", instances, reservations, progress, participants, morale));
+    }
+
+    private static SiegeRuntimeSnapshot decodeSiegeRuntime(String encoded) {
+        String raw = dec(encoded);
+        if (raw == null || raw.isEmpty()) return SiegeRuntimeSnapshot.empty();
+        String[] sections = raw.split("#", -1);
+        if (sections.length != 5) throw new IllegalArgumentException("invalid siege runtime snapshot");
+
+        List<SiegeInstanceSnapshot> instances = new ArrayList<>();
+        if (!sections[0].equals("-") && !sections[0].isEmpty()) {
+            for (String row : sections[0].split(";", -1)) {
+                String[] x = row.split(",", -1);
+                if (x.length != 6) throw new IllegalArgumentException("invalid siege instance snapshot row");
+                instances.add(new SiegeInstanceSnapshot(dec(x[0]), dec(x[1]), dec(x[2]), dec(x[3]),
+                        SiegePhase.valueOf(x[4]), dec(x[5])));
+            }
+        }
+
+        List<SiegeReservationSnapshot> reservations = new ArrayList<>();
+        if (!sections[1].equals("-") && !sections[1].isEmpty()) {
+            for (String row : sections[1].split(";", -1)) {
+                String[] x = row.split(",", -1);
+                if (x.length != 3) throw new IllegalArgumentException("invalid siege reservation snapshot row");
+                reservations.add(new SiegeReservationSnapshot(dec(x[0]), Long.parseLong(x[1]),
+                        x[2].equals("-") ? null : Long.parseLong(x[2])));
+            }
+        }
+
+        List<SiegeProgressSnapshot> progress = new ArrayList<>();
+        if (!sections[2].equals("-") && !sections[2].isEmpty()) {
+            for (String row : sections[2].split(";", -1)) {
+                String[] x = row.split(",", -1);
+                if (x.length != 4) throw new IllegalArgumentException("invalid siege progress snapshot row");
+                progress.add(new SiegeProgressSnapshot(dec(x[0]), SiegeEngagementProfile.valueOf(x[1]),
+                        SiegeStage.valueOf(x[2]), Boolean.parseBoolean(x[3])));
+            }
+        }
+
+        List<SiegeParticipantSnapshot> participants = new ArrayList<>();
+        if (!sections[3].equals("-") && !sections[3].isEmpty()) {
+            for (String row : sections[3].split(";", -1)) {
+                String[] x = row.split(",", -1);
+                if (x.length != 5) throw new IllegalArgumentException("invalid siege participant snapshot row");
+                participants.add(new SiegeParticipantSnapshot(dec(x[0]), UUID.fromString(x[1]),
+                        SiegeSide.valueOf(x[2]), Boolean.parseBoolean(x[3]), dec(x[4])));
+            }
+        }
+
+        List<SiegeMoraleSnapshot> morale = new ArrayList<>();
+        if (!sections[4].equals("-") && !sections[4].isEmpty()) {
+            for (String row : sections[4].split(";", -1)) {
+                String[] x = row.split(",", -1);
+                if (x.length != 3) throw new IllegalArgumentException("invalid siege morale snapshot row");
+                morale.add(new SiegeMoraleSnapshot(dec(x[0]), SiegeSide.valueOf(x[1]), Integer.parseInt(x[2])));
+            }
+        }
+        return new SiegeRuntimeSnapshot(instances, reservations, progress, participants, morale);
     }
 
     private static String enc(String s) {
