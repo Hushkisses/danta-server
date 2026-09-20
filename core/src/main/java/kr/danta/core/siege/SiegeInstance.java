@@ -12,12 +12,24 @@ public final class SiegeInstance {
     private String result;
 
     public SiegeInstance(String siegeId, String pointId, String attackerNationId, String defenderNationId) {
+        this(siegeId, pointId, attackerNationId, defenderNationId, SiegePhase.CREATED, null);
+    }
+
+    private SiegeInstance(String siegeId, String pointId, String attackerNationId, String defenderNationId,
+                          SiegePhase phase, String result) {
         this.siegeId = require(siegeId, "siegeId");
         this.pointId = require(pointId, "pointId");
         this.attackerNationId = require(attackerNationId, "attackerNationId");
         this.defenderNationId = require(defenderNationId, "defenderNationId");
         if (attackerNationId.equals(defenderNationId)) throw new IllegalArgumentException("attacker and defender must differ");
-        this.phase = SiegePhase.CREATED;
+        this.phase = Objects.requireNonNull(phase, "phase");
+        if (phase == SiegePhase.RESOLVED) this.result = require(result, "result");
+        else if (result != null) throw new IllegalArgumentException("result is only valid for RESOLVED siege");
+    }
+
+    public static SiegeInstance restored(String siegeId, String pointId, String attackerNationId, String defenderNationId,
+                                         SiegePhase phase, String result) {
+        return new SiegeInstance(siegeId, pointId, attackerNationId, defenderNationId, phase, result);
     }
 
     public synchronized void schedule() { transition(SiegePhase.CREATED, SiegePhase.SCHEDULED); }
