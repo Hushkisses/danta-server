@@ -2,7 +2,7 @@ package kr.danta.core.snapshot;
 
 import java.util.List;
 
-/** Restart-recovery snapshot. DEV-119 schema v21 adds army troop-type composition. */
+/** Restart-recovery snapshot. DEV-120 schema v22 adds siege runtime state. */
 public record GameSnapshot(
         int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
         double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
@@ -14,9 +14,10 @@ public record GameSnapshot(
         List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
         List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars,
         List<FameScoreSnapshot> fameScores,
-        List<ChronicleEntrySnapshot> chronicleEntries
+        List<ChronicleEntrySnapshot> chronicleEntries,
+        SiegeRuntimeSnapshot siegeRuntime
 ) {
-    public static final int CURRENT_SCHEMA = 21;
+    public static final int CURRENT_SCHEMA = 22;
 
     public GameSnapshot {
         if (schemaVersion <= 0) throw new IllegalArgumentException("schemaVersion must be positive");
@@ -27,10 +28,32 @@ public record GameSnapshot(
         armies = copy(armies); armyOrders = copy(armyOrders); armyOperationQueues = copy(armyOperationQueues);
         personalWallets = copy(personalWallets); strategicResourceStockpiles = copy(strategicResourceStockpiles);
         localResourceStockpiles = copy(localResourceStockpiles); generals = copy(generals);
-        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions); researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations); vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars); fameScores = copy(fameScores); chronicleEntries = copy(chronicleEntries);
+        facilities = copy(facilities); facilityConstructions = copy(facilityConstructions);
+        researchStates = copy(researchStates); diplomaticRelations = copy(diplomaticRelations);
+        vassalRelations = copy(vassalRelations); independenceWars = copy(independenceWars);
+        fameScores = copy(fameScores); chronicleEntries = copy(chronicleEntries);
+        siegeRuntime = siegeRuntime == null ? SiegeRuntimeSnapshot.empty() : siegeRuntime;
     }
 
     private static <T> List<T> copy(List<T> value) { return value == null ? List.of() : List.copyOf(value); }
+
+    /** Source-compatible v20/v21-shape constructor; DEV-120 adds siegeRuntime in schema v22. */
+    public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
+                        double runtimeSpeedMultiplier, String seasonId, String seasonDisplayName,
+                        List<NationSnapshot> nations, List<StrategicPointSnapshot> strategicPoints, List<StrategicEdgeSnapshot> strategicEdges,
+                        List<ArmySnapshot> armies, List<ArmyOrderSnapshot> armyOrders, List<ArmyOperationQueueSnapshot> armyOperationQueues,
+                        List<PersonalWalletSnapshot> personalWallets, List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles,
+                        List<LocalResourceStockpileSnapshot> localResourceStockpiles, List<GeneralSnapshot> generals,
+                        List<FacilitySnapshot> facilities, List<FacilityConstructionSnapshot> facilityConstructions,
+                        List<ResearchStateSnapshot> researchStates, List<DiplomaticRelationSnapshot> diplomaticRelations,
+                        List<VassalRelationSnapshot> vassalRelations, List<IndependenceWarSnapshot> independenceWars,
+                        List<FameScoreSnapshot> fameScores, List<ChronicleEntrySnapshot> chronicleEntries) {
+        this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
+                seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
+                personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, chronicleEntries,
+                SiegeRuntimeSnapshot.empty());
+    }
 
     /** Source-compatible v19-shape constructor; DEV-107 adds chronicleEntries in schema v20. */
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis, boolean runtimePaused,
@@ -46,7 +69,8 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
                 personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
-                researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, List.of());
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, fameScores, List.of(),
+                SiegeRuntimeSnapshot.empty());
     }
 
     /** Source-compatible v18-shape constructor; DEV-102 adds fameScores in schema v19. */
@@ -62,7 +86,8 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders, armyOperationQueues,
                 personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals, facilities, facilityConstructions,
-                researchStates, diplomaticRelations, vassalRelations, independenceWars, List.of(), List.of());
+                researchStates, diplomaticRelations, vassalRelations, independenceWars, List.of(), List.of(),
+                SiegeRuntimeSnapshot.empty());
     }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
@@ -71,7 +96,8 @@ public record GameSnapshot(
                         List<StrategicEdgeSnapshot> strategicEdges, List<ArmySnapshot> armies) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies,
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
@@ -81,7 +107,8 @@ public record GameSnapshot(
                         List<ArmyOrderSnapshot> armyOrders, List<ArmyOperationQueueSnapshot> armyOperationQueues) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                armyOperationQueues, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
@@ -92,7 +119,8 @@ public record GameSnapshot(
                         List<PersonalWalletSnapshot> personalWallets) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, personalWallets, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                armyOperationQueues, personalWallets, List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 
     public GameSnapshot(int schemaVersion, long createdAtEpochMillis, long runtimeElapsedMillis,
@@ -104,7 +132,8 @@ public record GameSnapshot(
                         List<StrategicResourceStockpileSnapshot> strategicResourceStockpiles) {
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
-                armyOperationQueues, personalWallets, strategicResourceStockpiles, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                armyOperationQueues, personalWallets, strategicResourceStockpiles, List.of(), List.of(), List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 
     /** Source-compatible v12-shape constructor used by existing snapshot code/tests. */
@@ -119,7 +148,7 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
                 armyOperationQueues, personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals,
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 
     /** Source-compatible v13-shape constructor. */
@@ -135,6 +164,6 @@ public record GameSnapshot(
         this(schemaVersion, createdAtEpochMillis, runtimeElapsedMillis, runtimePaused, runtimeSpeedMultiplier,
                 seasonId, seasonDisplayName, nations, strategicPoints, strategicEdges, armies, armyOrders,
                 armyOperationQueues, personalWallets, strategicResourceStockpiles, localResourceStockpiles, generals,
-                facilities, facilityConstructions, List.of(), List.of(), List.of(), List.of());
+                facilities, facilityConstructions, List.of(), List.of(), List.of(), List.of(), SiegeRuntimeSnapshot.empty());
     }
 }
