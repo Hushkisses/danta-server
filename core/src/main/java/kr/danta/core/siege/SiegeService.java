@@ -23,6 +23,21 @@ public final class SiegeService {
         return instance;
     }
 
+    public synchronized SiegeInstance restore(String siegeId, String pointId, String attackerNationId,
+                                              String defenderNationId, SiegePhase phase, String result) {
+        if (byId.containsKey(siegeId)) throw new IllegalStateException("siege id already exists: " + siegeId);
+        if (!gameState.hasStrategicPoint(pointId)) throw new IllegalArgumentException("point not found: " + pointId);
+        if (!gameState.hasNation(attackerNationId)) throw new IllegalArgumentException("attacker nation not found: " + attackerNationId);
+        if (!gameState.hasNation(defenderNationId)) throw new IllegalArgumentException("defender nation not found: " + defenderNationId);
+        boolean duplicate = byId.values().stream().anyMatch(s -> s.pointId().equals(pointId) && !s.phase().terminal());
+        if (duplicate && !phase.terminal()) throw new IllegalStateException("active siege already exists for point: " + pointId);
+        SiegeInstance restored = SiegeInstance.restored(
+                siegeId, pointId, attackerNationId, defenderNationId, phase, result);
+        byId.put(siegeId, restored);
+        return restored;
+    }
+
     public synchronized Optional<SiegeInstance> find(String siegeId) { return Optional.ofNullable(byId.get(siegeId)); }
     public synchronized List<SiegeInstance> instances() { return List.copyOf(byId.values()); }
+    public synchronized void clear() { byId.clear(); }
 }
