@@ -34,7 +34,7 @@ class Dev102FameScoreSnapshotTest {
         String[] fields = GameSnapshotCodec.encode(current).split("\\|", -1);
         fields[0] = "18";
         // v18 predates both fame (v19) and chronicle (v20).
-        String schema18 = String.join("|", java.util.Arrays.copyOf(fields, fields.length - 2));
+        String schema18 = String.join("|", java.util.Arrays.copyOf(fields, 23));
 
         GameSnapshot decoded = GameSnapshotCodec.decode(schema18);
 
