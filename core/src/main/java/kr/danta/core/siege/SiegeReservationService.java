@@ -54,7 +54,19 @@ public final class SiegeReservationService {
         return siege;
     }
 
+    public synchronized void restore(SiegeReservation reservation) {
+        Objects.requireNonNull(reservation, "reservation");
+        SiegeInstance siege = sieges.find(reservation.siegeId())
+                .orElseThrow(() -> new IllegalArgumentException("siege not found: " + reservation.siegeId()));
+        if (siege.phase() == SiegePhase.CREATED) {
+            throw new IllegalStateException("restored reservation requires scheduled/active/terminal siege");
+        }
+        reservations.put(reservation.siegeId(), reservation);
+    }
+
     public synchronized Optional<SiegeReservation> find(String siegeId) { return Optional.ofNullable(reservations.get(siegeId)); }
+    public synchronized List<SiegeReservation> reservations() { return List.copyOf(reservations.values()); }
+    public synchronized void clear() { reservations.clear(); }
 
     private SiegeReservation require(String id) {
         SiegeReservation r = reservations.get(id);
